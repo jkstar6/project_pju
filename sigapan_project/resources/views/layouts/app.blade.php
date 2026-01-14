@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" dir="ltr" data-pc-theme="light">
+<html lang="en" class="preset-hrm preset-ai" data-pc-direction="ltr" dir="ltr" data-pc-theme="light">
 <head>
     @include('partials.head')
 </head>

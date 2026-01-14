@@ -242,173 +242,7 @@
                     Pages
                     <i class="ti ti-chevron-down"></i>
                   </button>
-                  <div class="dropdown-menu dropdown-center group-[.drp-show]:max-lg:!relative !w-[860px] max-lg:!w-full max-lg:!transform-none !p-0 overflow-hidden shadow-[0px_0px_2px_0px_rgba(0,0,0,0.2),_rgba(26,28,30,0.06)_0px_16px_10px_0px]">
-                    <div class="grid grid-cols-12 gap-3">
-                      <div class="col-span-12 sm:col-span-4 p-2">
-                        <div class="p-5 bg-neutral-100 h-full rounded-lg">
-                            <div class="flex flex-col items-start gap-6 h-full justify-center">
-                              <div class="flex flex-col gap-2">
-                                <div class="flex flex-col items-start gap-3">
-                                  <div class="bg-theme-bg-default rounded-full hidden sm:inline-flex">
-                                    <span class="caption flex flex-row items-center">
-                                      <img class="w-4 h-4 ltr:ml-2.5 rtl:mr-2.5"
-                                        src="../assets/images/shared/celebration.svg" alt="celebration">
-                                      <span class="subtitle2 px-3 py-1">SaasAble UI Kit</span>
-                                    </span>
-                                  </div>
-                                  <h4>Kickstart your project with pre-built essentials pages.</h4>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                      </div>
-                      <div class="col-span-12 sm:col-span-8">
-                        <div class="grid grid-cols-12 gap-2">
-                          <div class="col-span-12 sm:col-span-4">
-                            <div class="flex flex-col p-2 h-full max-w-full lg:max-w-[860px]">
-                              <div class="subtitle1 p-2 text-theme-text-primary">General</div>
-                              <ul class="*:*:block *:*:px-2.5 *:*:py-1 *:*:my-0.5 *:*:rounded-lg *:*:hover:bg-neutral-50 focus:*:*:bg-neutral-200 *:*:transition-all *:*:duration-300">
-                                <li>
-                                  <a href="../pages/about.html" target="_blank">
-                                    <div class="flex flex-row justify-between items-center">
-                                      <div class="body1 my-1 truncate">About</div>
-                                      <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                    </div>
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href="../pages/career.html" target="_blank">
-                                    <div class="flex flex-row justify-between items-center">
-                                      <div class="body1 my-1 truncate">Career</div>
-                                      <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                    </div>
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href="../pages/privacy-policy.html" target="_blank">
-                                    <div class="flex flex-row justify-between items-center">
-                                      <div class="body1 my-1 truncate">Privacy Policy</div>
-                                      <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                    </div>
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href="../pages/contact.html" target="_blank">
-                                    <div class="flex flex-row justify-between items-center">
-                                      <div class="body1 my-1 truncate">Contact Us</div>
-                                      <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                    </div>
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href="../pages/faq.html" target="_blank">
-                                    <div class="flex flex-row justify-between items-center">
-                                      <div class="body1 my-1 truncate">FAQs</div>
-                                      <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                    </div>
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href="../pages/pricing.html" target="_blank">
-                                    <div class="flex flex-row justify-between items-center">
-                                      <div class="body1 my-1 truncate">Pricing</div>
-                                      <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                    </div>
-                                  </a>
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                          <div class="col-span-12 sm:col-span-4">
-                            <div class="flex flex-col p-2 h-full max-w-full lg:max-w-[860px]">
-                              <div class="subtitle1 p-2 text-theme-text-primary">Maintenance</div>
-                              <ul class="*:*:block *:*:px-2.5 *:*:py-1 *:*:my-0.5 *:*:rounded-lg *:*:hover:bg-neutral-50 focus:*:*:bg-neutral-200 *:*:transition-all *:*:duration-300">
-                                <li>
-                                  <a href="../coming-soon/coming-soon-1.html" target="_blank">
-                                    <div class="flex flex-row justify-between items-center">
-                                      <div class="body1 my-1 truncate">Coming Soon</div>
-                                      <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                    </div>
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href="../error404/error404-1.html" target="_blank">
-                                    <div class="flex flex-row justify-between items-center">
-                                      <div class="body1 my-1 truncate">Error 404</div>
-                                      <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                    </div>
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href="../error500/error500-1.html" target="_blank">
-                                    <div class="flex flex-row justify-between items-center">
-                                      <div class="body1 my-1 truncate">Error 500</div>
-                                      <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                    </div>
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href="../under-maintenance/under-maintenance-1.html" target="_blank">
-                                    <div class="flex flex-row justify-between items-center">
-                                      <div class="body1 my-1 truncate">Under Maintenance</div>
-                                      <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                    </div>
-                                  </a>
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                          <div class="col-span-12 sm:col-span-4">
-                            <div class="flex flex-col p-2 h-full max-w-full lg:max-w-[860px]">
-                              <div class="subtitle1 p-2 text-theme-text-primary">External</div>
-                                <ul class="*:*:block *:*:px-2.5 *:*:py-1 *:*:my-0.5 *:*:rounded-lg *:*:hover:bg-neutral-50 focus:*:*:bg-neutral-200 *:*:transition-all *:*:duration-300">
-                                  <li>
-                                    <a href="https://blog.saasable.io/" target="_blank">
-                                      <div class="flex flex-row justify-between items-center">
-                                        <div class="body1 my-1 truncate">Blog</div>
-                                        <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                      </div>
-                                    </a>
-                                  </li>
-                                  <li>
-                                    <a href="https://phoenixcoded.gitbook.io/saasable-tailwind" target="_blank">
-                                      <div class="flex flex-row justify-between items-center">
-                                        <div class="body1 my-1 truncate">Documentation</div>
-                                        <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                      </div>
-                                    </a>
-                                  </li>
-                                  <li>
-                                    <a href="https://phoenixcoded.authordesk.app/" target="_blank">
-                                      <div class="flex flex-row justify-between items-center">
-                                        <div class="body1 my-1 truncate">Support</div>
-                                        <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                      </div>
-                                    </a>
-                                  </li>
-                                  <li>
-                                    <a href="https://discord.com/invite/gmqz4BWYA8" target="_blank">
-                                      <div class="flex flex-row justify-between items-center">
-                                        <div class="body1 my-1 truncate">Discord</div>
-                                        <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                      </div>
-                                    </a>
-                                  </li>
-                                  <li>
-                                    <a href="https://themeforest.net/licenses/standard" target="_blank">
-                                      <div class="flex flex-row justify-between items-center">
-                                        <div class="body1 my-1 truncate">Terms & Conditions</div>
-                                        <i class="ti ti-arrow-up-right text-neutral-800 text-base leading-none"></i>
-                                      </div>
-                                    </a>
-                                  </li>
-                                </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+
                 </div>
                 <a href="https://phoenixcoded.gitbook.io/saasable-tailwind" target="_blank"
                   class="inline-block text-neutral-900 hover:bg-primary-500/[.04] dark:text-themedark-bodycolor rounded-full px-[18px] lg:px-6 py-3 text-[14px] font-medium transition-all leading-[1.429] open:text-primary-500 open:font-semibold">
@@ -492,11 +326,9 @@
         <div class="container animation-ref">
           <div class="pb-5 sm:pb-11 lg:pb-12">
             <div class="flex flex-col items-center gap-3">
-              <div class="animate-y delay-reset py-3 px-6 text-theme-textsecondary caption rounded-full border border-theme-divider">
-                <p class="body1">✦&nbsp;&nbsp; HR Solutions Made Easy &nbsp;&nbsp;✦</p>
-              </div>
-              <h1 class="animate-y max-w-[800px] text-center">
-                Simplify HR Tasks, Prioritize Your Workforce
+
+              <h1 class="animate-y max-w-[800px] text-center">        
+                Penerangan Jalan Umum Kabupaten Bantul
               </h1>
               <div class="animate-y text-primary-500">
                 <!-- [ wawe image ] -->
@@ -509,27 +341,27 @@
                   />
                 </svg>
               </div>
-              <h6 class="animate-y max-w-[650px] text-center text-theme-text-secondary">Empower your HR team with our comprehensive platform for seamless HR management</h6>
+              <h6 class="animate-y max-w-[650px] text-center text-theme-text-secondary">Sistem pemetaan terpadu yang menampilkan informasi Lampu PJU, Tiang, dan KWH di seluruh wilayah Kabupaten Bantul. Akurat, terstruktur, dan dapat diakses publik.</h6>
             </div>
             <div class="flex flex-col items-center gap-4 mt-6 sm:mt-8 lg:mt-10">
               <div class="animate-y">
                 <button class="btn btn-primary btn-md capitalize">
                   <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
-                    <i class="ti ti-sparkles text-base leading-none"></i>
-                    Try Predictive Cost Analytics
+                    Lihat Peta
+                  </span>
+                </button>
+                <button class="btn btn-primary btn-md capitalize">
+                  <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
+                    Kirim Aduan
+                  </span>
+                </button>
+                <button class="btn btn-primary btn-md capitalize">
+                  <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
+                    Daftar Aduan
                   </span>
                 </button>
               </div>
-              <div class="animate-y flex flex-row gap-2 justify-center sm:gap-6 flex-wrap">
-                <div class="flex flex-row items-center gap-2 text-theme-text-secondary">
-                  <i class="ti ti-settings-up text-2xl leading-none"></i>
-                  <p class="body2">Automated Scaling for Efficiency</p>
-                </div>
-                <div class="flex flex-row items-center gap-2 text-theme-text-secondary">
-                  <i class="ti ti-chart-histogram text-2xl leading-none"></i>
-                  <p class="body2">Real-time Performance Insights</p>
-                </div>
-              </div>
+
             </div>
           </div>
           <div class=" sticky top-0">

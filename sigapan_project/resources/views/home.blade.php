@@ -209,7 +209,7 @@
       layout_rtl_change('false');
     </script>
     
-
+    @push('scripts')
     <script src="../assets/js/plugins/motion.js"></script>
     <script type="module">
       const { animate, inView, scroll } = Motion;
@@ -262,4 +262,5 @@
     
       });
     </script>
-    @endsection
+    @endpush
+@endsection

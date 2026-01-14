@@ -136,12 +136,16 @@
               <div class="animate-y">
                 <button class="btn btn-primary btn-md capitalize">
                   <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
-                    Lihat Peta
+                    <a href="/map">
+                      Lihat Peta
+                    </a>
                   </span>
                 </button>
                 <button class="btn btn-primary btn-md capitalize">
                   <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
-                    Kirim Aduan
+                    <a href="/aduan">
+                      Kirim Aduan
+                    </a>
                   </span>
                 </button>
                 <button class="btn btn-primary btn-md capitalize">

@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\Settings\UsersController;
 use App\Http\Controllers\Admin\Settings\NavigationsController;
 use App\Http\Controllers\Admin\Settings\PreferencesController;
 
+// ✅ Tambahan untuk Aduan
+use App\Http\Controllers\AduanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +26,7 @@ use App\Http\Controllers\Admin\Settings\PreferencesController;
 |
 */
 
-/* 
+/*
 |--------------------------------------------------------------------------
 | Landing Routes
 |--------------------------------------------------------------------------
@@ -35,7 +37,7 @@ Route::get('/', function () {
     return view('home');
 });
 
-/* 
+/*
 |--------------------------------------------------------------------------
 | Landing Routes
 |--------------------------------------------------------------------------
@@ -43,15 +45,20 @@ Route::get('/', function () {
 Route::get('/map', function () {
     return view('map');
 });
+
+// ✅ (Opsional tapi rapi) naming untuk halaman aduan
 Route::get('/aduan', function () {
     return view('aduan');
-});
+})->name('aduan.create');
+
+// ✅ WAJIB: ini yang bikin route('aduan.store') tidak error
+Route::post('/aduan', [AduanController::class, 'store'])->name('aduan.store');
+
 Route::get('/daftar-aduan', function () {
     return view('daftar-aduan');
 });
 
-
-/* 
+/*
 |--------------------------------------------------------------------------
 | Admin Routes
 |--------------------------------------------------------------------------
@@ -59,7 +66,6 @@ Route::get('/daftar-aduan', function () {
 Route::middleware('auth', 'verified')->group(function () {
     /* ---- Dashboard */
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
 
     /* ---- My Profile */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -77,14 +83,13 @@ Route::middleware('auth', 'verified')->group(function () {
         Route::resource('navs', NavigationsController::class)->names('navs');
         /* Preferences */
         Route::resource('preferences', PreferencesController::class)->names('preferences');
-    }); 
+    });
 });
 
 require __DIR__ . '/auth.php';
 
 // Change Locale Language
 Route::get('change-locale/{lang}', [LocaleController::class, 'changeLocale'])->name('change-locale');
-
 
 // Route::middleware('auth')->group(function () {
 //     Route::resource('home', HomeController::class);

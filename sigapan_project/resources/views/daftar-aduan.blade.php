@@ -12,10 +12,10 @@
     <meta name="description" content="Ready-to-use HRM landing page template to help you launch your project faster and smarter." />
     <meta name="keywords" content="Tailwind Templates, Tailwind Theme, SaaS UI Kit, SaaS Template"/>
     <meta name="author" content="Phoenixcoded" />
-
+   
     <!-- [Favicon] icon -->
     <link rel="icon" href="../assets/images/favicon.ico" type="image/x-icon" />
-
+    
     <link rel="stylesheet" href="../assets/fonts/satoshi/Satoshi.css">
     <link rel="stylesheet" href="../assets/fonts/uncut-sans/Uncut-Sans.css">
     <!-- [Font] Family -->
@@ -36,7 +36,17 @@
     <link rel="stylesheet" href="../assets/fonts/material.css" />
     <!-- [Template CSS Files] -->
     <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            // 1. Set ke 'class' agar tidak otomatis ikut mode gelap laptop (biar tetap putih sesuai tema)
+            darkMode: 'class', 
+            corePlugins: {
+                // 2. Matikan preflight agar Navbar & Font bawaan TIDAK BERUBAH
+                preflight: false, 
+            }
+        }
+    </script>
   </head>
   <!-- [Head] end -->
 
@@ -87,6 +97,95 @@
     <!-- [ Nav ] end -->
 
     {{-- isi konten dibawah ini --}}
+    <section class="py-12 bg-white dark:bg-themedark-bodybg">
+        <div class="container mx-auto px-4"> <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-neutral-900 dark:text-white mb-2">Daftar Laporan Warga</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <div class="group relative bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
+                    <div class="relative h-48 w-full overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&w=2070&auto=format&fit=crop" 
+                             alt="Jalan Rusak" 
+                             class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                        <span class="absolute top-3 right-3 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                            Menunggu
+                        </span>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-center gap-2 text-neutral-500 text-xs mb-2">
+                            <i class="ti ti-clock"></i> <span>2 days ago</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-neutral-900 dark:text-white mb-1 group-hover:text-blue-600">
+                            Jalan Bocor
+                        </h3>
+                        <p class="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2 mb-4">
+                            Sepanjang jalan bantul banyak yang berlubang pak.
+                        </p>
+                        <div class="flex items-center gap-2 text-neutral-500 text-xs">
+                            <i class="ti ti-map-pin text-red-500"></i> Bantul
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group relative bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
+                    <div class="relative h-48 w-full overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1540932296774-74452326c759?q=80&w=2089&auto=format&fit=crop" 
+                             alt="Lampu" 
+                             class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                        <span class="absolute top-3 right-3 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                            Menunggu
+                        </span>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-center gap-2 text-neutral-500 text-xs mb-2">
+                            <i class="ti ti-clock"></i> <span>3 days ago</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-neutral-900 dark:text-white mb-1 group-hover:text-blue-600">
+                            Lampu Mati
+                        </h3>
+                        <p class="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2 mb-4">
+                            Lampunya mati total di perempatan jalan.
+                        </p>
+                        <div class="flex items-center gap-2 text-neutral-500 text-xs">
+                            <i class="ti ti-map-pin text-red-500"></i> Kominfo
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group relative bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
+                    <div class="relative h-48 w-full overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1530587191325-3db32d826c18?q=80&w=2069&auto=format&fit=crop" 
+                             alt="Sampah" 
+                             class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                        <span class="absolute top-3 right-3 bg-green-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                            Selesai
+                        </span>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-center gap-2 text-neutral-500 text-xs mb-2">
+                            <i class="ti ti-clock"></i> <span>5 days ago</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-neutral-900 dark:text-white mb-1 group-hover:text-blue-600">
+                            Sampah Numpuk
+                        </h3>
+                        <p class="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2 mb-4">
+                            Bau menyengat di sekitar pasar karena sampah.
+                        </p>
+                        <div class="flex items-center gap-2 text-neutral-500 text-xs">
+                            <i class="ti ti-map-pin text-red-500"></i> Pasar Seni
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    
+    ```
+    
+
 
   </body>
 </html>

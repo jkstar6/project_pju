@@ -7,9 +7,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="description" content="Ready-to-use HRM landing page template." />
-    <meta name="author" content="Phoenixcoded" />
-
     <link rel="icon" href="../assets/images/favicon.ico" type="image/x-icon" />
 
     <link rel="stylesheet" href="../assets/fonts/satoshi/Satoshi.css">
@@ -22,32 +19,12 @@
     <style>
       body { overflow-x: hidden; }
       
-      /* Container Map */
       #map {
         height: 75vh;
         width: 100%;
-        z-index: 10; 
+        z-index: 5; /* Diturunkan agar elemen UI di atasnya aman */
         border-radius: 12px;
       }
-
-      /* Tombol GPS Costum */
-      .gps-button {
-        position: absolute;
-        bottom: 20px;
-        right: 10px;
-        z-index: 1000;
-        background: white;
-        width: 40px;
-        height: 40px;
-        border-radius: 4px;
-        border: 2px solid rgba(0,0,0,0.2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-      }
-      .gps-button:hover { background: #f4f4f4; }
 
       /* Side Panel Detail */
       #lampPanel {
@@ -73,34 +50,43 @@
         display: none;
       }
 
-      .leaflet-interactive { cursor: pointer !important; }
-      
-      .user-location-marker {
-        background: #3b82f6;
-        border: 2px solid white;
-        border-radius: 50%;
+      .gps-button {
+        position: absolute;
+        bottom: 20px;
+        right: 10px;
+        z-index: 1000;
+        background: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        border: 2px solid rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+      }
+
+      .search-container {
+        position: relative;
+        z-index: 100; /* Pastikan di atas peta */
       }
     </style>
   </head>
+
   <body class="bg-gray-50">
     <nav class="z-50 w-full relative bg-neutral-200">
       <div class="container">
         <div class="static flex py-4 items-center justify-between">
           <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-between">
             <div class="flex flex-1 flex-shrink-0 items-center justify-between text-primary-500">
-              <a href="#">
-                  <h3 class="">LOGO</h3>
-              </a>
+              <a href="#"><h3 class="">LOGO</h3></a>
             </div>
-            <div class="nav-collapse grow hidden w-full lg:flex lg:w-full flex-auto justify-center"
-              id="main-navbar-collapse">
+            <div class="nav-collapse grow hidden w-full lg:flex lg:w-full flex-auto justify-center" id="main-navbar-collapse">
               <div class="justify-center flex flex-col lg:flex-row p-0 lg:bg-neutral-200 lg:rounded-full">
-                <a class="inline-block text-neutral-900 hover:bg-primary-500/[.04] dark:text-themedark-bodycolor rounded-full px-[18px] lg:px-6 py-3 text-[14px] font-medium transition-all leading-[1.429] open:text-primary-500 open:font-semibold"
-                  href="../">Home</a>
-                <a href="../map"
-                  class="inline-block text-neutral-900 hover:bg-primary-500/[.04] dark:text-themedark-bodycolor rounded-full px-[18px] lg:px-6 py-3 text-[14px] font-medium transition-all leading-[1.429] open:text-primary-500 open:font-semibold">Map</a>
-                <a href="../aduan"
-                  class="inline-block text-neutral-900 hover:bg-primary-500/[.04] dark:text-themedark-bodycolor rounded-full px-[18px] lg:px-6 py-3 text-[14px] font-medium transition-all leading-[1.429] open:text-primary-500 open:font-semibold">Aduan</a>
+                <a class="inline-block text-neutral-900 hover:bg-primary-500/[.04] rounded-full px-6 py-3 text-[14px] font-medium" href="../">Home</a>
+                <a href="../map" class="inline-block text-neutral-900 hover:bg-primary-500/[.04] rounded-full px-6 py-3 text-[14px] font-medium">Map</a>
+                <a href="../aduan" class="inline-block text-neutral-900 hover:bg-primary-500/[.04] rounded-full px-6 py-3 text-[14px] font-medium">Aduan</a>
               </div>
             </div>
           </div>
@@ -112,12 +98,14 @@
         </div>
       </div>
     </nav>
+
     <main class="py-6">
-      <div class="container mx-auto px-4 mb-4">
+      <div class="container mx-auto px-4 mb-4 search-container">
           <div class="max-w-2xl mx-auto flex shadow-sm bg-white rounded-lg overflow-hidden border">
-              <input id="addressSearch" type="text" placeholder="Cari alamat..." class="flex-1 px-4 py-3 outline-none text-sm">
+              <input id="addressSearch" type="text" placeholder="Masukkan nama jalan atau tempat..." class="flex-1 px-4 py-3 outline-none text-sm">
               <button id="searchBtn" class="px-6 bg-teal-600 text-white font-semibold hover:bg-teal-700 transition">Search</button>
           </div>
+          <div id="searchLoading" class="text-center text-xs text-teal-600 mt-2 hidden italic">Mencari lokasi...</div>
       </div>
 
       <div class="container mx-auto px-4">
@@ -133,11 +121,11 @@
     <div id="panelOverlay"></div>
     <div id="lampPanel">
         <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-            <h3 class="font-bold text-gray-800">Street Light Detail</h3>
+            <h3 class="font-bold text-gray-800 text-base">Street Light Detail</h3>
             <button id="closePanel" class="text-3xl leading-none">&times;</button>
         </div>
         <div id="lampContent" class="p-6 space-y-5">
-            <p class="text-gray-500 text-sm">Pilih marker untuk melihat detail.</p>
+            <p class="text-gray-400 text-sm">Klik marker lampu untuk melihat informasi.</p>
         </div>
     </div>
 
@@ -199,91 +187,92 @@
 
       document.addEventListener('DOMContentLoaded', () => {
         const map = L.map('map').setView([-7.89610, 110.33843], 17);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         const lampPanel = document.getElementById('lampPanel');
         const lampContent = document.getElementById('lampContent');
         const overlay = document.getElementById('panelOverlay');
-        let userMarker;
+        const searchInput = document.getElementById('addressSearch');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchLoading = document.getElementById('searchLoading');
+        let searchMarker;
 
-        // Fungsi Detail Panel
+        // Fungsi Search Fix
+        async function handleSearch() {
+            const query = searchInput.value.trim();
+            if(!query) return;
+
+            searchLoading.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    
+                    map.flyTo([lat, lon], 17);
+                    
+                    if (searchMarker) map.removeLayer(searchMarker);
+                    searchMarker = L.marker([lat, lon]).addTo(map)
+                        .bindPopup(`<b>Lokasi Ditemukan</b><br>${data[0].display_name}`)
+                        .openPopup();
+                } else {
+                    alert("Lokasi tidak ditemukan. Coba masukkan nama jalan yang lebih spesifik.");
+                }
+            } catch (error) {
+                console.error("Search error:", error);
+                alert("Terjadi kesalahan saat mencari lokasi.");
+            } finally {
+                searchLoading.classList.add('hidden');
+            }
+        }
+
+        searchBtn.onclick = handleSearch;
+        searchInput.onkeypress = (e) => { if(e.key === 'Enter') handleSearch(); };
+
+        // Detail Panel Functions
         function openDetail(light) {
             lampContent.innerHTML = `
                 <div class="space-y-4">
-                    <div class="p-4 bg-teal-50 rounded-xl border border-teal-100">
-                        <h4 class="text-xl font-bold text-teal-800">${light.name}</h4>
-                        <p class="text-xs text-teal-600 font-mono">Device ID: #${light.id}</p>
+                    <div class="p-4 bg-teal-50 rounded-xl border border-teal-100 font-bold text-teal-800 text-lg">${light.name}</div>
+                    <div class="flex justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-xs uppercase text-gray-400 font-bold">Status</span>
+                        <span class="font-bold ${light.status === 'on' ? 'text-green-500' : 'text-red-500'}">${light.status.toUpperCase()}</span>
                     </div>
-                    <div class="space-y-3">
-                        <div class="flex justify-between p-3 bg-gray-50 rounded-lg">
-                            <span class="text-gray-500 text-sm font-medium uppercase">Status</span>
-                            <span class="px-3 py-1 rounded-full text-xs font-bold text-white ${
-                                light.status === 'on' ? 'bg-green-500' : (light.status === 'fault' ? 'bg-red-500' : 'bg-gray-400')
-                            }">${light.status.toUpperCase()}</span>
-                        </div>
-                        <div class="flex justify-between p-3 bg-gray-50 rounded-lg">
-                            <span class="text-gray-500 text-sm font-medium uppercase">Power</span>
-                            <span class="text-gray-800 font-bold">${light.power}</span>
-                        </div>
+                    <div class="flex justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-xs uppercase text-gray-400 font-bold">Power</span>
+                        <span class="font-bold">${light.power}</span>
                     </div>
-                    <div class="p-4 border rounded-lg text-sm">
-                        <p class="text-gray-400 font-bold uppercase mb-2 text-xs">Coordinates</p>
-                        <p>Lat: ${light.lat}</p><p>Lng: ${light.lng}</p>
-                    </div>
-                    <a href="https://www.google.com/maps/search/?api=1&query=${light.lat},${light.lng}" target="_blank" 
-                       class="block w-full text-center py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 transition">
-                       Google Maps
-                    </a>
+                    <div class="p-3 border rounded-lg text-xs leading-5"><b>Koordinat:</b><br>${light.lat}, ${light.lng}</div>
+                    <a href="https://www.google.com/maps?q=${light.lat},${light.lng}" target="_blank" class="block w-full text-center py-3 bg-teal-600 text-white rounded-lg font-bold shadow-md">Buka di Google Maps</a>
                 </div>
             `;
             lampPanel.classList.add('active');
             overlay.style.display = 'block';
         }
 
-        // Fungsi GPS Lokasi Terkini
-        function locateUser() {
-            if (!navigator.geolocation) {
-                alert("GPS tidak didukung oleh browser Anda.");
-                return;
-            }
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const { latitude, longitude } = pos.coords;
-                map.flyTo([latitude, longitude], 18);
-                if (userMarker) userMarker.setLatLng([latitude, longitude]);
-                else {
-                    userMarker = L.circleMarker([latitude, longitude], {
-                        radius: 8, fillColor: '#3b82f6', color: '#fff', weight: 2, fillOpacity: 1
-                    }).addTo(map).bindTooltip("Lokasi Anda").openTooltip();
-                }
-            }, (err) => alert("Gagal akses lokasi: " + err.message));
-        }
-
-        document.getElementById('gpsBtn').onclick = locateUser;
         document.getElementById('closePanel').onclick = () => { lampPanel.classList.remove('active'); overlay.style.display = 'none'; };
         overlay.onclick = () => { lampPanel.classList.remove('active'); overlay.style.display = 'none'; };
 
-        // Render 50 Markers
+        // GPS Function
+        document.getElementById('gpsBtn').onclick = () => {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                map.flyTo([pos.coords.latitude, pos.coords.longitude], 18);
+            }, (err) => alert("Izin lokasi ditolak atau tidak tersedia."));
+        };
+
+        // Render Streetlights
         streetLights.forEach(light => {
             const color = light.status === 'on' ? '#10b981' : (light.status === 'fault' ? '#ef4444' : '#9ca3af');
-            const marker = L.circleMarker([light.lat, light.lng], {
-                radius: 10, fillColor: color, color: "#fff", weight: 2.5, fillOpacity: 1, interactive: true
-            }).addTo(map);
-
-            marker.on('click', (e) => { L.DomEvent.stopPropagation(e); openDetail(light); });
-            marker.bindTooltip(light.name);
+            L.circleMarker([light.lat, light.lng], {
+                radius: 10, fillColor: color, color: "#fff", weight: 2, fillOpacity: 1, interactive: true
+            }).addTo(map).on('click', (e) => { 
+                L.DomEvent.stopPropagation(e); 
+                openDetail(light); 
+            }).bindTooltip(light.name);
         });
-
-        // Search Address
-        document.getElementById('searchBtn').onclick = async () => {
-            const q = document.getElementById('addressSearch').value;
-            if(!q) return;
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`);
-            const data = await res.json();
-            if(data.length > 0) map.setView([data[0].lat, data[0].lon], 18);
-        };
       });
     </script>
   </body>

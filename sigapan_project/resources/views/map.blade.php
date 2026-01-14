@@ -1,21 +1,8 @@
+@extends('layouts.app')
+
 @section('title', 'map')
 
-<!doctype html>
-<html lang="en" class="preset-hrm preset-ai" data-pc-direction="ltr" dir="ltr" data-pc-theme="light">
-  <head>
-    <title>MAP</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="icon" href="../assets/images/favicon.ico" type="image/x-icon" />
-
-    <link rel="stylesheet" href="../assets/fonts/satoshi/Satoshi.css">
-    <link rel="stylesheet" href="../assets/fonts/uncut-sans/Uncut-Sans.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
+@push('styles')
     <style>
       body { overflow-x: hidden; }
       
@@ -72,38 +59,14 @@
         z-index: 100; /* Pastikan di atas peta */
       }
     </style>
-  </head>
+@endpush
 
-  <body class="bg-gray-50">
-    <nav class="z-50 w-full relative bg-neutral-200">
-      <div class="container">
-        <div class="static flex py-4 items-center justify-between">
-          <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-between">
-            <div class="flex flex-1 flex-shrink-0 items-center justify-between text-primary-500">
-              <a href="#"><h3 class="">LOGO</h3></a>
-            </div>
-            <div class="nav-collapse grow hidden w-full lg:flex lg:w-full flex-auto justify-center" id="main-navbar-collapse">
-              <div class="justify-center flex flex-col lg:flex-row p-0 lg:bg-neutral-200 lg:rounded-full">
-                <a class="inline-block text-neutral-900 hover:bg-primary-500/[.04] rounded-full px-6 py-3 text-[14px] font-medium" href="../">Home</a>
-                <a href="../map" class="inline-block text-neutral-900 hover:bg-primary-500/[.04] rounded-full px-6 py-3 text-[14px] font-medium">Map</a>
-                <a href="../aduan" class="inline-block text-neutral-900 hover:bg-primary-500/[.04] rounded-full px-6 py-3 text-[14px] font-medium">Aduan</a>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center gap-3">
-            @if (Route::has('login'))
-                <a href="{{ route('login') }}" class="btn btn-primary px-4 py-2.5 shrink-0">Login</a>
-            @endif
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <main class="py-6">
+@section('content')
+    <main class="bg-neutral-200 py-6">
       <div class="container mx-auto px-4 mb-4 search-container">
           <div class="max-w-2xl mx-auto flex shadow-sm bg-white rounded-lg overflow-hidden border">
               <input id="addressSearch" type="text" placeholder="Masukkan nama jalan atau tempat..." class="flex-1 px-4 py-3 outline-none text-sm">
-              <button id="searchBtn" class="px-6 bg-teal-600 text-white font-semibold hover:bg-teal-700 transition">Search</button>
+              <button id="searchBtn" class="px-6 bg-teal-600 text-gray-600 font-semibold hover:bg-teal-700 transition cursor-pointer">Search</button>
           </div>
           <div id="searchLoading" class="text-center text-xs text-teal-600 mt-2 hidden italic">Mencari lokasi...</div>
       </div>
@@ -129,6 +92,7 @@
         </div>
     </div>
 
+@push('scripts')
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
@@ -275,5 +239,5 @@
         });
       });
     </script>
-  </body>
-</html>
+@endpush
+@endsection

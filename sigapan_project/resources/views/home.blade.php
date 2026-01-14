@@ -462,7 +462,7 @@
             </div>
             <a href="#" type="button" class="max-sm:hidden flex items-center justify-center h-10 w-10 rounded-full btn-outline-primary p-[9px_24px]">
               <i class="ti ti-brand-github text-lg leading-none"></i>
-            </a>
+            </a>  
             @if (Route::has('login'))
                 <a
                     href="{{ route('login') }}"

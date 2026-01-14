@@ -46,6 +46,9 @@ Route::get('/map', function () {
 Route::get('/aduan', function () {
     return view('aduan');
 });
+Route::get('/daftar-aduan', function () {
+    return view('daftar-aduan');
+});
 
 
 /* 

@@ -150,7 +150,9 @@
                 </button>
                 <button class="btn btn-primary btn-md capitalize">
                   <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
-                    Daftar Aduan
+                    <a href="/daftar-aduan">
+                      Daftar Aduan
+                    </a>
                   </span>
                 </button>
               </div>

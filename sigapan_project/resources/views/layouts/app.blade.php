@@ -5,7 +5,6 @@
 </head>
 
 <body>
-    @include('partials.pre-loader')
     @include('partials.navbar')
 
     <main>

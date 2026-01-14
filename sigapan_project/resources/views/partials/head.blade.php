@@ -19,6 +19,8 @@
 {{-- Leaflet --}}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
+@stack('styles')
+
 <style>
 #map-hero {
   width: 100%;
@@ -30,3 +32,4 @@
   #map-hero { height: 550px; }
 }
 </style>
+

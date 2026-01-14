@@ -1,105 +1,13 @@
+@extends('layouts.app')
+
 @section('title', 'aduan')
 
-<!doctype html>
-<html lang="en" class="preset-hrm" class="preset-ai" data-pc-direction="ltr" dir="ltr" data-pc-theme="light">
-  <!-- [Head] start -->
-  <head>
-    <title>Aduan</title>
-    <!-- [Meta] -->
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="description" content="Ready-to-use HRM landing page template to help you launch your project faster and smarter." />
-    <meta name="keywords" content="Tailwind Templates, Tailwind Theme, SaaS UI Kit, SaaS Template"/>
-    <meta name="author" content="Phoenixcoded" />
-
-    <!-- [Favicon] icon -->
-    <link rel="icon" href="../assets/images/favicon.ico" type="image/x-icon" />
-
-    <link rel="stylesheet" href="../assets/fonts/satoshi/Satoshi.css">
-    <link rel="stylesheet" href="../assets/fonts/uncut-sans/Uncut-Sans.css">
-    <!-- [Font] Family -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
-
-    <!-- [phosphor Icons] https://phosphoricons.com/ -->
-    <link rel="stylesheet" href="../assets/fonts/phosphor/duotone/style.css" />
-    <!-- [Tabler Icons] https://tablericons.com -->
-    <link rel="stylesheet" href="../assets/fonts/tabler-icons.min.css" />
-    <!-- [Font Awesome Icons] https://fontawesome.com/icons -->
-    <link rel="stylesheet" href="../assets/fonts/fontawesome.css" />
-    <!-- [Material Icons] https://fonts.google.com/icons -->
-    <link rel="stylesheet" href="../assets/fonts/material.css" />
-    <!-- [Template CSS Files] -->
-    <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
-
-  </head>
-  <!-- [Head] end -->
-
-  <body>
-    <!-- [ Nav ] start -->
-    <nav class="z-50 w-full relative bg-neutral-200">
-      <div class="container">
-        <div class="static flex py-4 items-center justify-between">
-          <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-between">
-            <div class="flex flex-1 flex-shrink-0 items-center justify-between text-primary-500">
-              <a href="#">
-                <!-- [ Logo main ] start -->
-                  <h3 class="">LOGO</h3>
-              </a>
-            </div>
-            <div class="nav-collapse grow hidden w-full lg:flex lg:w-full flex-auto justify-center"
-              id="main-navbar-collapse">
-              <div class="justify-center flex flex-col lg:flex-row p-0 lg:bg-neutral-200 lg:rounded-full">
-                <a class="inline-block text-neutral-900 hover:bg-primary-500/[.04] dark:text-themedark-bodycolor rounded-full px-[18px] lg:px-6 py-3 text-[14px] font-medium transition-all leading-[1.429] open:text-primary-500 open:font-semibold"
-                  href="../">
-                  Home
-                </a>
-                <a href="../map"
-                  class="inline-block text-neutral-900 hover:bg-primary-500/[.04] dark:text-themedark-bodycolor rounded-full px-[18px] lg:px-6 py-3 text-[14px] font-medium transition-all leading-[1.429] open:text-primary-500 open:font-semibold">
-                  Map
-                </a>
-                <a href="../aduan"
-                  class="inline-block text-neutral-900 hover:bg-primary-500/[.04] dark:text-themedark-bodycolor rounded-full px-[18px] lg:px-6 py-3 text-[14px] font-medium transition-all leading-[1.429] open:text-primary-500 open:font-semibold">
-                  Aduan
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center gap-3">
-            @if (Route::has('login'))
-                <a
-                    href="{{ route('login') }}"
-                    class="btn btn-primary px-4 py-2.5 shrink-0"
-                >
-                    Login
-                </a>
-            @endif
-          </div>
-
-        </div>
-      </div>
-    </nav>
-    <!-- [ Nav ] end -->
-
- {{-- isi konten dibawah ini --}}
-
-{{-- isi konten dibawah ini --}}
-
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
-
+@push('styles')
 <style>
   /* ====== Layout persis wireframe (tanpa Tailwind) ====== */
   .aduan-page { padding: 40px 0 60px; background:#fff; }
   .aduan-title { text-align:center; font-size:56px; font-weight:800; margin: 10px 0 26px; color:#111; }
-
+  
   .aduan-panel {
     max-width: 1050px;
     margin: 0 auto;
@@ -116,7 +24,7 @@
 
   .aduan-col-left { flex: 1; min-width: 420px; }
   .aduan-col-right { flex: 1; min-width: 420px; }
-
+  
   .field { margin-bottom: 22px; }
   .label { font-size:18px; font-weight:700; color:#111; margin-bottom: 10px; }
 
@@ -133,7 +41,7 @@
   }
   .input::placeholder, .textarea::placeholder { color:#666; }
   .textarea { height: 190px; resize:none; padding-top: 16px; }
-
+  
   .upload-row { display:flex; align-items:center; gap:18px; }
   .btn-file {
     background:#000;
@@ -177,7 +85,7 @@
     color:#4b5563;
     z-index: 999;
   }
-
+  
   .coord-row { display:flex; gap: 12px; margin-top: 12px; }
   .coord {
     flex:1;
@@ -214,36 +122,39 @@
     border:none;
     cursor:pointer;
   }
-
+  
   /* ====== Responsive: kalau layar kecil baru turun satu kolom ====== */
   @media (max-width: 980px) {
     .aduan-title { font-size:38px; }
     .aduan-row { flex-direction: column; }
     .aduan-col-left, .aduan-col-right { min-width: 0; }
   }
-
+  
   /* Leaflet default style fix supaya tile kebaca */
   .leaflet-container { background: transparent; }
 </style>
+@endpush
+
+@section('content')
 
 <div class="aduan-page">
   <div class="container">
     <div class="aduan-title">Buat Pengaduan</div>
-
+    
     <div class="aduan-panel">
-
+      
       @if (session('success'))
-        <div style="margin-bottom:14px; padding:12px 14px; border-radius:10px; background:#eaf7ee; border:1px solid #bfe5c9; color:#1f7a36;">
+      <div style="margin-bottom:14px; padding:12px 14px; border-radius:10px; background:#eaf7ee; border:1px solid #bfe5c9; color:#1f7a36;">
           {{ session('success') }}
         </div>
       @endif
-
+      
       @if ($errors->any())
-        <div style="margin-bottom:14px; padding:12px 14px; border-radius:10px; background:#fdecec; border:1px solid #f3b4b4; color:#a11;">
-          <div style="font-weight:800; margin-bottom:6px;">Ada input yang perlu diperbaiki.</div>
+      <div style="margin-bottom:14px; padding:12px 14px; border-radius:10px; background:#fdecec; border:1px solid #f3b4b4; color:#a11;">
+        <div style="font-weight:800; margin-bottom:6px;">Ada input yang perlu diperbaiki.</div>
           <ul style="margin:0; padding-left:18px;">
             @foreach ($errors->all() as $err)
-              <li>{{ $err }}</li>
+            <li>{{ $err }}</li>
             @endforeach
           </ul>
         </div>
@@ -303,6 +214,7 @@
   </div>
 </div>
 
+@push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
@@ -376,9 +288,5 @@
   // penting: kalau map muncul tapi tile blank (sering terjadi karena container hidden/resize)
   setTimeout(() => map.invalidateSize(), 200);
 </script>
-
-
-
-
-  </body>
-</html>
+@endpush
+@endsection

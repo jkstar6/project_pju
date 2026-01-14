@@ -198,6 +198,28 @@
           attribution: '© OpenStreetMap'
         }).addTo(map);
 
+        fetch('{{ asset("geojson/peta-bantul.geojson") }}')
+        .then(res => res.json())
+        .then(data => {
+          console.log('GeoJSON loaded');
+
+          const bantulLayer = L.geoJSON(data, {
+            coordsToLatLng: function (coords) {
+              return [coords[1], coords[0]]; // ⬅️ BUANG Z, BALIK LAT LNG
+            },
+            style: {
+              color: '#b91c1c',
+              weight: 4,
+              fillColor: '#ef4444',
+              fillOpacity: 0.3
+            }
+          }).addTo(map);
+
+          map.fitBounds(bantulLayer.getBounds());
+        })
+        .catch(err => console.error(err));
+
+
         // Data 50 Lampu untuk memadati visual Hero
         const lights = [
             { id: 1, lat: -7.89610, lng: 110.33843, status: "on" },

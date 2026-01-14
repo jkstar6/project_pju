@@ -22,7 +22,7 @@
     </div>
     <!-- [ Pre-loader ] End -->
     <!-- [ hero ] start -->
-    <section class="bg-neutral-100 relative overflow-hidden">
+    <section class="bg-neutral-200 relative overflow-hidden">
         <div class="common-section relative z-20">
           <div class="container animation-ref">
             <div class="pb-5 sm:pb-11 lg:pb-12">
@@ -72,7 +72,7 @@
     <!-- [ hero ] end -->
 
     <!-- [ Feature ] start -->
-    <section class="common-section">
+    <section class="bg-neutral-200 common-section">
       <div class="container">
         <div class="flex flex-col gap-6 sm:gap-8">
           <div class="animate-y delay-reset flex flex-col items-center text-center gap-2 sm:gap-3">

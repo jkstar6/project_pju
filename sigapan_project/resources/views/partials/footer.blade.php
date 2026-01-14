@@ -1,5 +1,5 @@
 <!-- [ Footer ] start -->
-    <section class="common-section">
+    <section class="bg-neutral-200 common-section">
       <div class="container">
         <div class="animate-y delay-reset bg-neutral-100 rounded-3xl sm:rounded-[32px] md:rounded-[40px]">
           <div class="p-5 sm:p-6 lg:p-8">

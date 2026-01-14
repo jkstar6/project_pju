@@ -42,7 +42,29 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
+    <style>
+      /* --- PERBAIKAN: WAJIB ADA TINGGI UNTUK MAP --- */
+      #map-hero {
+        width: 100%;
+        height: 400px; /* Tinggi default untuk mobile */
+        border: 5px solid #E6E8EE;
+        border-radius: 1rem;
+        z-index: 10;
+        background: #f8f9fa; /* Warna fallback saat peta dimuat */
+      }
 
+      /* Tinggi peta untuk layar desktop agar lebih proporsional */
+      @media (min-width: 1024px) {
+        #map-hero {
+          height: 550px;
+        }
+      }
+
+      /* Memastikan peta tidak rusak karena konflik CSS preloader */
+      .leaflet-container {
+        font-family: inherit;
+      }
+    </style>
   </head>
   <!-- [Head] end -->
   <!-- [Body] Start -->
@@ -157,12 +179,93 @@
           </div>
           <div class=" sticky top-0">
             <div class="img-hero-1">
-              <img src="../assets/images/graphics/hrm/desktop1-light.svg" alt="image" class="block dark:hidden w-full border-[5px] border-neutral-300 rounded-2xl">
-              <img src="../assets/images/graphics/hrm/desktop1-dark.svg" alt="image" class="hidden dark:block w-full border-[5px] border-neutral-300 rounded-2xl">
+              <div id="map-hero" class="shadow-2xl"></div>
             </div>
           </div>
         </div>
       </div>
+
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Inisialisasi peta fokus ke Bantul (Zoom 12 cocok untuk highlight area)
+        const map = L.map('map-hero', {
+            scrollWheelZoom: false // Agar tidak mengganggu scrolling halaman
+        }).setView([-7.89610, 110.33843], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Data 50 Lampu untuk memadati visual Hero
+        const lights = [
+            { id: 1, lat: -7.89610, lng: 110.33843, status: "on" },
+            { id: 2, lat: -7.89582, lng: 110.33801, status: "off" },
+            { id: 3, lat: -7.89645, lng: 110.33902, status: "fault" },
+            { id: 4, lat: -7.89701, lng: 110.33789, status: "on" },
+            { id: 5, lat: -7.89554, lng: 110.33745, status: "off" },
+            { id: 6, lat: -7.89672, lng: 110.33888, status: "on" },
+            { id: 7, lat: -7.89591, lng: 110.33931, status: "on" },
+            { id: 8, lat: -7.89633, lng: 110.33771, status: "fault" },
+            { id: 9, lat: -7.89724, lng: 110.33815, status: "off" },
+            { id: 10, lat: -7.89566, lng: 110.33954, status: "on" },
+            { id: 11, lat: -7.89681, lng: 110.33792, status: "on" },
+            { id: 12, lat: -7.89538, lng: 110.33866, status: "off" },
+            { id: 13, lat: -7.89659, lng: 110.33919, status: "fault" },
+            { id: 14, lat: -7.89712, lng: 110.33764, status: "on" },
+            { id: 15, lat: -7.89577, lng: 110.33894, status: "off" },
+            { id: 16, lat: -7.89604, lng: 110.33973, status: "on" },
+            { id: 17, lat: -7.89731, lng: 110.33841, status: "on" },
+            { id: 18, lat: -7.89548, lng: 110.33783, status: "fault" },
+            { id: 19, lat: -7.89668, lng: 110.33822, status: "off" },
+            { id: 20, lat: -7.89593, lng: 110.33907, status: "on" },
+            { id: 21, lat: -7.89621, lng: 110.33752, status: "on" },
+            { id: 22, lat: -7.89708, lng: 110.33876, status: "off" },
+            { id: 23, lat: -7.89562, lng: 110.33938, status: "fault" },
+            { id: 24, lat: -7.89694, lng: 110.33791, status: "on" },
+            { id: 25, lat: -7.89529, lng: 110.33853, status: "off" },
+            { id: 26, lat: -7.89647, lng: 110.33962, status: "on" },
+            { id: 27, lat: -7.89719, lng: 110.33805, status: "on" },
+            { id: 28, lat: -7.89583, lng: 110.33766, status: "fault" },
+            { id: 29, lat: -7.89656, lng: 110.33889, status: "off" },
+            { id: 30, lat: -7.89597, lng: 110.33921, status: "on" },
+            { id: 31, lat: -7.89612, lng: 110.33784, status: "on" },
+            { id: 32, lat: -7.89703, lng: 110.33847, status: "off" },
+            { id: 33, lat: -7.89571, lng: 110.33911, status: "fault" },
+            { id: 34, lat: -7.89685, lng: 110.33758, status: "on" },
+            { id: 35, lat: -7.89544, lng: 110.33892, status: "off" },
+            { id: 36, lat: -7.89663, lng: 110.33948, status: "on" },
+            { id: 37, lat: -7.89727, lng: 110.33819, status: "on" },
+            { id: 38, lat: -7.89588, lng: 110.33774, status: "fault" },
+            { id: 39, lat: -7.89654, lng: 110.33861, status: "off" },
+            { id: 40, lat: -7.89599, lng: 110.33932, status: "on" },
+            { id: 41, lat: -7.89618, lng: 110.33795, status: "on" },
+            { id: 42, lat: -7.89706, lng: 110.33888, status: "off" },
+            { id: 43, lat: -7.89569, lng: 110.33955, status: "fault" },
+            { id: 44, lat: -7.89692, lng: 110.33771, status: "on" },
+            { id: 45, lat: -7.89533, lng: 110.33834, status: "off" },
+            { id: 46, lat: -7.89651, lng: 110.33966, status: "on" },
+            { id: 47, lat: -7.89722, lng: 110.33827, status: "on" },
+            { id: 48, lat: -7.89586, lng: 110.33782, status: "fault" },
+            { id: 49, lat: -7.89661, lng: 110.33873, status: "off" },
+            { id: 50, lat: -7.89595, lng: 110.33944, status: "on" },
+        ];
+
+        // Render marker kecil (radius 4) untuk tampilan landing page
+        lights.forEach(light => {
+          const color = light.status === 'on' ? '#10b981' : (light.status === 'fault' ? '#ef4444' : '#9ca3af');
+          L.circleMarker([light.lat, light.lng], {
+            radius: 5,
+            fillColor: color,
+            color: "#fff",
+            weight: 1,
+            fillOpacity: 0.9
+          }).addTo(map);
+        });
+      });
+    </script>
+
     </section>
     <!-- [ hero ] end -->
 

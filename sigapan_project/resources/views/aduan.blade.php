@@ -7,7 +7,7 @@
   /* ====== Layout persis wireframe (tanpa Tailwind) ====== */
   .aduan-page { padding: 40px 0 60px; background:#fff; }
   .aduan-title { text-align:center; font-size:56px; font-weight:800; margin: 10px 0 26px; color:#111; }
-  
+
   .aduan-panel {
     max-width: 1050px;
     margin: 0 auto;
@@ -24,7 +24,7 @@
 
   .aduan-col-left { flex: 1; min-width: 420px; }
   .aduan-col-right { flex: 1; min-width: 420px; }
-  
+
   .field { margin-bottom: 22px; }
   .label { font-size:18px; font-weight:700; color:#111; margin-bottom: 10px; }
 
@@ -41,7 +41,29 @@
   }
   .input::placeholder, .textarea::placeholder { color:#666; }
   .textarea { height: 190px; resize:none; padding-top: 16px; }
-  
+
+  /* ✅ Tambahan kecil: select biar sama feel-nya */
+  select.input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, #111 50%),
+      linear-gradient(135deg, #111 50%, transparent 50%),
+      linear-gradient(to right, transparent, transparent);
+    background-position:
+      calc(100% - 22px) calc(50% - 2px),
+      calc(100% - 16px) calc(50% - 2px),
+      100% 0;
+    background-size:
+      6px 6px,
+      6px 6px,
+      2.5em 2.5em;
+    background-repeat: no-repeat;
+    padding-right: 48px;
+    cursor: pointer;
+  }
+
   .upload-row { display:flex; align-items:center; gap:18px; }
   .btn-file {
     background:#000;
@@ -85,7 +107,7 @@
     color:#4b5563;
     z-index: 999;
   }
-  
+
   .coord-row { display:flex; gap: 12px; margin-top: 12px; }
   .coord {
     flex:1;
@@ -122,14 +144,14 @@
     border:none;
     cursor:pointer;
   }
-  
+
   /* ====== Responsive: kalau layar kecil baru turun satu kolom ====== */
   @media (max-width: 980px) {
     .aduan-title { font-size:38px; }
     .aduan-row { flex-direction: column; }
     .aduan-col-left, .aduan-col-right { min-width: 0; }
   }
-  
+
   /* Leaflet default style fix supaya tile kebaca */
   .leaflet-container { background: transparent; }
 </style>
@@ -140,21 +162,21 @@
 <div class="aduan-page">
   <div class="container">
     <div class="aduan-title">Buat Pengaduan</div>
-    
+
     <div class="aduan-panel">
-      
+
       @if (session('success'))
-      <div style="margin-bottom:14px; padding:12px 14px; border-radius:10px; background:#eaf7ee; border:1px solid #bfe5c9; color:#1f7a36;">
+        <div style="margin-bottom:14px; padding:12px 14px; border-radius:10px; background:#eaf7ee; border:1px solid #bfe5c9; color:#1f7a36;">
           {{ session('success') }}
         </div>
       @endif
-      
+
       @if ($errors->any())
-      <div style="margin-bottom:14px; padding:12px 14px; border-radius:10px; background:#fdecec; border:1px solid #f3b4b4; color:#a11;">
-        <div style="font-weight:800; margin-bottom:6px;">Ada input yang perlu diperbaiki.</div>
+        <div style="margin-bottom:14px; padding:12px 14px; border-radius:10px; background:#fdecec; border:1px solid #f3b4b4; color:#a11;">
+          <div style="font-weight:800; margin-bottom:6px;">Ada input yang perlu diperbaiki.</div>
           <ul style="margin:0; padding-left:18px;">
             @foreach ($errors->all() as $err)
-            <li>{{ $err }}</li>
+              <li>{{ $err }}</li>
             @endforeach
           </ul>
         </div>
@@ -166,6 +188,35 @@
         <div class="aduan-row">
           <!-- LEFT -->
           <div class="aduan-col-left">
+
+            {{-- ✅ TAMBAHAN 1: Nama Pelapor --}}
+            <div class="field">
+              <div class="label">Nama Pelapor</div>
+              <input class="input" type="text" name="nama_pelapor" value="{{ old('nama_pelapor') }}"
+                     placeholder="Contoh: Budi Santoso">
+              @error('nama_pelapor') <div style="color:#c00; margin-top:6px;">{{ $message }}</div> @enderror
+            </div>
+
+            {{-- ✅ TAMBAHAN 2: Nomor HP Pelapor --}}
+            <div class="field">
+              <div class="label">Nomor HP Pelapor</div>
+              <input class="input" type="text" name="no_hp" value="{{ old('no_hp') }}"
+                     placeholder="Contoh: 08xxxxxxxxxx" inputmode="numeric">
+              @error('no_hp') <div style="color:#c00; margin-top:6px;">{{ $message }}</div> @enderror
+            </div>
+
+            {{-- ✅ TAMBAHAN 3: Dropdown tipe aduan --}}
+            <div class="field">
+              <div class="label">Tipe Aduan</div>
+              <select class="input" name="tipe_aduan">
+                <option value="" {{ old('tipe_aduan') == '' ? 'selected' : '' }}>-- Pilih Tipe Aduan --</option>
+                <option value="lampu_mati" {{ old('tipe_aduan') == 'lampu_mati' ? 'selected' : '' }}>Lampu Mati</option>
+                <option value="permohonan_pju_baru" {{ old('tipe_aduan') == 'permohonan_pju_baru' ? 'selected' : '' }}>Permohonan PJU Baru</option>
+              </select>
+              @error('tipe_aduan') <div style="color:#c00; margin-top:6px;">{{ $message }}</div> @enderror
+            </div>
+
+            {{-- ✅ YANG LAMA TETAP --}}
             <div class="field">
               <div class="label">Judul / Topik Pengaduan</div>
               <input class="input" type="text" name="judul" value="{{ old('judul') }}" placeholder="Contoh: Lampu Jalan Rusak">
@@ -245,7 +296,6 @@
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
 
-  // marker merah (pakai divIcon biar mirip wireframe)
   const redPin = L.divIcon({
     className: '',
     html: `<div style="font-size:28px; transform: translate(-50%, -100%);">📍</div>`,
@@ -285,7 +335,6 @@
     reverseGeocode(p.lat, p.lng);
   });
 
-  // penting: kalau map muncul tapi tile blank (sering terjadi karena container hidden/resize)
   setTimeout(() => map.invalidateSize(), 200);
 </script>
 @endpush

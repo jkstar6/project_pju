@@ -38,21 +38,21 @@
                 <div class="animate-y">
                   <button class="btn btn-primary btn-md capitalize">
                     <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
-                      <a href="/map">
+                      <a href="./map">
                         Lihat Peta
                       </a>
                     </span>
                   </button>
                   <button class="btn btn-primary btn-md capitalize">
                     <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
-                      <a href="/aduan">
+                      <a href="./aduan">
                         Kirim Aduan
                       </a>
                     </span>
                   </button>
                   <button class="btn btn-primary btn-md capitalize">
                     <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
-                      <a href="/daftar-aduan">
+                      <a href="./daftar-aduan">
                         Daftar Aduan
                       </a>
                     </span>
@@ -81,7 +81,7 @@
               Aplikasi WebGIS yang dirancang untuk membantu pemerintah dan masyarakat dalam memantau kondisi Penerangan Jalan Umum secara menyeluruh. Informasi disajikan secara visual, terpusat, dan mudah diakses.
             </h6>
           </div>
-          <div class="flex flex-col-reverse sm:flex-row gap-3 items-stretch">
+          <!-- <div class="flex flex-col-reverse sm:flex-row gap-3 items-stretch">
             <div class="basis-full sm:basis-1/2">
               <div class="animate-y rounded-3xl sm:rounded-[32px] md:rounded-[40px] bg-neutral-100 overflow-hidden flex flex-col h-full">
                 <div class="p-6 sm:p-8 md:p-10 flex flex-col items-start gap-6 sm:gap-8 md:gap-10 h-full justify-between">
@@ -100,7 +100,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </section>

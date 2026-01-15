@@ -38,6 +38,17 @@
             z-index: 9998;
             display: none;
         }
+        /* Darken ONLY map tiles */
+            #map .leaflet-tile-pane {
+            filter: brightness(0.85) contrast(1.1) saturate(0.9);
+            }
+
+            /* Keep markers & UI crisp */
+            #map .leaflet-overlay-pane,
+            #map .leaflet-marker-pane,
+            #map .leaflet-popup-pane {
+            filter: none;
+            }
 
         .gps-button {
             position: absolute;
@@ -211,7 +222,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #ef4444;"></div>
-                        <span>Pindah / Mati</span>
+                        <span>Pindah</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #3b82f6;"></div>
@@ -221,9 +232,13 @@
                         <div class="legend-color" style="background: #facc15;"></div>
                         <span>Usulan</span>
                     </div>
-                       <div class="legend-item">
+                    <div class="legend-item">
                         <div class="legend-color" style="background: #111827;"></div>
                         <span>Mati</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f59e0b;"></div>
+                        <span>Panel KWH</span>
                     </div>
                 </div>
 
@@ -814,7 +829,7 @@ function openDetail(light) {
             ${light.kecamatan}, ${light. desa}
         </div>
 
-        <a href="https://www.google.com/maps? q=${light.latitude},${light.longitude}"
+        <a href="https://www.google.com/maps/search/?api=1&query=${light.latitude},${light.longitude}"
            target="_blank"
            class="map-link">
             Buka di Google Maps
@@ -846,7 +861,7 @@ function openDetail(light) {
             </div>
         </div>
 
-        <a href="https://www.google.com/maps?q=${panel. latitude},${panel.longitude}"
+        <a href="https://www.google.com/maps/search/?api=1&query=${panel. latitude},${panel.longitude}"
            target="_blank"
            class="map-link" style="background: #f59e0b;">
             Lihat Panel di Maps
@@ -975,9 +990,10 @@ document.addEventListener('click', (e) => {
                             [[panel.latitude, panel.longitude], [light.latitude, light.longitude]],
                             {
                                 color: getFasaColor(connection.fasa),
-                                weight: 2,
-                                opacity: 0.6,
-                                dashArray: '5, 10'
+                                weight: 3,
+                                opacity: 0.9,
+                
+                               
                             }
                         ).addTo(map);
 
@@ -1003,8 +1019,8 @@ document.addEventListener('click', (e) => {
             panelKWH.forEach(panel => {
                 const panelIcon = L.divIcon({
                     className: 'custom-panel-icon',
-                    html: `<div style="background: #eeeeee; color: white; width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">⚡</div>`,
-                    iconSize: [32, 32]
+                    html: `<div style=" background: #f59e0b; color: black; width: 32px; height: 32px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">KWH</div>`,
+                    iconSize: [16, 16]
                 });
 
                 L.marker([panel.latitude, panel.longitude], { icon: panelIcon })
@@ -1030,8 +1046,8 @@ document.addEventListener('click', (e) => {
                         fillColor: color,
                         color: color,
                         weight: 0,
-                        opacity: 0.3,
-                        fillOpacity: 0.2,
+                        opacity: 0.75,
+                        fillOpacity: 0.5,
                         interactive: false
                     }).addTo(map);
                 }

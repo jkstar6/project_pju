@@ -57,7 +57,8 @@ Route::post('/aduan', [AduanController::class, 'store'])->name('aduan.store');
 Route::get('/daftar-aduan', function () {
     return view('daftar-aduan');
 });
-Route::get('/detail-aduan', function () {
+Route::get('/detail-aduan/{id}', function ($id) {
+    // Memanggil file resources/views/detail-aduan.blade.php
     return view('detail-aduan');
 });
 

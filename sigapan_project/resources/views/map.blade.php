@@ -159,6 +159,35 @@
         .map-link:hover {
             background: #0f9488;
         }
+        . detail-tab {
+    padding: 8px 16px;
+    border:  none;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    color: #6b7280;
+}
+
+. detail-tab. active {
+    border-bottom-color: #14b8a6;
+    color: #14b8a6;
+}
+
+.detail-tab:hover {
+    color: #14b8a6;
+}
+
+.detail-tab-content {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
     </style>
 @endpush
 
@@ -167,7 +196,7 @@
         <div class="container mx-auto px-4 mb-4 search-container">
             <div class="max-w-2xl mx-auto flex shadow-sm bg-white rounded-lg overflow-hidden border">
                 <input id="addressSearch" type="text" placeholder="Masukkan nama jalan atau tempat..." class="flex-1 px-4 py-3 outline-none text-sm">
-                <button id="searchBtn" class="px-6 bg-teal-600 text-white font-semibold hover:bg-teal-700 transition cursor-pointer">Search</button>
+                <button id="searchBtn" class="px-6 bg-teal-600 font-semibold hover:bg-teal-700 transition cursor-pointer">Search</button>
             </div>
             <div id="searchLoading" class="text-center text-xs text-teal-600 mt-2 hidden italic">Mencari lokasi...</div>
         </div>
@@ -192,6 +221,10 @@
                         <div class="legend-color" style="background: #facc15;"></div>
                         <span>Usulan</span>
                     </div>
+                       <div class="legend-item">
+                        <div class="legend-color" style="background: #111827;"></div>
+                        <span>Mati</span>
+                    </div>
                 </div>
 
                 <div id="map" class="border shadow-md"></div>
@@ -210,13 +243,30 @@
 
     <div id="panelOverlay"></div>
     <div id="lampPanel">
-        <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-            <h3 class="font-bold text-gray-800 text-base">Street Light Detail</h3>
-            <button id="closePanel" class="text-3xl leading-none">&times;</button>
-        </div>
-        <div id="lampContent" class="p-6 space-y-5">
-            <p class="text-gray-400 text-sm">Klik marker lampu untuk melihat informasi.</p>
-        </div>
+       <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+    <div class="flex gap-0">
+        <button class="detail-tab active" data-tab="pju" style="padding: 8px 16px; border-bottom: 3px solid #14b8a6; cursor: pointer;">PJU</button>
+        <button class="detail-tab" data-tab="kwh" style="padding: 8px 16px; border-bottom: 3px solid transparent; cursor: pointer;">KWH Panel</button>
+        <button class="detail-tab" data-tab="cables" style="padding: 8px 16px; border-bottom: 3px solid transparent; cursor: pointer;">Cables</button>
+    </div>
+    <button id="closePanel" class="text-3xl leading-none">&times;</button>
+</div>
+       <div id="lampContent" class="p-6">
+    <!-- PJU Tab Content -->
+    <div id="tab-pju" class="detail-tab-content space-y-5">
+        <!-- Will be populated by JavaScript -->
+    </div>
+    
+    <!-- KWH Tab Content -->
+    <div id="tab-kwh" class="detail-tab-content space-y-5" style="display: none;">
+        <!-- Will be populated by JavaScript -->
+    </div>
+    
+    <!-- Cables Tab Content -->
+    <div id="tab-cables" class="detail-tab-content space-y-5" style="display: none;">
+        <!-- Will be populated by JavaScript -->
+    </div>
+</div>
     </div>
 @endsection
 
@@ -472,24 +522,185 @@
         ];
 
         // Data Koneksi (Cable connections)
-        const koneksiPJUKWH = [
-            { id: 1, aset_pju_id: 1, panel_kwh_id: 1, nomor_mcb_panel: "MCB-1", fasa: "R", status_koneksi: "Aktif" },
-            { id: 2, aset_pju_id: 2, panel_kwh_id: 1, nomor_mcb_panel: "MCB-2", fasa: "S", status_koneksi: "Aktif" },
-            { id: 3, aset_pju_id: 3, panel_kwh_id: 2, nomor_mcb_panel: "MCB-1", fasa: "T", status_koneksi: "Aktif" },
-            { id: 4, aset_pju_id: 4, panel_kwh_id: 2, nomor_mcb_panel: "MCB-2", fasa: "R", status_koneksi: "Aktif" },
-            { id: 5, aset_pju_id: 5, panel_kwh_id: 3, nomor_mcb_panel: "MCB-1", fasa: "S", status_koneksi: "Aktif" },
-            { id: 6, aset_pju_id: 6, panel_kwh_id: 3, nomor_mcb_panel: "MCB-2", fasa: "T", status_koneksi: "Aktif" },
-            { id: 7, aset_pju_id: 7, panel_kwh_id: 4, nomor_mcb_panel: "MCB-1", fasa: "R", status_koneksi: "Aktif" },
-            { id: 8, aset_pju_id: 8, panel_kwh_id: 4, nomor_mcb_panel: "MCB-2", fasa: "S", status_koneksi: "Aktif" },
-            { id: 9, aset_pju_id: 9, panel_kwh_id: 1, nomor_mcb_panel: "MCB-3", fasa: "T", status_koneksi: "Aktif" },
-            { id: 10, aset_pju_id: 10, panel_kwh_id: 2, nomor_mcb_panel: "MCB-3", fasa: "R", status_koneksi: "Aktif" },
-            { id: 11, aset_pju_id: 11, panel_kwh_id: 3, nomor_mcb_panel: "MCB-3", fasa: "S", status_koneksi: "Aktif" },
-            { id: 12, aset_pju_id: 12, panel_kwh_id: 3, nomor_mcb_panel: "MCB-4", fasa: "T", status_koneksi: "Aktif" },
-            { id: 13, aset_pju_id: 13, panel_kwh_id: 4, nomor_mcb_panel: "MCB-3", fasa: "R", status_koneksi: "Aktif" },
-            { id: 14, aset_pju_id: 14, panel_kwh_id: 4, nomor_mcb_panel: "MCB-4", fasa: "S", status_koneksi: "Aktif" },
-            { id: 15, aset_pju_id: 15, panel_kwh_id: 2, nomor_mcb_panel: "MCB-4", fasa: "T", status_koneksi: "Aktif" },
-            { id: 16, aset_pju_id: 16, panel_kwh_id: 1, nomor_mcb_panel: "MCB-4", fasa: "R", status_koneksi: "Aktif" }
-        ];
+    const koneksiPJUKWH = [
+    {
+        id: 1,
+        aset_pju_id: 1,
+        panel_kwh_id: 1,
+        nomor_mcb_panel: "MCB-1",
+        fasa: "R",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-15",
+        panjang_kabel_est: 45.5,
+        keterangan_jalur: "Via Jl. Utama"
+    },
+    {
+        id: 2,
+        aset_pju_id: 2,
+        panel_kwh_id: 1,
+        nomor_mcb_panel: "MCB-2",
+        fasa: "S",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-16",
+        panjang_kabel_est: 48.2,
+        keterangan_jalur: "Via Jl. Utama"
+    },
+    {
+        id: 3,
+        aset_pju_id: 3,
+        panel_kwh_id: 2,
+        nomor_mcb_panel: "MCB-1",
+        fasa: "T",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-17",
+        panjang_kabel_est: 50.0,
+        keterangan_jalur: "Via Jl. Sekunder"
+    },
+    {
+        id: 4,
+        aset_pju_id: 4,
+        panel_kwh_id: 2,
+        nomor_mcb_panel: "MCB-2",
+        fasa: "R",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-18",
+        panjang_kabel_est: 42.7,
+        keterangan_jalur: "Via Jl. Sekunder"
+    },
+    {
+        id: 5,
+        aset_pju_id: 5,
+        panel_kwh_id: 3,
+        nomor_mcb_panel: "MCB-1",
+        fasa: "S",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-19",
+        panjang_kabel_est: 55.3,
+        keterangan_jalur: "Via Jl. Lingkungan"
+    },
+    {
+        id: 6,
+        aset_pju_id: 6,
+        panel_kwh_id: 3,
+        nomor_mcb_panel: "MCB-2",
+        fasa: "T",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-20",
+        panjang_kabel_est: 47.8,
+        keterangan_jalur: "Via Jl. Lingkungan"
+    },
+    {
+        id: 7,
+        aset_pju_id: 7,
+        panel_kwh_id: 4,
+        nomor_mcb_panel: "MCB-1",
+        fasa: "R",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-21",
+        panjang_kabel_est: 60.1,
+        keterangan_jalur: "Via Jl. Protokol"
+    },
+    {
+        id: 8,
+        aset_pju_id: 8,
+        panel_kwh_id: 4,
+        nomor_mcb_panel: "MCB-2",
+        fasa: "S",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-22",
+        panjang_kabel_est: 58.6,
+        keterangan_jalur: "Via Jl. Protokol"
+    },
+    {
+        id: 9,
+        aset_pju_id: 9,
+        panel_kwh_id: 1,
+        nomor_mcb_panel: "MCB-3",
+        fasa: "T",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-23",
+        panjang_kabel_est: 49.9,
+        keterangan_jalur: "Via Jl. Utama"
+    },
+    {
+        id: 10,
+        aset_pju_id: 10,
+        panel_kwh_id: 2,
+        nomor_mcb_panel: "MCB-3",
+        fasa: "R",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-24",
+        panjang_kabel_est: 52.4,
+        keterangan_jalur: "Via Jl. Sekunder"
+    },
+    {
+        id: 11,
+        aset_pju_id: 11,
+        panel_kwh_id: 3,
+        nomor_mcb_panel: "MCB-3",
+        fasa: "S",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-25",
+        panjang_kabel_est: 46.0,
+        keterangan_jalur: "Via Jl. Lingkungan"
+    },
+    {
+        id: 12,
+        aset_pju_id: 12,
+        panel_kwh_id: 3,
+        nomor_mcb_panel: "MCB-4",
+        fasa: "T",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-26",
+        panjang_kabel_est: 53.7,
+        keterangan_jalur: "Via Jl. Lingkungan"
+    },
+    {
+        id: 13,
+        aset_pju_id: 13,
+        panel_kwh_id: 4,
+        nomor_mcb_panel: "MCB-3",
+        fasa: "R",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-27",
+        panjang_kabel_est: 59.2,
+        keterangan_jalur: "Via Jl. Protokol"
+    },
+    {
+        id: 14,
+        aset_pju_id: 14,
+        panel_kwh_id: 4,
+        nomor_mcb_panel: "MCB-4",
+        fasa: "S",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-28",
+        panjang_kabel_est: 61.8,
+        keterangan_jalur: "Via Jl. Protokol"
+    },
+    {
+        id: 15,
+        aset_pju_id: 15,
+        panel_kwh_id: 2,
+        nomor_mcb_panel: "MCB-4",
+        fasa: "T",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-29",
+        panjang_kabel_est: 54.6,
+        keterangan_jalur: "Via Jl. Sekunder"
+    },
+    {
+        id: 16,
+        aset_pju_id: 16,
+        panel_kwh_id: 1,
+        nomor_mcb_panel: "MCB-4",
+        fasa: "R",
+        status_koneksi: "Aktif",
+        tgl_koneksi: "2024-01-30",
+        panjang_kabel_est: 47.3,
+        keterangan_jalur: "Via Jl. Utama"
+    }
+];
+
 
         document.addEventListener('DOMContentLoaded', () => {
             const map = L.map('map').setView([-7.89610, 110.33843], 15);
@@ -567,84 +778,169 @@
             searchInput.onkeypress = (e) => { if (e.key === 'Enter') handleSearch(); };
 
             // Open detail panel
-            function openDetail(light) {
-                const connection = koneksiPJUKWH.find(k => k.aset_pju_id === light.id);
-                const panel = connection ? panelKWH.find(p => p.id === connection.panel_kwh_id) : null;
+           // Replace the entire openDetail function (lines 359-405) with:
 
-                lampContent.innerHTML = `
-                    <div class="badge">${light.kode_tiang}</div>
+function openDetail(light) {
+    const connection = koneksiPJUKWH. find(k => k.aset_pju_id === light.id);
+    const panel = connection ?  panelKWH.find(p => p.id === connection.panel_kwh_id) : null;
 
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Status</span>
-                            <span>${light.status_aset}</span>
-                        </div>
-                    </div>
+    // TAB 1: PJU CONTENT
+    const pjuContent = `
+        <div class="badge">${light.kode_tiang}</div>
 
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Jenis Lampu</span>
-                            <span>${light.jenis_lampu}</span>
-                        </div>
-                    </div>
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">Status</span>
+                <span>${light.status_aset}</span>
+            </div>
+        </div>
 
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Daya</span>
-                            <span>${light.watt} Watt</span>
-                        </div>
-                    </div>
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">Jenis Lampu</span>
+                <span>${light.jenis_lampu}</span>
+            </div>
+        </div>
 
-                    ${connection ? `
-                        <div class="info-card">
-                            <div class="info-row">
-                                <span class="info-label">MCB Panel</span>
-                                <span>${connection.nomor_mcb_panel}</span>
-                            </div>
-                        </div>
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">Daya</span>
+                <span>${light.watt} Watt</span>
+            </div>
+        </div>
 
-                        <div class="info-card">
-                            <div class="info-row">
-                                <span class="info-label">Fasa</span>
-                                <span style="color: ${getFasaColor(connection.fasa)}; font-weight: 700;">${connection.fasa}</span>
-                            </div>
-                        </div>
+        <div style="font-size: 12px; padding:  12px; border:  1px solid #e5e7eb; border-radius: 8px;">
+            <strong>Wilayah</strong><br>
+            ${light.kecamatan}, ${light. desa}
+        </div>
 
-                        <div class="info-card">
-                            <div class="info-row">
-                                <span class="info-label">Status Koneksi</span>
-                                <span>${connection.status_koneksi}</span>
-                            </div>
-                        </div>
-                    ` : ''}
+        <a href="https://www.google.com/maps? q=${light.latitude},${light.longitude}"
+           target="_blank"
+           class="map-link">
+            Buka di Google Maps
+        </a>
+    `;
 
-                    ${panel ? `
-                        <div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                            <div style="font-weight: 700; margin-bottom: 8px; font-size: 13px;">📍 Panel KWH</div>
-                            <div style="font-size: 12px; color: #92400e;">
-                                <div><strong>No. PLN:</strong> ${panel.no_pelanggan_pln}</div>
-                                <div><strong>Lokasi:</strong> ${panel.lokasi_panel}</div>
-                                <div><strong>Daya:</strong> ${panel.daya_va} VA</div>
-                            </div>
-                        </div>
-                    ` : ''}
+    // TAB 2: KWH PANEL CONTENT
+    const kwhContent = panel ? `
+        <div class="badge" style="background:  #fef3c7; color: #92400e;">${panel.no_pelanggan_pln}</div>
 
-                    <div style="font-size: 12px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-top: 16px;">
-                        <strong>Wilayah</strong><br>
-                        ${light.kecamatan}, ${light.desa}
-                    </div>
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">Lokasi Panel</span>
+                <span>${panel.lokasi_panel}</span>
+            </div>
+        </div>
 
-                    <a href="https://www.google.com/maps?q=${light.latitude},${light.longitude}"
-                       target="_blank"
-                       class="map-link">
-                        Buka di Google Maps
-                    </a>
-                `;
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">Daya VA</span>
+                <span>${panel. daya_va} VA</span>
+            </div>
+        </div>
 
-                lampPanel.classList.add('active');
-                overlay.style.display = 'block';
-            }
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">Koordinat</span>
+                <span style="font-size: 11px;">${panel.latitude. toFixed(5)}, ${panel.longitude.toFixed(5)}</span>
+            </div>
+        </div>
 
+        <a href="https://www.google.com/maps?q=${panel. latitude},${panel.longitude}"
+           target="_blank"
+           class="map-link" style="background: #f59e0b;">
+            Lihat Panel di Maps
+        </a>
+    ` : `<p class="text-gray-400 text-sm">Tidak ada panel KWH yang terhubung.</p>`;
+
+    // TAB 3: CABLE CONNECTION CONTENT
+    const cableContent = connection ? `
+        <div class="info-card" style="background: #dbeafe;">
+            <div class="info-row">
+                <span class="info-label">Status Koneksi</span>
+                <span style="color: #0369a1; font-weight: 700;">${connection.status_koneksi}</span>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">Nomor MCB Panel</span>
+                <span style="font-family: monospace; font-weight: 600;">${connection.nomor_mcb_panel}</span>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">Fasa</span>
+                <span style="color: ${getFasaColor(connection.fasa)}; font-weight: 700; font-size: 18px;">${connection.fasa}</span>
+            </div>
+        </div>
+
+        ${connection.tgl_koneksi ? `
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Tanggal Koneksi</span>
+                    <span>${new Date(connection.tgl_koneksi).toLocaleDateString('id-ID')}</span>
+                </div>
+            </div>
+        ` : ''}
+
+        ${connection.panjang_kabel_est ? `
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Panjang Kabel</span>
+                    <span>${connection. panjang_kabel_est} meter</span>
+                </div>
+            </div>
+        ` : ''}
+
+        ${connection.keterangan_jalur ? `
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Keterangan Jalur</span>
+                </div>
+                <div style="font-size: 12px; margin-top: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #14b8a6;">
+                    ${connection.keterangan_jalur}
+                </div>
+            </div>
+        ` : ''}
+    ` : `<p class="text-gray-400 text-sm">Tidak ada koneksi kabel terdaftar.</p>`;
+
+    // Set content for all tabs
+    document.getElementById('tab-pju').innerHTML = pjuContent;
+    document.getElementById('tab-kwh').innerHTML = kwhContent;
+    document. getElementById('tab-cables').innerHTML = cableContent;
+
+    // Show panel
+    lampPanel.classList.add('active');
+    overlay.style.display = 'block';
+
+    // Reset to PJU tab
+    document.querySelectorAll('.detail-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelector('[data-tab="pju"]').classList.add('active');
+    document.querySelectorAll('.detail-tab-content').forEach(content => content. style.display = 'none');
+    document.getElementById('tab-pju').style.display = 'block';
+}
+// Tab switching functionality
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('detail-tab')) {
+        const tabName = e.target.dataset.tab;
+        
+        // Hide all tabs
+        document.querySelectorAll('.detail-tab-content').forEach(content => {
+            content.style.display = 'none';
+        });
+        
+        // Remove active class from all tabs
+        document.querySelectorAll('.detail-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(`tab-${tabName}`).style.display = 'block';
+        e.target.classList.add('active');
+    }
+});
             // Close panel
             document.getElementById('closePanel').onclick = () => {
                 lampPanel.classList.remove('active');

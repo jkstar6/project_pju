@@ -57,6 +57,9 @@ Route::post('/aduan', [AduanController::class, 'store'])->name('aduan.store');
 Route::get('/daftar-aduan', function () {
     return view('daftar-aduan');
 });
+Route::get('/detail-aduan', function () {
+    return view('detail-aduan');
+});
 
 /*
 |--------------------------------------------------------------------------

@@ -18,7 +18,7 @@
                 </button>
             </form>
             <div class="connected-apps-menu relative ltr:ml-[13px] ltr:md:ml-[18px] ltr:lg:ml-[25px] rtl:ml-[r3px] rtl:md:mr-[18px] rtl:lg:mr-[25px]">
-                <button type="button" class="transition-all relative top-[2px] hover:text-primary-500" id="dropdownToggleBtn">
+                <!-- <button type="button" class="transition-all relative top-[2px] hover:text-primary-500" id="dropdownToggleBtn">
                     <i class="material-symbols-outlined !text-[22px] md:!text-[24px]">
                         apps
                     </i>
@@ -106,7 +106,7 @@
                             </a>
                         </li>
                     </ul>
-                </div>
+                </div> -->
             </div>
         </div>
         <ul class="flex items-center justify-center md:justify-normal mt-[13px] md:mt-0">

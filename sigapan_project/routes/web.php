@@ -75,7 +75,46 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        // Add this to routes/web.php inside the Route::middleware(['auth', 'verified'])->group(function () {...});
 
+// ===================================================================
+// PJU MANAGEMENT ROUTES
+// ===================================================================
+
+// Tim Lapangan Management
+Route::prefix('admin/tim-lapangan')->name('admin.tim-lapangan.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\TimLapanganController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\Admin\TimLapanganController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [App\Http\Controllers\Admin\TimLapanganController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [App\Http\Controllers\Admin\TimLapanganController::class, 'update'])->name('update');
+    Route::delete('/{id}', [App\Http\Controllers\Admin\TimLapanganController::class, 'destroy'])->name('destroy');
+});
+
+// Log Survey Management
+Route::prefix('admin/log-survey')->name('admin.log-survey.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\LogSurveyController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\Admin\LogSurveyController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [App\Http\Controllers\Admin\LogSurveyController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [App\Http\Controllers\Admin\LogSurveyController::class, 'update'])->name('update');
+    Route::delete('/{id}', [App\Http\Controllers\Admin\LogSurveyController::class, 'destroy'])->name('destroy');
+});
+
+// Tiket Perbaikan Management
+Route::prefix('admin/tiket-perbaikan')->name('admin.tiket-perbaikan.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'store'])->name('store');
+    Route::get('/{id}', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'show'])->name('show');
+    Route::put('/{id}', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'update'])->name('update');
+    Route::put('/{id}/status', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'updateStatus'])->name('updateStatus');
+});
+
+// Progres Pengerjaan Management
+Route::prefix('admin/progres-pengerjaan')->name('admin.progres-pengerjaan.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'store'])->name('store');
+    Route::get('/{asetPjuId}', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'show'])->name('show');
+    Route::put('/{id}', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'update'])->name('update');
+});
     /* ---- Settings */
     Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
         /* Users */

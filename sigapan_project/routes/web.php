@@ -61,6 +61,10 @@ Route::get('/detail-aduan/{id}', function ($id) {
     // Memanggil file resources/views/detail-aduan.blade.php
     return view('detail-aduan');
 });
+Route::get('/halaman-aduan', function () {
+    // Memanggil file: resources/views/aduan-admin/index.blade.php
+    return view('aduan-admin.index');
+});
 
 /*
 |--------------------------------------------------------------------------

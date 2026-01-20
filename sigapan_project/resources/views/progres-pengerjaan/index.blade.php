@@ -37,7 +37,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @can('progres-pengerjaan.read')
+                        {{-- @can('progres-pengerjaan.read') --}}
                             @php
                                 $groupedProgres = collect($progresPengerjaan)->groupBy('aset_pju_id');
                             @endphp
@@ -72,18 +72,18 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="flex items-center gap-[9px] justify-center">
-                                            @can(abilities: 'progres-pengerjaan.read')
-                                                <a href="{{ route('admin.progres-pengerjaan.show', $latestProgres['aset_pju_id']) }}" class="text-primary-500 leading-none custom-tooltip" id="customTooltip" data-text="Lihat Histori">
+                                            {{-- @can(abilities: 'progres-pengerjaan.read') --}}
+                                                <a href="{{ route('progres-pengerjaan.show', $latestProgres['aset_pju_id']) }}" class="text-primary-500 leading-none custom-tooltip" id="customTooltip" data-text="Lihat Histori">
                                                     <i class="material-symbols-outlined !text-md">
                                                         history
                                                     </i>
                                                 </a>
-                                            @endcan
+                                            {{-- @endcan --}}
                                         </div>
                                     </td>
                                 </tr>
                             @endforeach
-                        @endcan
+                        {{-- @endcan --}}
                     </tbody>
                 </table>
             </div>

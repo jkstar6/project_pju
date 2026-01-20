@@ -22,7 +22,7 @@
                 </div>
                 <h2 class="text-4xl font-bold text-gray-800 mt-2">6</h2>
             </div>
-            <p class="text-gray-400 text-xs mt-4">Semua aduan terdaftar</p>
+            <p class="text-gray-400 text-xs mt-4">Semua aduan masuk</p>
         </a>
 
         <a href="/tiket-perbaikan" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
@@ -38,7 +38,7 @@
                 </div>
                 <h2 class="text-4xl font-bold text-gray-800 mt-2">9</h2>
             </div>
-            <p class="text-gray-400 text-xs mt-4">Perbaikan berjalan normal</p>
+            <p class="text-gray-400 text-xs mt-4">Daftar perbaikan berjalan</p>
         </a>
 
         <a href="/log-survey" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
@@ -53,7 +53,7 @@
                 </div>
                 <h2 class="text-4xl font-bold text-gray-800 mt-2">6</h2>
             </div>
-            <p class="text-gray-400 text-xs mt-4">Survey tidak aktif</p>
+            <p class="text-gray-400 text-xs mt-4">Daftar survey harian</p>
         </a>
 
         <a href="/progres-pengerjaan" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-red-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
@@ -68,7 +68,7 @@
                 </div>
                 <h2 class="text-4xl font-bold text-gray-800 mt-2">9</h2>
             </div>
-            <p class="text-gray-400 text-xs mt-4">Perlu ditindak lanjut</p>
+            <p class="text-gray-400 text-xs mt-4">Pengerjaan lampu</p>
         </a>
 
     </div>

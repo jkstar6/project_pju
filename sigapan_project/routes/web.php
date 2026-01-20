@@ -71,10 +71,9 @@ Route::get('/detail-aduan/{id}', function ($id) {
 Route::middleware('auth', 'verified')->group(function () {
     /* ---- Dashboard */
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/halaman-aduan', function () {
-    // Memanggil file: resources/views/aduan-admin/index.blade.php
-    return view('aduan-admin.index');
-});
+    Route::get('/halaman-aduan', [AduanController::class, 'index'])
+    ->name('halaman-aduan.index');
+
     /* ---- My Profile */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -64,7 +64,7 @@
   /* ====== LAYOUT ====== */
   .aduan-row {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr; /* kiri sedikit lebih lebar */
+    grid-template-columns: 1.1fr 0.9fr;
     gap: 36px;
     align-items: start;
   }
@@ -260,7 +260,6 @@
   <div class="container">
     <div class="aduan-title">Buat Pengaduan</div>
 
-    {{-- tombol ke daftar aduan --}}
     <div class="aduan-topbar">
       <a class="btn-top" href="{{ url('/daftar-aduan') }}">Lihat Daftar Aduan</a>
     </div>
@@ -313,15 +312,11 @@
               @error('tipe_aduan') <div style="color:#c00; margin-top:6px; font-size:13px;">{{ $message }}</div> @enderror
             </div>
 
-            <div class="field">
-              <div class="label">Judul / Topik Pengaduan</div>
-              <input class="input" type="text" name="judul" value="{{ old('judul') }}" placeholder="Contoh: Lampu Jalan Rusak">
-              @error('judul') <div style="color:#c00; margin-top:6px; font-size:13px;">{{ $message }}</div> @enderror
-            </div>
+            {{-- ✅ DIHAPUS: Judul / Topik Pengaduan --}}
 
             <div class="field">
-              <div class="label">Deskripsi Detail</div>
-              <textarea class="textarea" name="deskripsi" placeholder="Jelaskan masalah secara detail...">{{ old('deskripsi') }}</textarea>
+              <div class="label">Deskripsi Detail Lokasi</div>
+              <textarea class="textarea" name="deskripsi" placeholder="Jelaskan detail lokasi / patokan tempat...">{{ old('deskripsi') }}</textarea>
               @error('deskripsi') <div style="color:#c00; margin-top:6px; font-size:13px;">{{ $message }}</div> @enderror
             </div>
 
@@ -346,13 +341,11 @@
             </div>
 
             <div class="coord-row">
-              {{-- ✅ awalnya kosong --}}
               <input id="lat" class="coord" type="text" name="latitude" value="{{ old('latitude') }}" readonly placeholder="Latitude">
               <input id="lng" class="coord" type="text" name="longitude" value="{{ old('longitude') }}" readonly placeholder="Longitude">
             </div>
 
             <div class="addr-wrap">
-              {{-- ✅ alamat awalnya kosong, bisa diketik --}}
               <input id="alamat" class="addr" type="text" name="alamat" value="{{ old('alamat') }}"
                      placeholder="Ketik alamat atau klik peta untuk mengisi otomatis" autocomplete="off">
               <div id="alamat-suggest" class="addr-suggest"></div>
@@ -388,11 +381,10 @@
   const alamatStatus = document.getElementById('alamat-status');
   const suggestBox = document.getElementById('alamat-suggest');
 
-  // posisi default hanya untuk VIEW map (bukan isi input)
+  // posisi default hanya untuk VIEW map (tidak isi input)
   const defaultLat = -7.886719404147378;
   const defaultLng = 110.32775434922764;
 
-  // kalau old lat/lng ada (misal habis error), pakai itu dan tampilkan marker
   const hasOldLatLng = !!(latEl.value && lngEl.value);
   const startLat = hasOldLatLng ? parseFloat(latEl.value) : defaultLat;
   const startLng = hasOldLatLng ? parseFloat(lngEl.value) : defaultLng;
@@ -411,7 +403,6 @@
     iconAnchor: [14, 28]
   });
 
-  // marker dibuat, tapi baru "muncul" saat user pilih lokasi (kecuali old lat/lng ada)
   let markerAdded = false;
   const marker = L.marker([startLat, startLng], { icon: redPin, draggable: true });
 
@@ -435,19 +426,17 @@
     alamatStatus.style.color = isError ? '#b91c1c' : '#6b7280';
   }
 
-  // kalau ada old lat/lng => tampilkan marker
   if (hasOldLatLng) {
     ensureMarker(startLat, startLng);
     if (alamatEl.value) setStatus('Alamat tersimpan ✔');
     else setStatus('Klik peta atau ketik alamat untuk mengisi.');
   } else {
-    // ✅ awalnya: lat/lng kosong, alamat kosong
     latEl.value = '';
     lngEl.value = '';
     if (!alamatEl.value) setStatus('Ketik alamat atau klik peta untuk mengisi.');
   }
 
-  // ===== AUTOCOMPLETE STATE =====
+  // ===== AUTOCOMPLETE =====
   let suggestions = [];
   let activeIndex = -1;
   let suggestTimer = null;
@@ -512,14 +501,12 @@
     } catch (e) {}
   }
 
-  // klik map -> marker muncul + isi lat/lng + isi alamat
   map.on('click', (e) => {
     ensureMarker(e.latlng.lat, e.latlng.lng);
     setFields(e.latlng.lat, e.latlng.lng);
     reverseGeocode(e.latlng.lat, e.latlng.lng);
   });
 
-  // drag marker -> update
   marker.on('dragend', () => {
     if (!markerAdded) return;
     const p = marker.getLatLng();
@@ -527,7 +514,6 @@
     reverseGeocode(p.lat, p.lng);
   });
 
-  // klik suggestion
   if (suggestBox) {
     suggestBox.addEventListener('click', (e) => {
       const el = e.target.closest('.addr-item');
@@ -537,7 +523,6 @@
     });
   }
 
-  // input alamat -> fetch suggestion (debounce)
   alamatEl.addEventListener('input', function () {
     const q = (alamatEl.value || '').trim();
     lastQuery = q;
@@ -569,7 +554,6 @@
     }, 450);
   });
 
-  // keyboard navigation
   alamatEl.addEventListener('keydown', function (e) {
     if (!suggestions.length) return;
 
@@ -600,12 +584,10 @@
     }
   });
 
-  // klik di luar -> tutup suggestion
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.addr-wrap')) closeSuggest();
   });
 
-  // fix tile blank
   setTimeout(() => map.invalidateSize(), 200);
 </script>
 @endpush

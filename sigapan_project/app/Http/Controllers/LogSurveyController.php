@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -81,7 +81,7 @@ class LogSurveyController extends Controller
             ],
         ];
 
-        return view('admin.log-survey.index', compact('logSurvey'));
+        return view('log-survey.index', compact('logSurvey'));
     }
 
     /**

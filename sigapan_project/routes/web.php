@@ -61,10 +61,7 @@ Route::get('/detail-aduan/{id}', function ($id) {
     // Memanggil file resources/views/detail-aduan.blade.php
     return view('detail-aduan');
 });
-Route::get('/halaman-aduan', function () {
-    // Memanggil file: resources/views/aduan-admin/index.blade.php
-    return view('aduan-admin.index');
-});
+
 
 /*
 |--------------------------------------------------------------------------
@@ -74,7 +71,10 @@ Route::get('/halaman-aduan', function () {
 Route::middleware('auth', 'verified')->group(function () {
     /* ---- Dashboard */
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
+    Route::get('/halaman-aduan', function () {
+    // Memanggil file: resources/views/aduan-admin/index.blade.php
+    return view('aduan-admin.index');
+});
     /* ---- My Profile */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -84,41 +84,77 @@ Route::middleware('auth', 'verified')->group(function () {
 // ===================================================================
 // PJU MANAGEMENT ROUTES
 // ===================================================================
+// PJU MANAGEMENT ROUTES
 
 // Tim Lapangan Management
-Route::prefix('admin/tim-lapangan')->name('admin.tim-lapangan.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\TimLapanganController::class, 'index'])->name('index');
-    Route::post('/', [App\Http\Controllers\Admin\TimLapanganController::class, 'store'])->name('store');
-    Route::get('/{id}/edit', [App\Http\Controllers\Admin\TimLapanganController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [App\Http\Controllers\Admin\TimLapanganController::class, 'update'])->name('update');
-    Route::delete('/{id}', [App\Http\Controllers\Admin\TimLapanganController::class, 'destroy'])->name('destroy');
+Route::prefix('/tim-lapangan')->name('tim-lapangan.')->group(function () {
+    Route::get('/', [App\Http\Controllers\TimLapanganController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\TimLapanganController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [App\Http\Controllers\TimLapanganController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [App\Http\Controllers\TimLapanganController::class, 'update'])->name('update');
+    Route::delete('/{id}', [App\Http\Controllers\TimLapanganController::class, 'destroy'])->name('destroy');
 });
 
 // Log Survey Management
-Route::prefix('admin/log-survey')->name('admin.log-survey.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\LogSurveyController::class, 'index'])->name('index');
-    Route::post('/', [App\Http\Controllers\Admin\LogSurveyController::class, 'store'])->name('store');
-    Route::get('/{id}/edit', [App\Http\Controllers\Admin\LogSurveyController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [App\Http\Controllers\Admin\LogSurveyController::class, 'update'])->name('update');
-    Route::delete('/{id}', [App\Http\Controllers\Admin\LogSurveyController::class, 'destroy'])->name('destroy');
+Route::prefix('/log-survey')->name('log-survey.')->group(function () {
+    Route::get('/', [App\Http\Controllers\LogSurveyController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\LogSurveyController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [App\Http\Controllers\LogSurveyController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [App\Http\Controllers\LogSurveyController::class, 'update'])->name('update');
+    Route::delete('/{id}', [App\Http\Controllers\LogSurveyController::class, 'destroy'])->name('destroy');
 });
 
 // Tiket Perbaikan Management
-Route::prefix('admin/tiket-perbaikan')->name('admin.tiket-perbaikan.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'index'])->name('index');
-    Route::post('/', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'store'])->name('store');
-    Route::get('/{id}', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'show'])->name('show');
-    Route::put('/{id}', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'update'])->name('update');
-    Route::put('/{id}/status', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'updateStatus'])->name('updateStatus');
+Route::prefix('/tiket-perbaikan')->name('tiket-perbaikan.')->group(function () {
+    Route::get('/', [App\Http\Controllers\TiketPerbaikanController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\TiketPerbaikanController::class, 'store'])->name('store');
+    Route::get('/{id}', [App\Http\Controllers\TiketPerbaikanController::class, 'show'])->name('show');
+    Route::put('/{id}', [App\Http\Controllers\TiketPerbaikanController::class, 'update'])->name('update');
+    Route::put('/{id}/status', [App\Http\Controllers\TiketPerbaikanController::class, 'updateStatus'])->name('updateStatus');
 });
 
 // Progres Pengerjaan Management
-Route::prefix('admin/progres-pengerjaan')->name('admin.progres-pengerjaan.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'index'])->name('index');
-    Route::post('/', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'store'])->name('store');
-    Route::get('/{asetPjuId}', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'show'])->name('show');
-    Route::put('/{id}', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'update'])->name('update');
+Route::prefix('/progres-pengerjaan')->name('progres-pengerjaan.')->group(function () {
+    Route::get('/', [App\Http\Controllers\ProgresPengerjaanController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\ProgresPengerjaanController::class, 'store'])->name('store');
+    Route::get('/{asetPjuId}', [App\Http\Controllers\ProgresPengerjaanController::class, 'show'])->name('show');
+    Route::put('/{id}', [App\Http\Controllers\ProgresPengerjaanController::class, 'update'])->name('update');
 });
+
+// // Tim Lapangan Management
+// Route::prefix('admin/tim-lapangan')->name('admin.tim-lapangan.')->group(function () {
+//     Route::get('/', [App\Http\Controllers\Admin\TimLapanganController::class, 'index'])->name('index');
+//     Route::post('/', [App\Http\Controllers\Admin\TimLapanganController::class, 'store'])->name('store');
+//     Route::get('/{id}/edit', [App\Http\Controllers\Admin\TimLapanganController::class, 'edit'])->name('edit');
+//     Route::put('/{id}', [App\Http\Controllers\Admin\TimLapanganController::class, 'update'])->name('update');
+//     Route::delete('/{id}', [App\Http\Controllers\Admin\TimLapanganController::class, 'destroy'])->name('destroy');
+// });
+
+// // Log Survey Management
+// Route::prefix('admin/log-survey')->name('admin.log-survey.')->group(function () {
+//     Route::get('/', [App\Http\Controllers\Admin\LogSurveyController::class, 'index'])->name('index');
+//     Route::post('/', [App\Http\Controllers\Admin\LogSurveyController::class, 'store'])->name('store');
+//     Route::get('/{id}/edit', [App\Http\Controllers\Admin\LogSurveyController::class, 'edit'])->name('edit');
+//     Route::put('/{id}', [App\Http\Controllers\Admin\LogSurveyController::class, 'update'])->name('update');
+//     Route::delete('/{id}', [App\Http\Controllers\Admin\LogSurveyController::class, 'destroy'])->name('destroy');
+// });
+
+// // Tiket Perbaikan Management
+// Route::prefix('admin/tiket-perbaikan')->name('admin.tiket-perbaikan.')->group(function () {
+//     Route::get('/', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'index'])->name('index');
+//     Route::post('/', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'store'])->name('store');
+//     Route::get('/{id}', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'show'])->name('show');
+//     Route::put('/{id}', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'update'])->name('update');
+//     Route::put('/{id}/status', [App\Http\Controllers\Admin\TiketPerbaikanController::class, 'updateStatus'])->name('updateStatus');
+// });
+
+// // Progres Pengerjaan Management
+// Route::prefix('admin/progres-pengerjaan')->name('admin.progres-pengerjaan.')->group(function () {
+//     Route::get('/', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'index'])->name('index');
+//     Route::post('/', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'store'])->name('store');
+//     Route::get('/{asetPjuId}', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'show'])->name('show');
+//     Route::put('/{id}', [App\Http\Controllers\Admin\ProgresPengerjaanController::class, 'update'])->name('update');
+// });
     /* ---- Settings */
     Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
         /* Users */

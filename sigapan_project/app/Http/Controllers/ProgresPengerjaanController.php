@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -91,7 +91,7 @@ class ProgresPengerjaanController extends Controller
             ],
         ];
 
-        return view('admin.progres-pengerjaan.index', compact('progresPengerjaan'));
+        return view('progres-pengerjaan.index', compact('progresPengerjaan'));
     }
 
     /**
@@ -156,7 +156,7 @@ class ProgresPengerjaanController extends Controller
             'longitude' => 110.398765,
         ];
 
-        return view('admin.progres-pengerjaan.show', compact('progresHistory', 'asetInfo'));
+        return view('progres-pengerjaan.show', compact('progresHistory', 'asetInfo'));
     }
 
     /**

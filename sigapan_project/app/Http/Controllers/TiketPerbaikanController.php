@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -69,7 +69,7 @@ class TiketPerbaikanController extends Controller
             ],
         ];
 
-        return view('admin.tiket-perbaikan.index', compact('tiketPerbaikan'));
+        return view('tiket-perbaikan.index', compact('tiketPerbaikan'));
     }
 
     /**
@@ -127,7 +127,7 @@ class TiketPerbaikanController extends Controller
             'created_at' => '2025-01-19 10:30:00'
         ];
 
-        return view('admin.tiket-perbaikan.show', compact('tiket'));
+        return view('tiket-perbaikan.show', compact('tiket'));
     }
 
     /**

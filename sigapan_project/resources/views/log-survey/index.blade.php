@@ -37,7 +37,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @can('log-survey.read')
+                        {{-- @can('log-survey.read') --}}
                             @foreach ($logSurvey as $index => $log)
                                 <tr>
                                     <td class="text-center">{{ $index + 1 }}</td>
@@ -63,15 +63,15 @@
                                     <td class="text-left">{{ $log['catatan_kerusakan'] ?? '-' }}</td>
                                     <td class="text-center">
                                         <div class="flex items-center gap-[9px] justify-center">
-                                            @can('log-survey.read')
+                                            {{-- @can('log-survey.read') --}}
                                                 <a href="#" class="text-primary-500 leading-none custom-tooltip" id="customTooltip" data-text="Detail">
                                                     <i class="material-symbols-outlined !text-md">
                                                         visibility
                                                     </i>
                                                 </a>
-                                            @endcan
-                                            @can('log-survey.delete')
-                                                <form action="{{ route('admin.log-survey.destroy', $log['id']) }}" method="post" class="d-inline">
+                                            {{-- @endcan --}}
+                                            {{-- @can('log-survey.delete') --}}
+                                                <form action="{{ route('log-survey.destroy', $log['id']) }}" method="post" class="d-inline">
                                                     @csrf
                                                     @method('delete')
                                                     <button type="submit" onclick="confirmDelete(this);" class="text-danger-500 leading-none custom-tooltip" id="customTooltip" data-text="Delete">
@@ -80,12 +80,12 @@
                                                         </i>
                                                     </button>
                                                 </form>
-                                            @endcan
+                                            {{-- @endcan --}}
                                         </div>
                                     </td>
                                 </tr>
                             @endforeach
-                        @endcan
+                        {{-- @endcan --}}
                     </tbody>
                 </table>
             </div>

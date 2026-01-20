@@ -52,7 +52,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @can('tim-lapangan.read')
+                        {{-- @can('tim-lapangan.read') --}}
                             @foreach ($timLapangan as $index => $tim)
                                 <tr>
                                     <td class="text-center">{{ $index + 1 }}</td>
@@ -92,7 +92,7 @@
                                     </td>
                                 </tr>
                             @endforeach
-                        @endcan
+                        {{-- @endcan --}}
                     </tbody>
                 </table>
             </div>

@@ -25,7 +25,7 @@
             <p class="text-gray-400 text-xs mt-4">Semua aduan terdaftar</p>
         </a>
 
-        <a href="/halaman-perbaikan" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
+        <a href="/tiket-perbaikan" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
             <div>
                 <div class="flex justify-between items-start">
                     <h4 class="text-gray-600 font-semibold text-sm">Tiket Perbaikan</h4>
@@ -41,7 +41,7 @@
             <p class="text-gray-400 text-xs mt-4">Perbaikan berjalan normal</p>
         </a>
 
-        <a href="/halaman-survey" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
+        <a href="/log-survey" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
             <div>
                 <div class="flex justify-between items-start">
                     <h4 class="text-gray-600 font-semibold text-sm">Log Survey</h4>
@@ -56,7 +56,7 @@
             <p class="text-gray-400 text-xs mt-4">Survey tidak aktif</p>
         </a>
 
-        <a href="/halaman-progres" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-red-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
+        <a href="/progres-pengerjaan" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-red-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
             <div>
                 <div class="flex justify-between items-start">
                     <h4 class="text-gray-600 font-semibold text-sm">Progres pengerjaan</h4>

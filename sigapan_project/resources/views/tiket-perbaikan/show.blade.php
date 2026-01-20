@@ -19,7 +19,8 @@
                 </p>
             </div>
             <div>
-                <a href="{{ route('admin.tiket-perbaikan.index') }}" class="inline-block py-[10px] px-[20px] bg-gray-500 text-white transition-all hover:bg-gray-400 rounded-md border border-gray-500 hover:border-gray-400">
+                <a href="{{ route('tiket-perbaikan.index') }}"
+                    class="inline-block py-[10px] px-[20px] bg-gray-500 text-white transition-all hover:bg-gray-400 rounded-md border border-gray-500 hover:border-gray-400">
                     <i class="ri-arrow-left-line"></i> Kembali
                 </a>
             </div>
@@ -29,17 +30,18 @@
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-5">
             <div class="bg-gray-50 dark:bg-[#15203c] p-4 rounded-md">
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Status Tindakan</p>
-                <span class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-sm
-                    @if($tiket['status_tindakan'] == 'Menunggu') bg-orange-100 dark:bg-[#15203c] text-orange-600
+                <span
+                    class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-sm
+                    @if ($tiket['status_tindakan'] == 'Menunggu') bg-orange-100 dark:bg-[#15203c] text-orange-600
                     @elseif($tiket['status_tindakan'] == 'Proses') bg-blue-100 dark:bg-[#15203c] text-blue-600
-                    @else bg-primary-50 dark:bg-[#15203c] text-primary-500
-                    @endif">
+                    @else bg-primary-50 dark:bg-[#15203c] text-primary-500 @endif">
                     {{ $tiket['status_tindakan'] }}
                 </span>
             </div>
             <div class="bg-gray-50 dark:bg-[#15203c] p-4 rounded-md">
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Prioritas</p>
-                <span class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-sm
+                <span
+                    class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-sm
                     {{ $tiket['prioritas'] == 'Mendesak' ? 'bg-red-100 dark:bg-[#15203c] text-red-600' : 'bg-gray-100 dark:bg-[#15203c] text-gray-600' }}">
                     {{ $tiket['prioritas'] }}
                 </span>
@@ -52,12 +54,14 @@
             </div>
             <div class="bg-gray-50 dark:bg-[#15203c] p-4 rounded-md">
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Surat PLN</p>
-                @if($tiket['perlu_surat_pln'])
-                    <span class="px-[8px] py-[3px] inline-block bg-orange-100 dark:bg-[#15203c] text-orange-600 rounded-sm font-medium text-sm">
+                @if ($tiket['perlu_surat_pln'])
+                    <span
+                        class="px-[8px] py-[3px] inline-block bg-orange-100 dark:bg-[#15203c] text-orange-600 rounded-sm font-medium text-sm">
                         Diperlukan
                     </span>
                 @else
-                    <span class="px-[8px] py-[3px] inline-block bg-gray-100 dark:bg-[#15203c] text-gray-600 rounded-sm font-medium text-sm">
+                    <span
+                        class="px-[8px] py-[3px] inline-block bg-gray-100 dark:bg-[#15203c] text-gray-600 rounded-sm font-medium text-sm">
                         Tidak Perlu
                     </span>
                 @endif
@@ -119,7 +123,8 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-600 dark:text-gray-400">Koordinat</p>
-                        <p class="font-medium">{{ $tiket['pengaduan']['latitude'] }}, {{ $tiket['pengaduan']['longitude'] }}</p>
+                        <p class="font-medium">{{ $tiket['pengaduan']['latitude'] }},
+                            {{ $tiket['pengaduan']['longitude'] }}</p>
                     </div>
                     <hr class="border-gray-200 dark:border-[#172036]">
                     <div>
@@ -137,7 +142,7 @@
     </div>
 
     {{-- START: Log Tindakan Teknisi --}}
-    @if(isset($tiket['log_tindakan']) && $tiket['log_tindakan'])
+    @if (isset($tiket['log_tindakan']) && $tiket['log_tindakan'])
         <div class="trezo-card bg-white dark:bg-[#0c1427] mt-[25px] p-[20px] md:p-[25px] rounded-md">
             <div class="trezo-card-header mb-[20px]">
                 <h6 class="font-semibold">Hasil Tindakan Teknisi</h6>
@@ -155,7 +160,7 @@
                         @endphp
                         <div class="bg-gray-50 dark:bg-[#15203c] p-3 rounded-md">
                             <ul class="list-disc list-inside space-y-1">
-                                @foreach($sukuCadang as $item => $qty)
+                                @foreach ($sukuCadang as $item => $qty)
                                     <li>{{ ucfirst($item) }}: {{ $qty }}</li>
                                 @endforeach
                             </ul>

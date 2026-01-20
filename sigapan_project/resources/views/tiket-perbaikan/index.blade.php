@@ -19,7 +19,7 @@
                 </h5>
             </div>
         </div>
-        
+
         <div class="trezo-card-content" id="dataTable">
             <div class="table-responsive overflow-x-auto p-2">
                 <table id="data-table" class="display stripe group" style="width:100%">
@@ -37,7 +37,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @can('tiket-perbaikan.read')
+                        {{-- @can('tiket-perbaikan.read') --}}
                             @foreach ($tiketPerbaikan as $tiket)
                                 <tr>
                                     <td class="text-center">
@@ -56,45 +56,50 @@
                                         {{ $tiket['tgl_jadwal'] ? date('d M Y', strtotime($tiket['tgl_jadwal'])) : '-' }}
                                     </td>
                                     <td class="text-center">
-                                        <span class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-xs
+                                        <span
+                                            class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-xs
                                             {{ $tiket['prioritas'] == 'Mendesak' ? 'bg-red-100 dark:bg-[#15203c] text-red-600' : 'bg-gray-100 dark:bg-[#15203c] text-gray-600' }}">
                                             {{ $tiket['prioritas'] }}
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-xs
-                                            @if($tiket['status_tindakan'] == 'Menunggu') bg-orange-100 dark:bg-[#15203c] text-orange-600
+                                        <span
+                                            class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-xs
+                                            @if ($tiket['status_tindakan'] == 'Menunggu') bg-orange-100 dark:bg-[#15203c] text-orange-600
                                             @elseif($tiket['status_tindakan'] == 'Proses') bg-blue-100 dark:bg-[#15203c] text-blue-600
-                                            @else bg-primary-50 dark:bg-[#15203c] text-primary-500
-                                            @endif">
+                                            @else bg-primary-50 dark:bg-[#15203c] text-primary-500 @endif">
                                             {{ $tiket['status_tindakan'] }}
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        @if($tiket['perlu_surat_pln'])
-                                            <span class="px-[8px] py-[3px] inline-block bg-orange-100 dark:bg-[#15203c] text-orange-600 rounded-sm font-medium text-xs">
+                                        @if ($tiket['perlu_surat_pln'])
+                                            <span
+                                                class="px-[8px] py-[3px] inline-block bg-orange-100 dark:bg-[#15203c] text-orange-600 rounded-sm font-medium text-xs">
                                                 Perlu
                                             </span>
                                         @else
-                                            <span class="px-[8px] py-[3px] inline-block bg-gray-100 dark:bg-[#15203c] text-gray-600 rounded-sm font-medium text-xs">
+                                            <span
+                                                class="px-[8px] py-[3px] inline-block bg-gray-100 dark:bg-[#15203c] text-gray-600 rounded-sm font-medium text-xs">
                                                 Tidak
                                             </span>
                                         @endif
                                     </td>
                                     <td class="text-center">
                                         <div class="flex items-center gap-[9px] justify-center">
-                                            @can('tiket-perbaikan.read')
-                                                <a href="{{ route('admin.tiket-perbaikan.show', $tiket['id']) }}" class="text-primary-500 leading-none custom-tooltip" id="customTooltip" data-text="Detail">
+                                            {{-- @can('tiket-perbaikan.read') --}}
+                                                <a href="{{ route('tiket-perbaikan.show', $tiket['id']) }}"
+                                                    class="text-primary-500 leading-none custom-tooltip" id="customTooltip"
+                                                    data-text="Detail">
                                                     <i class="material-symbols-outlined !text-md">
                                                         visibility
                                                     </i>
                                                 </a>
-                                            @endcan
+                                            {{-- @endcan --}}
                                         </div>
                                     </td>
                                 </tr>
                             @endforeach
-                        @endcan
+                        {{-- @endcan --}}
                     </tbody>
                 </table>
             </div>
@@ -105,7 +110,7 @@
 @push('scripts')
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
-    
+
     <script>
         $('#data-table').DataTable({
             responsive: true,

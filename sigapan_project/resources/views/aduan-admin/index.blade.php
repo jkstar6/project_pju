@@ -2,22 +2,27 @@
 
 @section('title', 'Verifikasi Aduan Masuk')
 
-@section('styles')
+@push('styles')
+    <link rel="stylesheet" href="{{ URL::asset('assets/admin/css/datatables-2.3.4/datatables.tailwindcss.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-@endsection
+    <style>
+        /* CSS tambahan agar tampilan tabel lebih rapat dan rapi */
+        table.dataTable tbody td {
+            vertical-align: top;
+        }
+    </style>
+@endpush
 
 @section('breadcrumb')
     <nav class="flex" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
             <li class="inline-flex items-center">
-                <a href="/dashboard" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
-                    Dashboard
-                </a>
+                <a href="/dashboard" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">Dashboard</a>
             </li>
             <li>
                 <div class="flex items-center">
-                    <svg class="w-3 h-3 text-gray-400 mx-1" fill="none" viewBox="0 0 6 10">
-                        <path stroke="currentColor" stroke-width="2" d="m1 9 4-4-4-4" />
+                    <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
                     </svg>
                     <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Aduan Masuk</span>
                 </div>
@@ -28,171 +33,252 @@
 
 @section('content')
 
-    <div class="container mx-auto px-4 py-8">
+    {{-- DATA DUMMY --}}
+    @php
+        $aduan = [
+            [
+                'id' => 1,
+                'nama' => 'Budi Santoso',
+                'nomor_hp' => '0812-3456-7890',
+                'tipe' => 'Lampu Mati',
+                'lokasi' => 'Jl. Mawar No. 10, RT 02/RW 05',
+                'deskripsi' => 'Dekat toko baju "Jaya Abadi", sekitar 50 meter ke barat dari pos kamling.',
+                'foto' => 'https://via.placeholder.com/600x400?text=Bukti+Foto+1',
+                'status' => 'Pending',
+                'catatan' => null,
+                'tanggal' => '2024-01-20',
+                'updated_at' => '2024-01-20',
+            ],
+            [
+                'id' => 2,
+                'nama' => 'Siti Aminah',
+                'nomor_hp' => '0857-1122-3344',
+                'tipe' => 'Permohonan PJU Baru',
+                'lokasi' => 'Gang Kelinci, Area Pemukiman Baru',
+                'deskripsi' => 'Masuk gang sebelah masjid besar, lurus terus sampai mentok sawah. Lokasi gelap rawan begal.',
+                'foto' => 'https://via.placeholder.com/600x400?text=Bukti+Foto+2',
+                'status' => 'Diterima',
+                'catatan' => 'Akan dijadwalkan survei minggu depan.',
+                'tanggal' => '2024-01-18',
+                'updated_at' => '2024-01-19',
+            ],
+            [
+                'id' => 3,
+                'nama' => 'Ahmad Dani',
+                'nomor_hp' => '0813-9988-7766',
+                'tipe' => 'Lampu Mati',
+                'lokasi' => 'Jl. Pasar Baru, Tiang PJU-045',
+                'deskripsi' => 'Tiang nomor 45 depan pintu masuk pasar sisi selatan.',
+                'foto' => 'https://via.placeholder.com/600x400?text=Bukti+Foto+3',
+                'status' => 'Ditolak',
+                'catatan' => 'Lokasi bukan kewenangan Pemda (Area Privat).',
+                'tanggal' => '2024-01-15',
+                'updated_at' => '2024-01-16',
+            ],
+        ];
+    @endphp
 
-        <div class="mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Verifikasi Aduan Masuk</h2>
-            <p class="text-sm text-gray-500">
-                Daftar aduan masyarakat yang perlu diverifikasi dan ditindaklanjuti.
-            </p>
+    <div class="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
+        
+        <div class="trezo-card-header mb-[20px] md:mb-[25px] sm:flex sm:items-center sm:justify-between">
+            <div class="trezo-card-title">
+                <h5 class="mb-0">
+                    Daftar @yield('title')
+                </h5>
+            </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden border">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-500">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+        <div class="trezo-card-content" id="dataTable">
+            <div class="table-responsive overflow-x-auto p-2">
+                
+                <table id="data-table" class="display stripe group" style="width:100%">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-4">No</th>
-                            <th class="px-6 py-4">Pelapor</th>
-                            <th class="px-6 py-4">No HP</th>
-                            <th class="px-6 py-4">Tipe Aduan</th>
-                            <th class="px-6 py-4">Lokasi</th>
-                            <th class="px-6 py-4">Deskripsi</th>
-                            <th class="px-6 py-4 text-center">Foto</th>
-                            <th class="px-6 py-4">Tanggal</th>
-                            <th class="px-6 py-4">Status</th>
-                            <th class="px-6 py-4">Catatan</th>
-                            <th class="px-6 py-4 text-center">Aksi</th>
+                            <th class="text-center">No</th>
+                            <th class="text-left">Pelapor</th>
+                            <th class="text-left">Tipe Aduan & Kontak</th>
+                            <th class="text-left">Lokasi</th>
+                            <th class="text-center">Foto</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-left">Catatan Admin</th>
+                            
+                            {{-- KOLOM TANGGAL (MASUK & UPDATE) --}}
+                            <th class="text-left">Tanggal</th>
+                            
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
-
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($aduan as $item)
-                            <tr class="hover:bg-gray-50 transition duration-150 align-top">
-                                <td class="px-6 py-4 font-medium text-gray-900">{{ $loop->iteration }}</td>
-
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="font-bold text-gray-900">{{ $item->nama_pelapor }}</span>
+                    <tbody>
+                        @foreach($aduan as $item)
+                            <tr>
+                                {{-- No --}}
+                                <td class="text-center">
+                                    <strong class="text-gray-500">{{ $loop->iteration }}</strong>
                                 </td>
 
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                                    {{ $item->no_hp }}
+                                {{-- Pelapor --}}
+                                <td class="text-left">
+                                    <strong class="text-primary-500">{{ $item['nama'] }}</strong>
                                 </td>
 
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span
-                                        class="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded border">
-                                        {{ $item->tipe_aduan }}
-                                    </span>
+                                {{-- Tipe & Kontak --}}
+                                <td class="text-left">
+                                    <span class="block text-xs font-semibold mb-1">{{ $item['tipe'] }}</span>
+                                    <small class="text-gray-500">{{ $item['nomor_hp'] }}</small>
                                 </td>
 
-                                <td class="px-6 py-4 text-xs leading-relaxed text-gray-600">
-                                    {{ $item->deskripsi_lokasi }}
-                                    <a href="https://maps.google.com/?q={{ $item->latitude }},{{ $item->longitude }}"
-                                        target="_blank" class="text-blue-500 hover:underline block mt-1 text-[10px]">
-                                        Buka Peta
+                                {{-- Lokasi (Maps & Deskripsi digabung agar hemat tempat) --}}
+                                <td class="text-left">
+                                    <div class="flex flex-col gap-1">
+                                        {{-- Maps --}}
+                                        <div class="text-xs">
+                                            <span class="font-semibold text-gray-700">Titik:</span> {{ $item['lokasi'] }}
+                                            <a href="https://maps.google.com/?q={{ $item['lokasi'] }}" target="_blank" class="text-blue-500 hover:underline inline-flex items-center ml-1">
+                                                <i class="material-symbols-outlined !text-[14px]">map</i>
+                                            </a>
+                                        </div>
+                                        {{-- Deskripsi --}}
+                                        <div class="text-xs italic text-gray-500 bg-gray-50 p-1 rounded border border-gray-100">
+                                            "{{ $item['deskripsi'] }}"
+                                        </div>
+                                    </div>
+                                </td>
+
+                                {{-- Foto --}}
+                                <td class="text-center">
+                                    <a href="{{ $item['foto'] }}" target="_blank" class="text-blue-500 hover:text-blue-700 inline-block p-1 bg-blue-50 rounded-full">
+                                        <i class="material-symbols-outlined !text-md">image</i>
                                     </a>
                                 </td>
 
-                                <td class="px-6 py-4 text-xs leading-relaxed text-gray-600 bg-gray-50/50 italic">
-                                    "{{ $item->deskripsi_lokasi }}"
+                                {{-- Status --}}
+                                <td class="text-center">
+                                    <span class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-xs
+                                        @if($item['status'] == 'Pending') bg-yellow-100 dark:bg-[#15203c] text-yellow-600
+                                        @elseif($item['status'] == 'Diterima') bg-green-100 dark:bg-[#15203c] text-green-600
+                                        @elseif($item['status'] == 'Ditolak') bg-red-100 dark:bg-[#15203c] text-red-600
+                                        @endif">
+                                        {{ $item['status'] }}
+                                    </span>
                                 </td>
 
-                                <td class="px-6 py-4 text-center">
-                                    @if ($item->foto_lapangan)
-                                        <a href="{{ $item->foto_lapangan }}" target="_blank"
-                                            class="inline-flex flex-col items-center justify-center p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
-                                            <span class="text-[10px] font-medium">Lihat</span>
-                                        </a>
+                                {{-- Catatan --}}
+                                <td class="text-left">
+                                    @if($item['catatan'])
+                                        <span class="text-xs text-gray-600">{{ $item['catatan'] }}</span>
                                     @else
-                                        <span class="text-gray-400 text-xs">-</span>
+                                        <span class="text-xs text-gray-300">-</span>
                                     @endif
                                 </td>
 
-                                <td class="px-6 py-4 whitespace-nowrap text-xs">
-                                    {{ $item->created_at }}
+                                {{-- Tanggal (Masuk & Update) --}}
+                                <td class="text-left">
+                                    <div class="flex flex-col text-xs gap-1">
+                                        <div>
+                                            <span class="text-gray-400 text-[10px] uppercase">Masuk:</span><br>
+                                            <span class="font-medium text-gray-800">{{ $item['tanggal'] }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-gray-400 text-[10px] uppercase">Update:</span><br>
+                                            <span class="font-medium text-blue-600">{{ $item['updated_at'] }}</span>
+                                        </div>
+                                    </div>
                                 </td>
 
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if ($item->status_verifikasi === 'Pending')
-                                        <span
-                                            class="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs px-2.5 py-0.5 rounded-full">
-                                            Pending
-                                        </span>
-                                    @elseif($item->status_verifikasi === 'Diterima')
-                                        <span
-                                            class="inline-flex items-center bg-green-100 text-green-800 text-xs px-2.5 py-0.5 rounded-full">
-                                            Diterima
-                                        </span>
-                                    @else
-                                        <span
-                                            class="inline-flex items-center bg-red-100 text-red-800 text-xs px-2.5 py-0.5 rounded-full">
-                                            Ditolak
-                                        </span>
-                                    @endif
-                                </td>
-
-                                <td class="px-6 py-4 text-xs">
-                                    {{ $item->catatan_admin ?? '-' }}
-                                </td>
-
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <button
-                                            onclick="actionVerifikasi({{ $item->id }}, '{{ $item->nama_pelapor }}')"
-                                            class="p-2 text-white bg-green-500 hover:bg-green-600 rounded-lg">
-                                            ✔
+                                {{-- Aksi --}}
+                                <td class="text-center">
+                                    <div class="flex items-center gap-[5px] justify-center">
+                                        <button onclick="actionVerifikasi({{ $item['id'] }}, '{{ $item['nama'] }}')" class="text-green-500 hover:text-green-700 transition" title="Verifikasi">
+                                            <i class="material-symbols-outlined !text-md">check_circle</i>
                                         </button>
-                                        <button onclick="actionTolak({{ $item->id }}, '{{ $item->nama_pelapor }}')"
-                                            class="p-2 text-white bg-yellow-500 hover:bg-yellow-600 rounded-lg">
-                                            ✖
+                                        <button onclick="actionTolak({{ $item['id'] }}, '{{ $item['nama'] }}')" class="text-yellow-500 hover:text-yellow-700 transition" title="Tolak">
+                                            <i class="material-symbols-outlined !text-md">cancel</i>
                                         </button>
-                                        <button onclick="actionHapus({{ $item->id }}, '{{ $item->nama_pelapor }}')"
-                                            class="p-2 text-white bg-red-500 hover:bg-red-600 rounded-lg">
-                                            🗑
+                                        <button onclick="actionHapus({{ $item['id'] }}, '{{ $item['nama'] }}')" class="text-red-500 hover:text-red-700 transition" title="Hapus">
+                                            <i class="material-symbols-outlined !text-md">delete</i>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="11" class="px-6 py-8 text-center text-gray-500">
-                                    Belum ada data aduan masuk.
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
-
                 </table>
-            </div>
-
-            <div class="px-6 py-4 bg-gray-50 text-sm text-gray-500">
-                Menampilkan {{ count($aduan) }} data
             </div>
         </div>
     </div>
 
-    {{-- SWEETALERT --}}
+@endsection
+
+@push('scripts')
+    <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
+    <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
+
     <script>
+        $('#data-table').DataTable({
+            responsive: true,
+            "pageLength": 10,
+           
+        });
+
+        // SWEETALERT FUNCTIONS
         function actionVerifikasi(id, nama) {
             Swal.fire({
                 title: 'Verifikasi Aduan',
-                text: 'Berikan catatan untuk ' + nama,
+                text: "Berikan catatan tindak lanjut untuk " + nama,
+                icon: 'question',
                 input: 'textarea',
+                inputLabel: 'Catatan Admin',
+                inputPlaceholder: 'Contoh: Laporan valid, tim teknis akan meluncur besok...',
                 showCancelButton: true,
-                confirmButtonText: 'Verifikasi'
+                confirmButtonColor: '#10B981',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Ya, Verifikasi!',
+                cancelButtonText: 'Batal',
+                inputValidator: (value) => {
+                    if (!value) return 'Anda harus menuliskan catatan verifikasi!'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('Terverifikasi!', 'Status aduan diubah menjadi Diterima.<br>Catatan: ' + result.value, 'success')
+                }
             })
         }
 
         function actionTolak(id, nama) {
             Swal.fire({
                 title: 'Tolak Aduan',
-                text: 'Alasan penolakan untuk ' + nama,
+                text: "Berikan alasan penolakan untuk " + nama,
+                icon: 'warning',
                 input: 'textarea',
+                inputLabel: 'Alasan Penolakan',
                 showCancelButton: true,
-                confirmButtonText: 'Tolak'
+                confirmButtonColor: '#F59E0B',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Tolak Aduan',
+                inputValidator: (value) => {
+                    if (!value) return 'Anda harus menuliskan alasan penolakan!'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('Ditolak!', 'Aduan ditolak karena: ' + result.value, 'success')
+                }
             })
         }
 
         function actionHapus(id, nama) {
             Swal.fire({
-                title: 'Hapus Aduan?',
-                text: 'Data dari ' + nama + ' akan dihapus',
-                icon: 'warning',
+                title: 'Hapus Data?',
+                text: "Data aduan dari " + nama + " akan dihapus permanen.",
+                icon: 'error',
                 showCancelButton: true,
-                confirmButtonText: 'Hapus'
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('Dihapus!', 'Data berhasil dihapus.', 'success')
+                }
             })
         }
     </script>
-
-@endsection
+@endpush

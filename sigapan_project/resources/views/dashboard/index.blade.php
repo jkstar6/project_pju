@@ -98,7 +98,7 @@
             </div>
             <p class="text-gray-400 text-xs mt-4">Surveyor, Teknisi, dan Admin</p>
         </a>
-         <a href="/tim-lapangan" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-pink-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
+         <a href="/tindakan-teknisi" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-pink-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
             <div>
                 <div class="flex justify-between items-start">
                     <h4 class="text-gray-600 font-semibold text-sm">Tindakan Teknisi</h4>

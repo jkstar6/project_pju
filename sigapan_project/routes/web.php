@@ -93,6 +93,16 @@ Route::prefix('/tim-lapangan')->name('tim-lapangan.')->group(function () {
     Route::put('/{id}', [App\Http\Controllers\TimLapanganController::class, 'update'])->name('update');
     Route::delete('/{id}', [App\Http\Controllers\TimLapanganController::class, 'destroy'])->name('destroy');
 });
+  // Tindakan Teknisi Management
+    Route::prefix('/tindakan-teknisi')->name('tindakan-teknisi.')->group(function () {
+        Route::get('/', [App\Http\Controllers\TindakanTeknisiController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\TindakanTeknisiController::class, 'store'])->name('store');
+        Route::get('/{id}', [App\Http\Controllers\TindakanTeknisiController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [App\Http\Controllers\TindakanTeknisiController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [App\Http\Controllers\TindakanTeknisiController::class, 'update'])->name('update');
+        Route::delete('/{id}', [App\Http\Controllers\TindakanTeknisiController::class, 'destroy'])->name('destroy');
+    });
+
 
 // Log Survey Management
 Route::prefix('/log-survey')->name('log-survey.')->group(function () {

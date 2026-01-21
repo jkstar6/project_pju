@@ -6,38 +6,63 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
         Paginator::useTailwind();
 
-        if (config('custom.force_https')) {
-            $this->app['request']->server->set('HTTPS', 'on');
-            \Illuminate\Support\Facades\URL::forceScheme('https');
+        // ==============================
+        // GLOBAL PREFS (ANTI KOSONG)
+        // ==============================
+        $prefs = Cache::get('prefs_composer');
+
+        // Kalau cache rusak / kosong
+        if (!is_array($prefs)) {
+            $prefs = [];
         }
 
-        // Verification Email For Registration
+        // Paksa semua key penting selalu ada
+        $prefs['title']   = $prefs['title']   ?? 'SIM PJU Bantul';
+        $prefs['logo']    = $prefs['logo']    ?? 'assets/images/logo.png';
+        $prefs['favicon'] = $prefs['favicon'] ?? 'assets/images/favicon.ico';
+
+        // Simpan ulang supaya tidak {} lagi
+        Cache::put('prefs_composer', $prefs, 60 * 60);
+
+        // Share ke semua view
+        View::share('prefs_composer', $prefs);
+        View::share('title', $prefs['title']);
+
+        // ==============================
+        // FORCE HTTPS
+        // ==============================
+        if (config('custom.force_https')) {
+            $this->app['request']->server->set('HTTPS', 'on');
+            URL::forceScheme('https');
+        }
+
+        // ==============================
+        // VERIFICATION EMAIL
+        // ==============================
         VerifyEmail::toMailUsing(function ($notifiable, $url) {
             return (new \App\Mail\VerificationMail($notifiable, $url))
                 ->to($notifiable->email)
                 ->subject('[No Reply] Verifikasi Akun');
         });
 
-        //  Verification Email For Forget Password Email
+        // ==============================
+        // RESET PASSWORD
+        // ==============================
         ResetPassword::toMailUsing(function ($notifiable, string $token) {
             return (new \App\Mail\ForgetPassword(
                 $notifiable,

@@ -44,6 +44,7 @@ class UserSeeder extends Seeder
             'name' => 'Laravel Base Developer',
             'email' => 'developerlaravelbase@gmail.com',
             'password' => Hash::make('123456789'),
+            'role'     => 'Admin',
         ]);
         $developerAccount->assignRole($developerRole);
     }

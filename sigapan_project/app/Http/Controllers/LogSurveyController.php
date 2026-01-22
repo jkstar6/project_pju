@@ -12,7 +12,7 @@ class LogSurveyController extends Controller
      */
     public function index()
     {
-        $this->setRule('log-survey.read');
+        // $this->setRule('log-survey.read');
 
         // TODO: Replace with actual database query
         // $logSurvey = LogSurvey::with(['asetPju', 'user'])->latest()->get();
@@ -89,7 +89,7 @@ class LogSurveyController extends Controller
      */
     public function store(Request $request)
     {
-        $this->setRule('log-survey.create');
+        // $this->setRule('log-survey.create');
 
         // TODO: Implement database insertion
         // LogSurvey::create($request->validated());
@@ -102,7 +102,7 @@ class LogSurveyController extends Controller
      */
     public function edit($id)
     {
-        $this->setRule('log-survey.update');
+        // $this->setRule('log-survey.update');
 
         // TODO: Replace with actual database query
         // return LogSurvey::findOrFail($id);
@@ -128,7 +128,7 @@ class LogSurveyController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->setRule('log-survey.update');
+        // $this->setRule('log-survey.update');
 
         // TODO: Implement database update
         // $log = LogSurvey::findOrFail($id);
@@ -142,7 +142,7 @@ class LogSurveyController extends Controller
      */
     public function destroy($id)
     {
-        $this->setRule('log-survey.delete');
+        // $this->setRule('log-survey.delete');
 
         // TODO: Implement database deletion
         // LogSurvey::findOrFail($id)->delete();

@@ -12,7 +12,7 @@ class TimLapanganController extends Controller
      */
     public function index()
     {
-        $this->setRule('tim-lapangan.read');
+        // $this->setRule('tim-lapangan.read');
 
         // TODO: Replace with actual database query
         // $timLapangan = TimLapangan::with(['leader', 'anggota'])->get();
@@ -74,7 +74,7 @@ class TimLapanganController extends Controller
      */
     public function store(Request $request)
     {
-        $this->setRule('tim-lapangan.create');
+        // $this->setRule('tim-lapangan.create');
 
         // TODO: Implement database insertion
         // TimLapangan::create($request->validated());
@@ -87,7 +87,7 @@ class TimLapanganController extends Controller
      */
     public function edit($id)
     {
-        $this->setRule('tim-lapangan.update');
+        // $this->setRule('tim-lapangan.update');
 
         // TODO: Replace with actual database query
         // return TimLapangan::findOrFail($id);
@@ -109,7 +109,7 @@ class TimLapanganController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->setRule('tim-lapangan.update');
+        // $this->setRule('tim-lapangan.update');
 
         // TODO: Implement database update
         // $tim = TimLapangan::findOrFail($id);
@@ -123,7 +123,7 @@ class TimLapanganController extends Controller
      */
     public function destroy($id)
     {
-        $this->setRule('tim-lapangan.delete');
+        // $this->setRule('tim-lapangan.delete');
 
         // TODO: Implement database deletion
         // TimLapangan::findOrFail($id)->delete();

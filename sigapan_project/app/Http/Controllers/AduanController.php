@@ -38,6 +38,7 @@ class AduanController extends Controller
                 'catatan_admin' => 'Akan dijadwalkan pemasangan',
                 'created_at' => now()->subDays(3),
             ],
+            
             (object) [
                 'id' => 3,
                 'nama_pelapor' => 'Ahmad Dani',

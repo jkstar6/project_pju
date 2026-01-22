@@ -33,51 +33,6 @@
 
 @section('content')
 
-    {{-- DATA DUMMY --}}
-    @php
-        $aduan = [
-            [
-                'id' => 1,
-                'nama' => 'Budi Santoso',
-                'nomor_hp' => '0812-3456-7890',
-                'tipe' => 'Lampu Mati',
-                'lokasi' => 'Jl. Mawar No. 10, RT 02/RW 05',
-                'deskripsi' => 'Dekat toko baju "Jaya Abadi", sekitar 50 meter ke barat dari pos kamling.',
-                'foto' => 'https://via.placeholder.com/600x400?text=Bukti+Foto+1',
-                'status' => 'Pending',
-                'catatan' => null,
-                'tanggal' => '2024-01-20',
-                'updated_at' => '2024-01-20',
-            ],
-            [
-                'id' => 2,
-                'nama' => 'Siti Aminah',
-                'nomor_hp' => '0857-1122-3344',
-                'tipe' => 'Permohonan PJU Baru',
-                'lokasi' => 'Gang Kelinci, Area Pemukiman Baru',
-                'deskripsi' => 'Masuk gang sebelah masjid besar, lurus terus sampai mentok sawah. Lokasi gelap rawan begal.',
-                'foto' => 'https://via.placeholder.com/600x400?text=Bukti+Foto+2',
-                'status' => 'Diterima',
-                'catatan' => 'Akan dijadwalkan survei minggu depan.',
-                'tanggal' => '2024-01-18',
-                'updated_at' => '2024-01-19',
-            ],
-            [
-                'id' => 3,
-                'nama' => 'Ahmad Dani',
-                'nomor_hp' => '0813-9988-7766',
-                'tipe' => 'Lampu Mati',
-                'lokasi' => 'Jl. Pasar Baru, Tiang PJU-045',
-                'deskripsi' => 'Tiang nomor 45 depan pintu masuk pasar sisi selatan.',
-                'foto' => 'https://via.placeholder.com/600x400?text=Bukti+Foto+3',
-                'status' => 'Ditolak',
-                'catatan' => 'Lokasi bukan kewenangan Pemda (Area Privat).',
-                'tanggal' => '2024-01-15',
-                'updated_at' => '2024-01-16',
-            ],
-        ];
-    @endphp
-
     <div class="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
         
         <div class="trezo-card-header mb-[20px] md:mb-[25px] sm:flex sm:items-center sm:justify-between">
@@ -92,117 +47,132 @@
             <div class="table-responsive overflow-x-auto p-2">
                 
                 <table id="data-table" class="display stripe group" style="width:100%">
-                    <thead>
-                        <tr>
-                            <th class="text-center">No</th>
-                            <th class="text-left">Pelapor</th>
-                            <th class="text-left">Tipe Aduan & Kontak</th>
-                            <th class="text-left">Lokasi</th>
-                            <th class="text-center">Foto</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-left">Catatan Admin</th>
-                            
-                            {{-- KOLOM TANGGAL (MASUK & UPDATE) --}}
-                            <th class="text-left">Tanggal</th>
-                            
-                            <th class="text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($aduan as $item)
-                            <tr>
-                                {{-- No --}}
-                                <td class="text-center">
-                                    <strong class="text-gray-500">{{ $loop->iteration }}</strong>
-                                </td>
+    <thead>
+        <tr>
+            <th class="text-center">No</th>
+            <th class="text-left">Pelapor</th>
+            <th class="text-left">Tipe Aduan</th>
+            <th class="text-left">Kontak</th>
+            <th class="text-left">Lokasi</th>
+            <th class="text-center">Foto</th>
+            <th class="text-center">Status</th>
+            <th class="text-left">Catatan Admin</th>
+            <th class="text-left">Tanggal</th>
+            <th class="text-center">Aksi</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($aduan as $item)
+            <tr>
+                {{-- No --}}
+                <td class="text-center">
+                    <strong class="text-gray-500">{{ $loop->iteration }}</strong>
+                </td>
 
-                                {{-- Pelapor --}}
-                                <td class="text-left">
-                                    <strong class="text-primary-500">{{ $item['nama'] }}</strong>
-                                </td>
+                {{-- Pelapor --}}
+                <td class="text-left">
+                    <strong class="text-primary-500">{{ $item->nama_pelapor }}</strong>
+                </td>
 
-                                {{-- Tipe & Kontak --}}
-                                <td class="text-left">
-                                    <span class="block text-xs font-semibold mb-1">{{ $item['tipe'] }}</span>
-                                    <small class="text-gray-500">{{ $item['nomor_hp'] }}</small>
-                                </td>
+                {{-- Tipe & Kontak --}}
+                <td class="text-left">
+                    <span class="block text-xs font-semibold mb-1">{{ $item->tipe_aduan }}</span>
+                </td>
 
-                                {{-- Lokasi (Maps & Deskripsi digabung agar hemat tempat) --}}
-                                <td class="text-left">
-                                    <div class="flex flex-col gap-1">
-                                        {{-- Maps --}}
-                                        <div class="text-xs">
-                                            <span class="font-semibold text-gray-700">Titik:</span> {{ $item['lokasi'] }}
-                                            <a href="https://maps.google.com/?q={{ $item['lokasi'] }}" target="_blank" class="text-blue-500 hover:underline inline-flex items-center ml-1">
-                                                <i class="material-symbols-outlined !text-[14px]">map</i>
-                                            </a>
-                                        </div>
-                                        {{-- Deskripsi --}}
-                                        <div class="text-xs italic text-gray-500 bg-gray-50 p-1 rounded border border-gray-100">
-                                            "{{ $item['deskripsi'] }}"
-                                        </div>
-                                    </div>
-                                </td>
+                {{-- Tipe & Kontak --}}
+                <td class="text-left">
+                    <small class="text-gray-500">{{ $item->no_hp }}</small>
+                </td>
 
-                                {{-- Foto --}}
-                                <td class="text-center">
-                                    <a href="{{ $item['foto'] }}" target="_blank" class="text-blue-500 hover:text-blue-700 inline-block p-1 bg-blue-50 rounded-full">
-                                        <i class="material-symbols-outlined !text-md">image</i>
-                                    </a>
-                                </td>
+                {{-- Lokasi --}}
+                <td class="text-left">
+                    <div class="flex flex-col gap-1">
+                        <div class="text-xs">
+                            <span class="font-semibold text-gray-700">Titik:</span>
+                            <a href="https://maps.google.com/?q={{ $item->latitude }},{{ $item->longitude }}"
+                               target="_blank"
+                               class="text-blue-500 hover:underline inline-flex items-center ml-1">
+                                <i class="material-symbols-outlined !text-[14px]">map</i>
+                            </a>
+                        </div>
+                        <div class="text-xs italic text-gray-500 bg-gray-50 p-1 rounded border border-gray-100">
+                            "{{ $item->deskripsi_lokasi }}"
+                        </div>
+                    </div>
+                </td>
 
-                                {{-- Status --}}
-                                <td class="text-center">
-                                    <span class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-xs
-                                        @if($item['status'] == 'Pending') bg-yellow-100 dark:bg-[#15203c] text-yellow-600
-                                        @elseif($item['status'] == 'Diterima') bg-green-100 dark:bg-[#15203c] text-green-600
-                                        @elseif($item['status'] == 'Ditolak') bg-red-100 dark:bg-[#15203c] text-red-600
-                                        @endif">
-                                        {{ $item['status'] }}
-                                    </span>
-                                </td>
+                {{-- Foto --}}
+                <td class="text-center">
+                    @if($item->foto_lapangan)
+                        <a href="{{ asset('storage/' . $item->foto_lapangan) }}" target="_blank"
+                           class="text-blue-500 hover:text-blue-700 inline-block p-1 bg-blue-50 rounded-full">
+                            <i class="material-symbols-outlined !text-md">image</i>
+                        </a>
+                    @else
+                        <span class="text-xs text-gray-300">-</span>
+                    @endif
+                </td>
 
-                                {{-- Catatan --}}
-                                <td class="text-left">
-                                    @if($item['catatan'])
-                                        <span class="text-xs text-gray-600">{{ $item['catatan'] }}</span>
-                                    @else
-                                        <span class="text-xs text-gray-300">-</span>
-                                    @endif
-                                </td>
+                {{-- Status --}}
+                <td class="text-center">
+                    <span class="px-[8px] py-[3px] inline-block rounded-sm font-medium text-xs
+                        @if($item->status_verifikasi == 'Pending') bg-yellow-100 dark:bg-[#15203c] text-yellow-600
+                        @elseif($item->status_verifikasi == 'Diterima') bg-green-100 dark:bg-[#15203c] text-green-600
+                        @elseif($item->status_verifikasi == 'Ditolak') bg-red-100 dark:bg-[#15203c] text-red-600
+                        @endif">
+                        {{ $item->status_verifikasi }}
+                    </span>
+                </td>
 
-                                {{-- Tanggal (Masuk & Update) --}}
-                                <td class="text-left">
-                                    <div class="flex flex-col text-xs gap-1">
-                                        <div>
-                                            <span class="text-gray-400 text-[10px] uppercase">Masuk:</span><br>
-                                            <span class="font-medium text-gray-800">{{ $item['tanggal'] }}</span>
-                                        </div>
-                                        <div>
-                                            <span class="text-gray-400 text-[10px] uppercase">Update:</span><br>
-                                            <span class="font-medium text-blue-600">{{ $item['updated_at'] }}</span>
-                                        </div>
-                                    </div>
-                                </td>
+                {{-- Catatan --}}
+                <td class="text-left">
+                    @if($item->catatan_admin)
+                        <span class="text-xs text-gray-600">{{ $item->catatan_admin }}</span>
+                    @else
+                        <span class="text-xs text-gray-300">-</span>
+                    @endif
+                </td>
 
-                                {{-- Aksi --}}
-                                <td class="text-center">
-                                    <div class="flex items-center gap-[5px] justify-center">
-                                        <button onclick="actionVerifikasi({{ $item['id'] }}, '{{ $item['nama'] }}')" class="text-green-500 hover:text-green-700 transition" title="Verifikasi">
-                                            <i class="material-symbols-outlined !text-md">check_circle</i>
-                                        </button>
-                                        <button onclick="actionTolak({{ $item['id'] }}, '{{ $item['nama'] }}')" class="text-yellow-500 hover:text-yellow-700 transition" title="Tolak">
-                                            <i class="material-symbols-outlined !text-md">cancel</i>
-                                        </button>
-                                        <button onclick="actionHapus({{ $item['id'] }}, '{{ $item['nama'] }}')" class="text-red-500 hover:text-red-700 transition" title="Hapus">
-                                            <i class="material-symbols-outlined !text-md">delete</i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                {{-- Tanggal --}}
+                <td class="text-left">
+                    <div class="flex flex-col text-xs gap-1">
+                        <div>
+                            <span class="text-gray-400 text-[10px] uppercase">Masuk:</span><br>
+                            <span class="font-medium text-gray-800">
+                                {{ $item->created_at->format('Y-m-d') }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 text-[10px] uppercase">Update:</span><br>
+                            <span class="font-medium text-blue-600">
+                                {{ $item->updated_at->format('Y-m-d') }}
+                            </span>
+                        </div>
+                    </div>
+                </td>
+
+                {{-- Aksi --}}
+                <td class="text-center">
+                    <div class="flex items-center gap-[5px] justify-center">
+                        <button onclick="actionVerifikasi({{ $item->id }}, '{{ $item->nama_pelapor }}')"
+                                class="text-green-500 hover:text-green-700 transition" title="Verifikasi">
+                            <i class="material-symbols-outlined !text-md">check_circle</i>
+                        </button>
+                        <button onclick="actionTolak({{ $item->id }}, '{{ $item->nama_pelapor }}')"
+                                class="text-yellow-500 hover:text-yellow-700 transition" title="Tolak">
+                            <i class="material-symbols-outlined !text-md">cancel</i>
+                        </button>
+                        <button onclick="actionHapus({{ $item->id }}, '{{ $item->nama_pelapor }}')"
+                                class="text-red-500 hover:text-red-700 transition" title="Hapus">
+                            <i class="material-symbols-outlined !text-md">delete</i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
+
             </div>
         </div>
     </div>

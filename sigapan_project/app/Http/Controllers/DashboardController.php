@@ -11,7 +11,7 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $this->setRule('dashboard.read');
+        // $this->setRule('dashboard.read');
         //
         return view('dashboard.index');
     }

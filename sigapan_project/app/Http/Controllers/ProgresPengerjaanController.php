@@ -12,7 +12,7 @@ class ProgresPengerjaanController extends Controller
      */
     public function index()
     {
-        $this->setRule('progres-pengerjaan.read');
+        // $this->setRule('progres-pengerjaan.read');
 
         // TODO: Replace with actual database query
         // $progresPengerjaan = ProgresPengerjaan::with(['asetPju', 'user'])->latest()->get();
@@ -99,7 +99,7 @@ class ProgresPengerjaanController extends Controller
      */
     public function store(Request $request)
     {
-        $this->setRule('progres-pengerjaan.create');
+        // $this->setRule('progres-pengerjaan.create');
 
         // TODO: Implement database insertion
         // ProgresPengerjaan::create($request->validated());
@@ -112,7 +112,7 @@ class ProgresPengerjaanController extends Controller
      */
     public function show($asetPjuId)
     {
-        $this->setRule('progres-pengerjaan.read');
+        // $this->setRule('progres-pengerjaan.read');
 
         // TODO: Replace with actual database query
         // $progresHistory = ProgresPengerjaan::where('aset_pju_id', $asetPjuId)
@@ -164,7 +164,7 @@ class ProgresPengerjaanController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->setRule('progres-pengerjaan.update');
+        // $this->setRule('progres-pengerjaan.update');
 
         // TODO: Implement database update
         // $progres = ProgresPengerjaan::findOrFail($id);

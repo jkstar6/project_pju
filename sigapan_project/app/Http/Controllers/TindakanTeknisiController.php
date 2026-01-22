@@ -12,7 +12,7 @@ class TindakanTeknisiController extends Controller
      */
     public function index()
     {
-        $this->setRule('tindakan-teknisi.read');
+        // $this->setRule('tindakan-teknisi.read');
 
         // TODO: Replace with actual database query
         // $logTindakan = LogTindakanTeknisi::with(['tiketPerbaikan', 'tiketPerbaikan.asetPju'])->latest()->get();
@@ -77,7 +77,7 @@ class TindakanTeknisiController extends Controller
      */
     public function store(Request $request)
     {
-        $this->setRule('tindakan-teknisi.create');
+        // $this->setRule('tindakan-teknisi.create');
 
         // TODO: Implement database insertion with file upload
         // $request->validate([
@@ -107,7 +107,7 @@ class TindakanTeknisiController extends Controller
      */
     public function show($id)
     {
-        $this->setRule('tindakan-teknisi.read');
+        // $this->setRule('tindakan-teknisi.read');
 
         // TODO: Replace with actual database query
         // $logTindakan = LogTindakanTeknisi::with(['tiketPerbaikan.asetPju'])->findOrFail($id);
@@ -139,7 +139,7 @@ class TindakanTeknisiController extends Controller
      */
     public function edit($id)
     {
-        $this->setRule('tindakan-teknisi.update');
+        // $this->setRule('tindakan-teknisi.update');
 
         // TODO: Replace with actual database query
         // return LogTindakanTeknisi::findOrFail($id);
@@ -164,7 +164,7 @@ class TindakanTeknisiController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->setRule('tindakan-teknisi.update');
+        // $this->setRule('tindakan-teknisi.update');
 
         // TODO: Implement database update
         // $log = LogTindakanTeknisi::findOrFail($id);
@@ -178,7 +178,7 @@ class TindakanTeknisiController extends Controller
      */
     public function destroy($id)
     {
-        $this->setRule('tindakan-teknisi.delete');
+        // $this->setRule('tindakan-teknisi.delete');
 
         // TODO: Implement database deletion
         // LogTindakanTeknisi::findOrFail($id)->delete();

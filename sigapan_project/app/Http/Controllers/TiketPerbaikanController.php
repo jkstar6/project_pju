@@ -12,7 +12,7 @@ class TiketPerbaikanController extends Controller
      */
     public function index()
     {
-        $this->setRule('tiket-perbaikan.read');
+        // $this->setRule('tiket-perbaikan.read');
 
         // TODO: Replace with actual database query
         // $tiketPerbaikan = TiketPerbaikan::with(['pengaduan', 'asetPju', 'timLapangan'])->latest()->get();
@@ -77,7 +77,7 @@ class TiketPerbaikanController extends Controller
      */
     public function store(Request $request)
     {
-        $this->setRule('tiket-perbaikan.create');
+        // $this->setRule('tiket-perbaikan.create');
 
         // TODO: Implement database insertion
         // TiketPerbaikan::create($request->validated());
@@ -90,7 +90,7 @@ class TiketPerbaikanController extends Controller
      */
     public function show($id)
     {
-        $this->setRule('tiket-perbaikan.read');
+        // $this->setRule('tiket-perbaikan.read');
 
         // TODO: Replace with actual database query
         // $tiket = TiketPerbaikan::with(['pengaduan', 'asetPju', 'timLapangan', 'logTindakan'])->findOrFail($id);
@@ -135,7 +135,7 @@ class TiketPerbaikanController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->setRule('tiket-perbaikan.update');
+        // $this->setRule('tiket-perbaikan.update');
 
         // TODO: Implement database update
         // $tiket = TiketPerbaikan::findOrFail($id);
@@ -149,7 +149,7 @@ class TiketPerbaikanController extends Controller
      */
     public function updateStatus(Request $request, $id)
     {
-        $this->setRule('tiket-perbaikan.update');
+        // $this->setRule('tiket-perbaikan.update');
 
         // TODO: Implement status update
         // $tiket = TiketPerbaikan::findOrFail($id);

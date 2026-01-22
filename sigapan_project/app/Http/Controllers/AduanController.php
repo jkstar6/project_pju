@@ -3,64 +3,59 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\PengaduanMasyarakat;
 
 class AduanController extends Controller
 {
     /**
-     * MOCKUP DATA PENGADUAN (ADMIN)
+     * LIST ADUAN (ADMIN)
      */
     public function index()
     {
-        $aduan = [
-            (object) [
-                'id' => 1,
-                'nama_pelapor' => 'Budi Santoso',
-                'no_hp' => '081234567890',
-                'tipe_aduan' => 'Lampu Mati',
-                'deskripsi_lokasi' => 'Jl. Mawar RT 03 RW 01, dekat mushola',
-                'latitude' => -7.795580,
-                'longitude' => 110.369490,
-                'foto_lapangan' => 'lampu_mati_1.jpg',
-                'status_verifikasi' => 'Pending',
-                'catatan_admin' => null,
-                'created_at' => now()->subDays(1),
-            ],
-            (object) [
-                'id' => 2,
-                'nama_pelapor' => 'Siti Aminah',
-                'no_hp' => '082345678901',
-                'tipe_aduan' => 'Permohonan PJU Baru',
-                'deskripsi_lokasi' => 'Jl. Melati, area persawahan gelap',
-                'latitude' => -7.801200,
-                'longitude' => 110.360120,
-                'foto_lapangan' => 'pju_baru_1.jpg',
-                'status_verifikasi' => 'Diterima',
-                'catatan_admin' => 'Akan dijadwalkan pemasangan',
-                'created_at' => now()->subDays(3),
-            ],
-            (object) [
-                'id' => 3,
-                'nama_pelapor' => 'Ahmad Dani',
-                'no_hp' => '083456789012',
-                'tipe_aduan' => 'Lampu Mati',
-                'deskripsi_lokasi' => 'Depan pasar tradisional',
-                'latitude' => -7.790100,
-                'longitude' => 110.375880,
-                'foto_lapangan' => null,
-                'status_verifikasi' => 'Ditolak',
-                'catatan_admin' => 'Lampu masih berfungsi normal',
-                'created_at' => now()->subDays(5),
-            ],
-        ];
-
+        $aduan = PengaduanMasyarakat::latest()->get();
         return view('aduan-admin.index', compact('aduan'));
     }
 
     /**
-     * SIMPAN ADUAN (MASIH MOCK)
+     * SIMPAN ADUAN (DATABASE)
      */
     public function store(Request $request)
     {
-        return back()->with('success', 'Aduan berhasil dikirim (mockup).');
+        // VALIDASI
+        $validated = $request->validate([
+            'nama_pelapor' => 'required|string|max:100',
+            'no_hp'        => 'required|string|max:20',
+            'tipe_aduan'   => 'required|in:lampu_mati,permohonan_pju_baru',
+            'deskripsi'    => 'required|string',
+            'latitude'     => 'required|numeric',
+            'longitude'    => 'required|numeric',
+            'foto'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        // KONVERSI TIPE ADUAN → ENUM DATABASE
+        $mapTipe = [
+            'lampu_mati' => 'Lampu Mati',
+            'permohonan_pju_baru' => 'Permohonan PJU Baru',
+        ];
+
+        // UPLOAD FOTO
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('aduan', 'public');
+        }
+
+        // SIMPAN KE DATABASE
+        PengaduanMasyarakat::create([
+            'nama_pelapor'     => $validated['nama_pelapor'],
+            'no_hp'            => $validated['no_hp'],
+            'tipe_aduan'       => $mapTipe[$validated['tipe_aduan']],
+            'deskripsi_lokasi' => $validated['deskripsi'],
+            'latitude'         => $validated['latitude'],
+            'longitude'        => $validated['longitude'],
+            'foto_lapangan'    => $fotoPath,
+            'status_verifikasi'=> 'Pending',
+        ]);
+
+        return back()->with('success', 'Aduan berhasil dikirim.');
     }
 }

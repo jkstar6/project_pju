@@ -39,7 +39,7 @@
 
         /* --- IMAGE BOX --- */
         .custom-img-box {
-            height: 220px !important; /* Sedikit dipertinggi agar lega */
+            height: 220px !important;
             width: 100%;
             position: relative;
         }
@@ -50,39 +50,39 @@
             object-fit: cover;
         }
         
-        /* --- STATUS BADGE (YANG DIPERBAIKI) --- */
+        /* --- STATUS BADGE --- */
         .status-badge {
             position: absolute;
             top: 16px;
             right: 16px;
-            padding: 6px 16px; /* Padding lebih besar */
+            padding: 6px 16px;
             border-radius: 50px;
             font-size: 11px;
-            font-weight: 800; /* Font lebih tebal */
+            font-weight: 800;
             color: white;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.25); /* Shadow lebih kuat agar kontras */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
             z-index: 10;
         }
 
         /* Warna Status Spesifik */
         .status-menunggu {
-            background-color: #f59e0b; /* Oranye/Amber: Menarik perhatian */
-            border: 2px solid #ffffff; /* Border putih agar memisah dari gambar */
+            background-color: #f59e0b;
+            border: 2px solid #ffffff;
         }
 
         .status-selesai {
-            background-color: #10b981; /* Hijau Emerald: Menenangkan/Sukses */
+            background-color: #10b981;
             border: 2px solid #ffffff;
         }
 
         .status-proses {
-            background-color: #3b82f6; /* Biru: Informatif */
+            background-color: #3b82f6; 
             border: 2px solid #ffffff;
         }
 
-        /* Indikator Garis Warna di Atas Kartu (Opsional, agar lebih jelas) */
+        /* Indikator Garis Warna di Atas Kartu */
         .card-border-menunggu { border-top: 4px solid #f59e0b; }
         .card-border-selesai { border-top: 4px solid #10b981; }
         .card-border-proses { border-top: 4px solid #3b82f6; }
@@ -101,78 +101,59 @@
 
             <div class="custom-grid-container">
 
-                {{-- Tambahkan class 'card-border-menunggu' di parent card --}}
-                <a href="{{ url('/detail-aduan/1') }}" class="custom-card group card-border-menunggu">
-                    <div class="custom-img-box">
-                        <img src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&w=2070&auto=format&fit=crop" alt="Jalan Rusak">
-                        {{-- Gunakan class .status-menunggu --}}
-                        <span class="status-badge status-menunggu">
-                            <i class="ti ti-clock-hour-4 mr-1"></i> Menunggu
-                        </span>
-                    </div>
-                    <div class="p-5 flex-1 flex flex-col">
-                        <div class="flex items-center gap-2 text-neutral-500 text-xs mb-3 font-medium">
-                            <i class="ti ti-calendar"></i> <span>2 days ago</span>
-                        </div>
-                        <h3 class="text-lg font-bold text-neutral-900 dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
-                            Jalan Bocor
-                        </h3>
-                        <p class="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2 mb-4">
-                            Sepanjang jalan bantul banyak yang berlubang pak, mohon segera diperbaiki.
-                        </p>
-                        <div class="flex items-center gap-2 text-neutral-500 text-xs mt-auto">
-                            <i class="ti ti-map-pin text-red-500"></i> Bantul
-                        </div>
-                    </div>
-                </a>
+                {{-- LOOPING DATA DARI CONTROLLER --}}
+                @forelse($aduan as $item)
+                    {{-- 
+                        Karena data yang dikirim controller adalah yang berstatus 'Diterima',
+                        maka kita gunakan style visual 'Proses' (Biru) agar sesuai konteks verifikasi.
+                    --}}
+                    <a href="{{ url('/detail-aduan/' . $item->id) }}" class="custom-card group card-border-proses">
+                        <div class="custom-img-box">
+                            {{-- Cek apakah ada foto lapangan --}}
+                            @if($item->foto_lapangan)
+                                <img src="{{ asset('storage/' . $item->foto_lapangan) }}" alt="{{ $item->tipe_aduan }}">
+                            @else
+                                {{-- Placeholder jika tidak ada gambar --}}
+                                <img src="https://via.placeholder.com/400x300?text=Tidak+Ada+Foto" alt="No Image">
+                            @endif
 
-                <a href="{{ url('/detail-aduan/2') }}" class="custom-card group card-border-menunggu">
-                    <div class="custom-img-box">
-                        <img src="https://thetapaktuanpost.com/wp-content/uploads/2020/03/Lampu-Jalan-Rusak.JPG.jpg" alt="Lampu Mati">
-                        <span class="status-badge status-menunggu">
-                            <i class="ti ti-clock-hour-4 mr-1"></i> Menunggu
-                        </span>
-                    </div>
-                    <div class="p-5 flex-1 flex flex-col">
-                        <div class="flex items-center gap-2 text-neutral-500 text-xs mb-3 font-medium">
-                            <i class="ti ti-calendar"></i> <span>3 days ago</span>
+                            {{-- Tampilkan Status Badge (Diterima) --}}
+                            <span class="status-badge status-proses">
+                                <i class="ti ti-check mr-1"></i> Diterima
+                            </span>
                         </div>
-                        <h3 class="text-lg font-bold text-neutral-900 dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
-                            Lampu Mati
-                        </h3>
-                        <p class="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2 mb-4">
-                            Lampunya mati total di perempatan jalan, sangat gelap saat malam.
-                        </p>
-                        <div class="flex items-center gap-2 text-neutral-500 text-xs mt-auto">
-                            <i class="ti ti-map-pin text-red-500"></i> Kominfo
-                        </div>
-                    </div>
-                </a>
 
-                {{-- Tambahkan class 'card-border-selesai' di parent card --}}
-                <a href="{{ url('/detail-aduan/3') }}" class="custom-card group card-border-selesai">
-                    <div class="custom-img-box">
-                        <img src="https://images.unsplash.com/photo-1530587191325-3db32d826c18?q=80&w=2069&auto=format&fit=crop" alt="Sampah">
-                        {{-- Gunakan class .status-selesai --}}
-                        <span class="status-badge status-selesai">
-                            <i class="ti ti-check mr-1"></i> Selesai
-                        </span>
-                    </div>
-                    <div class="p-5 flex-1 flex flex-col">
-                        <div class="flex items-center gap-2 text-neutral-500 text-xs mb-3 font-medium">
-                            <i class="ti ti-calendar"></i> <span>5 days ago</span>
+                        <div class="p-5 flex-1 flex flex-col">
+                            <div class="flex items-center gap-2 text-neutral-500 text-xs mb-3 font-medium">
+                                <i class="ti ti-calendar"></i> 
+                                {{-- Menampilkan waktu relatif (ex: 2 jam yang lalu) --}}
+                                <span>{{ $item->created_at->diffForHumans() }}</span>
+                            </div>
+                            
+                            <h3 class="text-lg font-bold text-neutral-900 dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
+                                {{ $item->tipe_aduan }}
+                            </h3>
+                            
+                            {{-- Batasi deskripsi agar tidak terlalu panjang (limit 100 karakter) --}}
+                            <p class="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2 mb-4">
+                                {{ Str::limit($item->deskripsi_lokasi, 100) }}
+                            </p>
+                            
+                            <div class="flex items-center gap-2 text-neutral-500 text-xs mt-auto">
+                                <i class="ti ti-user text-blue-500"></i> {{ $item->nama_pelapor }}
+                            </div>
                         </div>
-                        <h3 class="text-lg font-bold text-neutral-900 dark:text-white mb-2 group-hover:text-blue-600 transition-colors">
-                            Sampah Numpuk
-                        </h3>
-                        <p class="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2 mb-4">
-                            Bau menyengat di sekitar pasar karena sampah menumpuk belum diangkut.
-                        </p>
-                        <div class="flex items-center gap-2 text-neutral-500 text-xs mt-auto">
-                            <i class="ti ti-map-pin text-red-500"></i> Pasar Seni
+                    </a>
+                @empty
+                    {{-- Tampilan jika belum ada data yang diverifikasi --}}
+                    <div class="col-span-1 md:col-span-3 text-center py-12">
+                        <div class="inline-block p-4 rounded-full bg-gray-100 mb-4">
+                            <i class="ti ti-inbox text-4xl text-gray-400"></i>
                         </div>
+                        <h3 class="text-lg font-medium text-gray-900">Belum ada aduan terverifikasi</h3>
+                        <p class="text-gray-500 mt-1">Laporan yang disetujui admin akan muncul di sini.</p>
                     </div>
-                </a>
+                @endforelse
 
             </div>
         </div>

@@ -4,7 +4,6 @@
 
 {{-- 
     STYLE MANUAL (CSS)
-    Kita gunakan CSS ini untuk memastikan tampilan rapi tanpa merusak Navbar bawaan.
 --}}
 @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -33,8 +32,8 @@
         /* --- CARD STYLING --- */
         .glass-card {
             background: #ffffff;
-            border-radius: 20px; /* Sudut lebih melengkung */
-            box-shadow: 0 10px 40px rgba(0,0,0,0.06); /* Shadow lembut */
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.06);
             border: 1px solid rgba(0,0,0,0.03);
             overflow: hidden;
             transition: transform 0.2s;
@@ -60,7 +59,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            color: #94a3b8; /* Abu-abu soft */
+            color: #94a3b8;
             margin-bottom: 12px;
         }
 
@@ -79,6 +78,7 @@
         .status-pending { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
         .status-proses  { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; }
         .status-selesai { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+        .status-tolak   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
         /* User Info Row */
         .info-row {
@@ -109,22 +109,6 @@
             position: sticky;
             top: 100px;
         }
-
-        /* Button */
-        .btn-action {
-            width: 100%;
-            padding: 12px;
-            background: #0f172a; /* Warna gelap elegan */
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .btn-action:hover {
-            background: #1e293b;
-        }
     </style>
 @endpush
 
@@ -147,12 +131,20 @@
                 {{-- KOLOM KIRI: Visual (Foto & Peta) --}}
                 <div class="space-y-8">
                     
+                    {{-- FOTO LAPANGAN DINAMIS --}}
                     <div class="glass-card">
-                        <img src="https://thetapaktuanpost.com/wp-content/uploads/2020/03/Lampu-Jalan-Rusak.JPG.jpg" 
-                             alt="Bukti Laporan" 
-                             class="hero-image">
+                        @if($aduan->foto_lapangan)
+                            <img src="{{ asset('storage/' . $aduan->foto_lapangan) }}" 
+                                 alt="{{ $aduan->tipe_aduan }}" 
+                                 class="hero-image">
+                        @else
+                            <img src="https://via.placeholder.com/800x400?text=Tidak+Ada+Foto" 
+                                 alt="Tidak Ada Foto" 
+                                 class="hero-image">
+                        @endif
                     </div>
 
+                    {{-- PETA LOKASI DINAMIS --}}
                     <div class="glass-card">
                         <div style="padding: 20px; border-bottom: 1px solid #f1f5f9;">
                             <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
@@ -176,11 +168,23 @@
                         {{-- Header: Judul & Status --}}
                         <div class="mb-6">
                             <div class="flex justify-between items-start mb-3">
-                                <span class="text-xs font-mono text-gray-400">#AD-2026001</span>
-                                <span class="status-pill status-pending">Pending</span>
+                                <span class="text-xs font-mono text-gray-400">#AD-{{ $aduan->id }}</span>
+                                
+                                {{-- LOGIK STATUS BADGE --}}
+                                @if($aduan->status_verifikasi == 'Pending')
+                                    <span class="status-pill status-pending">Menunggu Verifikasi</span>
+                                @elseif($aduan->status_verifikasi == 'Diterima')
+                                    <span class="status-pill status-proses">Diterima / Proses</span>
+                                @elseif($aduan->status_verifikasi == 'Ditolak')
+                                    <span class="status-pill status-tolak">Ditolak</span>
+                                @else
+                                    <span class="status-pill status-selesai">Selesai</span>
+                                @endif
                             </div>
-                            <h1 class="text-3xl font-extrabold text-gray-900 leading-tight mb-2">Lampu PJU Mati Total</h1>
-                            <p class="text-sm text-gray-500">Dilaporkan pada: 12 Januari 2026</p>
+                            <h1 class="text-3xl font-extrabold text-gray-900 leading-tight mb-2">{{ $aduan->tipe_aduan }}</h1>
+                            <p class="text-sm text-gray-500">
+                                Dilaporkan pada: {{ \Carbon\Carbon::parse($aduan->created_at)->translatedFormat('d F Y') }}
+                            </p>
                         </div>
 
                         <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
@@ -189,21 +193,29 @@
                         <div class="mb-6">
                             <div class="section-title">Informasi Pelapor</div>
                             <div class="info-row">
-                                <div class="avatar-circle">BS</div>
+                                {{-- Inisial Nama --}}
+                                <div class="avatar-circle">
+                                    {{ substr($aduan->nama_pelapor, 0, 2) }}
+                                </div>
                                 <div>
-                                    <div class="text-sm font-bold text-gray-800">Budi Santoso</div>
-                                    <div class="text-xs text-gray-500">Warga RT 05</div>
+                                    <div class="text-sm font-bold text-gray-800">{{ $aduan->nama_pelapor }}</div>
+                                    {{-- Hapus Nomor HP, ganti dengan label generic agar layout tetap rapi --}}
+                                    <div class="text-xs text-gray-500">Masyarakat / Pelapor</div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Deskripsi Masalah --}}
+                        {{-- Deskripsi Lokasi --}}
                         <div class="mb-6">
-                            <div class="section-title">Deskripsi Laporan</div>
+                            <div class="section-title">Deskripsi Lokasi</div>
                             <p class="text-gray-600 text-sm leading-relaxed" style="text-align: justify;">
-                                Lampu penerangan jalan umum (PJU) di perempatan jalan utama mati total sejak 3 hari yang lalu. Kondisi ini menyebabkan jalanan sangat gelap pada malam hari dan rawan kecelakaan lalu lintas. Mohon segera ditindaklanjuti.
+                                {{ $aduan->deskripsi_lokasi }}
                             </p>
                         </div>
+
+                        {{-- 
+                            BAGIAN CATATAN ADMIN TELAH DIHAPUS 
+                        --}}
 
                         {{-- Koordinat Teknis --}}
                         <div class="mb-8">
@@ -211,16 +223,14 @@
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                 <div style="background: #f1f5f9; padding: 8px; border-radius: 8px; text-align: center;">
                                     <span class="block text-xs text-gray-400">Latitude</span>
-                                    <span class="block text-sm font-mono font-bold text-gray-700">-7.8923</span>
+                                    <span class="block text-sm font-mono font-bold text-gray-700">{{ $aduan->latitude }}</span>
                                 </div>
                                 <div style="background: #f1f5f9; padding: 8px; border-radius: 8px; text-align: center;">
                                     <span class="block text-xs text-gray-400">Longitude</span>
-                                    <span class="block text-sm font-mono font-bold text-gray-700">110.3341</span>
+                                    <span class="block text-sm font-mono font-bold text-gray-700">{{ $aduan->longitude }}</span>
                                 </div>
                             </div>
                         </div>
-
-                        
 
                     </div>
                 </div>
@@ -232,9 +242,9 @@
     {{-- SCRIPT LOGIC --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Data Dummy Koordinat
-            var lat = -7.8923; 
-            var lng = 110.3341;
+            // Data Koordinat dari Database (Blade Injection)
+            var lat = {{ $aduan->latitude }}; 
+            var lng = {{ $aduan->longitude }};
 
             // Inisialisasi Map
             var map = L.map('map', { scrollWheelZoom: false }).setView([lat, lng], 15);
@@ -246,7 +256,7 @@
 
             var marker = L.marker([lat, lng]).addTo(map);
 
-            // Fetch Alamat
+            // Fetch Alamat dari Nominatim API
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
                 .then(response => response.json())
                 .then(data => {
@@ -258,8 +268,9 @@
                     }
                 })
                 .catch(error => {
+                    console.error('Error fetching address:', error);
                     document.getElementById('address-text').innerText = "Gagal memuat alamat.";
                 });
         });
     </script>
-@endsection
+@endsectionx`

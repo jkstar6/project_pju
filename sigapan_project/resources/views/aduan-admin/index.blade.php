@@ -180,6 +180,8 @@
 @endsection
 
 @push('scripts')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
 
@@ -192,63 +194,77 @@
 
         // SWEETALERT FUNCTIONS
         function actionVerifikasi(id, nama) {
-            Swal.fire({
-                title: 'Verifikasi Aduan',
-                text: "Berikan catatan tindak lanjut untuk " + nama,
-                icon: 'question',
-                input: 'textarea',
-                inputLabel: 'Catatan Admin',
-                inputPlaceholder: 'Contoh: Laporan valid, tim teknis akan meluncur besok...',
-                showCancelButton: true,
-                confirmButtonColor: '#10B981',
-                cancelButtonColor: '#6B7280',
-                confirmButtonText: 'Ya, Verifikasi!',
-                cancelButtonText: 'Batal',
-                inputValidator: (value) => {
-                    if (!value) return 'Anda harus menuliskan catatan verifikasi!'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire('Terverifikasi!', 'Status aduan diubah menjadi Diterima.<br>Catatan: ' + result.value, 'success')
-                }
+    Swal.fire({
+        title: 'Verifikasi Aduan',
+        input: 'textarea',
+        inputLabel: 'Catatan Admin',
+        showCancelButton: true,
+        confirmButtonText: 'Verifikasi'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/aduan/${id}/verifikasi`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    catatan_admin: result.value
+                })
             })
+            .then(res => res.json())
+            .then(() => location.reload());
         }
+    });
+}
+
 
         function actionTolak(id, nama) {
-            Swal.fire({
-                title: 'Tolak Aduan',
-                text: "Berikan alasan penolakan untuk " + nama,
-                icon: 'warning',
-                input: 'textarea',
-                inputLabel: 'Alasan Penolakan',
-                showCancelButton: true,
-                confirmButtonColor: '#F59E0B',
-                cancelButtonColor: '#6B7280',
-                confirmButtonText: 'Tolak Aduan',
-                inputValidator: (value) => {
-                    if (!value) return 'Anda harus menuliskan alasan penolakan!'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire('Ditolak!', 'Aduan ditolak karena: ' + result.value, 'success')
-                }
+    Swal.fire({
+        title: 'Tolak Aduan',
+        input: 'textarea',
+        inputLabel: 'Alasan Penolakan',
+        showCancelButton: true,
+        confirmButtonText: 'Tolak'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/aduan/${id}/tolak`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    catatan_admin: result.value
+                })
             })
+            .then(res => res.json())
+            .then(() => location.reload());
         }
+    });
+}
+
 
         function actionHapus(id, nama) {
-            Swal.fire({
-                title: 'Hapus Data?',
-                text: "Data aduan dari " + nama + " akan dihapus permanen.",
-                icon: 'error',
-                showCancelButton: true,
-                confirmButtonColor: '#EF4444',
-                cancelButtonColor: '#6B7280',
-                confirmButtonText: 'Ya, Hapus!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire('Dihapus!', 'Data berhasil dihapus.', 'success')
+    Swal.fire({
+        title: 'Hapus Aduan?',
+        text: 'Data akan dihapus permanen',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Hapus'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/aduan/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 }
             })
+            .then(res => res.json())
+            .then(() => location.reload());
         }
+    });
+}
+
     </script>
 @endpush

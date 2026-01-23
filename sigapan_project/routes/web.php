@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\Settings\RolesController;
 use App\Http\Controllers\Admin\Settings\UsersController;
 use App\Http\Controllers\Admin\Settings\NavigationsController;
 use App\Http\Controllers\Admin\Settings\PreferencesController;
+use App\Http\Controllers\TiketPerbaikanController;
 
 // ✅ Tambahan untuk Aduan
 use App\Http\Controllers\AduanController;
@@ -114,12 +115,18 @@ Route::middleware('auth', 'verified')->group(function () {
     });
 
     Route::prefix('/tiket-perbaikan')->name('tiket-perbaikan.')->group(function () {
-        Route::get('/', [App\Http\Controllers\TiketPerbaikanController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\TiketPerbaikanController::class, 'store'])->name('store');
-        Route::get('/{id}', [App\Http\Controllers\TiketPerbaikanController::class, 'show'])->name('show');
-        Route::put('/{id}', [App\Http\Controllers\TiketPerbaikanController::class, 'update'])->name('update');
-        Route::put('/{id}/status', [App\Http\Controllers\TiketPerbaikanController::class, 'updateStatus'])->name('updateStatus');
-    });
+    // Route untuk mengambil daftar aduan terverifikasi (JSON) untuk Modal Create
+    Route::get('/get-verified-aduan', [TiketPerbaikanController::class, 'getVerifiedAduan'])->name('get-verified-aduan');
+    
+    Route::get('/', [TiketPerbaikanController::class, 'index'])->name('index');
+    Route::post('/', [TiketPerbaikanController::class, 'store'])->name('store');
+    Route::get('/{id}', [TiketPerbaikanController::class, 'show'])->name('show');
+    
+    // Update data (Edit via Modal)
+    Route::put('/{id}', [TiketPerbaikanController::class, 'update'])->name('update');
+    
+    Route::delete('/{id}', [TiketPerbaikanController::class, 'destroy'])->name('destroy');
+});
 
     Route::prefix('/progres-pengerjaan')->name('progres-pengerjaan.')->group(function () {
         Route::get('/', [App\Http\Controllers\ProgresPengerjaanController::class, 'index'])->name('index');

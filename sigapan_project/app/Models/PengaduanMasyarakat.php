@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+// ✅ TAMBAHKAN INI AGAR TIDAK MERAH DI BAWAH:
+use App\Models\TiketPerbaikan;
+
 class PengaduanMasyarakat extends Model
 {
     use HasFactory;
@@ -22,4 +25,13 @@ class PengaduanMasyarakat extends Model
         'status_verifikasi',
         'catatan_admin',
     ];
+
+    /**
+     * Relasi ke Tiket Perbaikan
+     */
+    public function tiket()
+    {
+        // Sekarang TiketPerbaikan::class akan dikenali
+        return $this->hasOne(TiketPerbaikan::class, 'pengaduan_id');
+    }
 }

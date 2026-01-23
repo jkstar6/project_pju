@@ -4,157 +4,113 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+use App\Models\TiketPerbaikan;        
+use App\Models\PengaduanMasyarakat;   
 
 class TiketPerbaikanController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * HALAMAN UTAMA (LIST TIKET)
      */
     public function index()
     {
-        // $this->setRule('tiket-perbaikan.read');
-
-        // TODO: Replace with actual database query
-        // $tiketPerbaikan = TiketPerbaikan::with(['pengaduan', 'asetPju', 'timLapangan'])->latest()->get();
-        
-        // Mockup data
-        $tiketPerbaikan = [
-            [
-                'id' => 1,
-                'pengaduan_id' => 1,
-                'no_tiket' => 'TKT-2025-001',
-                'aset_pju_id' => 2,
-                'kode_aset' => 'PJU-002',
-                'lokasi_aset' => 'Jl. Parangtritis Km 5',
-                'tim_lapangan_id' => 1,
-                'nama_tim' => 'Tim Teknisi 1',
-                'tgl_jadwal' => '2025-01-20',
-                'prioritas' => 'Mendesak',
-                'status_tindakan' => 'Proses',
-                'perlu_surat_pln' => false,
-                'nama_pelapor' => 'Budi Hartono',
-                'created_at' => '2025-01-19 10:30:00'
-            ],
-            [
-                'id' => 2,
-                'pengaduan_id' => 2,
-                'no_tiket' => 'TKT-2025-002',
-                'aset_pju_id' => 3,
-                'kode_aset' => 'PJU-003',
-                'lokasi_aset' => 'Jl. Imogiri Timur Km 10',
-                'tim_lapangan_id' => 2,
-                'nama_tim' => 'Tim Teknisi 2',
-                'tgl_jadwal' => '2025-01-21',
-                'prioritas' => 'Mendesak',
-                'status_tindakan' => 'Menunggu',
-                'perlu_surat_pln' => true,
-                'nama_pelapor' => 'Siti Rahayu',
-                'created_at' => '2025-01-19 11:00:00'
-            ],
-            [
-                'id' => 3,
-                'pengaduan_id' => 3,
-                'no_tiket' => 'TKT-2025-003',
-                'aset_pju_id' => 5,
-                'kode_aset' => 'PJU-005',
-                'lokasi_aset' => 'Jl. Bantul Km 3',
-                'tim_lapangan_id' => 1,
-                'nama_tim' => 'Tim Teknisi 1',
-                'tgl_jadwal' => '2025-01-22',
-                'prioritas' => 'Biasa',
-                'status_tindakan' => 'Selesai',
-                'perlu_surat_pln' => false,
-                'nama_pelapor' => 'Ahmad Yani',
-                'created_at' => '2025-01-18 14:15:00'
-            ],
-        ];
+        $tiketPerbaikan = TiketPerbaikan::with(['pengaduan'])
+            // ✅ PERBAIKAN SORTING:
+            // 1. Prioritaskan status: Yang bukan 'Selesai' (0) di atas, 'Selesai' (1) di bawah.
+            ->orderByRaw("CASE WHEN status_tindakan = 'Selesai' THEN 1 ELSE 0 END ASC")
+            // 2. Setelah dikelompokkan status, urutkan berdasarkan yang terbaru dibuat
+            ->latest() 
+            ->get();
 
         return view('tiket-perbaikan.index', compact('tiketPerbaikan'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * API: AMBIL DAFTAR ADUAN VERIFIED (UNTUK MODAL CREATE)
      */
-    public function store(Request $request)
+    public function getVerifiedAduan()
     {
-        // $this->setRule('tiket-perbaikan.create');
+        $aduan = PengaduanMasyarakat::where('status_verifikasi', 'Diterima')
+            ->doesntHave('tiket')
+            ->latest()
+            ->get();
 
-        // TODO: Implement database insertion
-        // TiketPerbaikan::create($request->validated());
-
-        return redirect()->back()->with('success', 'Tiket perbaikan berhasil dibuat');
+        return response()->json($aduan);
     }
 
     /**
-     * Display the specified resource.
+     * STORE: MEMBUAT TIKET BARU
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'pengaduan_id' => 'required|exists:pengaduan_masyarakat,id',
+        ]);
+
+        $tiket = TiketPerbaikan::create([
+            'pengaduan_id'    => $request->pengaduan_id,
+            'tgl_jadwal'      => Carbon::now()->toDateString(),
+            'prioritas'       => 'Biasa',
+            'status_tindakan' => 'Menunggu',
+            'perlu_surat_pln' => 0,
+        ]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Tiket perbaikan berhasil dibuat.',
+            'data'    => $tiket
+        ]);
+    }
+
+    /**
+     * SHOW: DETAIL TIKET
      */
     public function show($id)
     {
-        // $this->setRule('tiket-perbaikan.read');
-
-        // TODO: Replace with actual database query
-        // $tiket = TiketPerbaikan::with(['pengaduan', 'asetPju', 'timLapangan', 'logTindakan'])->findOrFail($id);
+        $tiket = TiketPerbaikan::with(['pengaduan'])
+            ->findOrFail($id);
         
-        // Mockup data
-        $tiket = [
-            'id' => $id,
-            'no_tiket' => 'TKT-2025-001',
-            'pengaduan_id' => 1,
-            'aset_pju_id' => 2,
-            'kode_aset' => 'PJU-002',
-            'lokasi_aset' => 'Jl. Parangtritis Km 5',
-            'tim_lapangan_id' => 1,
-            'nama_tim' => 'Tim Teknisi 1',
-            'ketua_tim' => 'Budi Santoso',
-            'tgl_jadwal' => '2025-01-20',
-            'prioritas' => 'Mendesak',
-            'status_tindakan' => 'Proses',
-            'perlu_surat_pln' => false,
-            'pengaduan' => [
-                'nama_pelapor' => 'Budi Hartono',
-                'no_hp' => '081234567890',
-                'tipe_aduan' => 'lampu_mati',
-                'judul' => 'Lampu PJU Mati Total',
-                'deskripsi' => 'Lampu PJU di depan rumah saya mati total sejak 3 hari yang lalu',
-                'latitude' => -7.823456,
-                'longitude' => 110.378901,
-            ],
-            'log_tindakan' => [
-                'hasil_cek' => 'MCB trip, kabel phase putus',
-                'suku_cadang' => json_encode(['kabel' => '5m', 'MCB' => '1 unit']),
-                'created_at' => '2025-01-20 10:00:00',
-            ],
-            'created_at' => '2025-01-19 10:30:00'
-        ];
-
         return view('tiket-perbaikan.show', compact('tiket'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * UPDATE: MENGUBAH DATA TIKET (EDIT VIA MODAL)
      */
     public function update(Request $request, $id)
     {
-        // $this->setRule('tiket-perbaikan.update');
+        $tiket = TiketPerbaikan::findOrFail($id);
 
-        // TODO: Implement database update
-        // $tiket = TiketPerbaikan::findOrFail($id);
-        // $tiket->update($request->validated());
+        $validated = $request->validate([
+            'tgl_jadwal'      => 'nullable|date',
+            'prioritas'       => 'required|in:Biasa,Mendesak',
+            'status_tindakan' => 'required|in:Menunggu,Proses,Selesai',
+            'perlu_surat_pln' => 'required',
+        ]);
 
-        return redirect()->back()->with('success', 'Tiket perbaikan berhasil diperbarui');
+        $perluSurat = filter_var($validated['perlu_surat_pln'], FILTER_VALIDATE_BOOLEAN);
+
+        $tiket->update([
+            'tgl_jadwal'      => $validated['tgl_jadwal'],
+            'prioritas'       => $validated['prioritas'],
+            'status_tindakan' => $validated['status_tindakan'],
+            'perlu_surat_pln' => $perluSurat,
+        ]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Tiket perbaikan berhasil diperbarui.'
+        ]);
     }
 
-    /**
-     * Update status tiket perbaikan
-     */
-    public function updateStatus(Request $request, $id)
+    public function destroy($id)
     {
-        // $this->setRule('tiket-perbaikan.update');
+        $tiket = TiketPerbaikan::findOrFail($id);
+        $tiket->delete();
 
-        // TODO: Implement status update
-        // $tiket = TiketPerbaikan::findOrFail($id);
-        // $tiket->update(['status_tindakan' => $request->status]);
-
-        return redirect()->back()->with('success', 'Status tiket berhasil diperbarui');
+        return response()->json([
+            'success' => true, 
+            'message' => 'Tiket berhasil dihapus.'
+        ]);
     }
 }

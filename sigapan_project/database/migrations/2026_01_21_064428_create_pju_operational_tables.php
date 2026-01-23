@@ -14,8 +14,14 @@ return new class extends Migration
         // 1. Tabel Aset PJU
         Schema::create('aset_pju', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('panel_kwh_id')->constrained('panel_kwh')->onDelete('cascade');
-            $table->foreignId('jalan_id')->constrained('master_jalan')->onDelete('cascade');
+            $table->foreignId('panel_kwh_id')
+                ->nullable()
+                ->constrained('panel_kwh')
+                ->nullOnDelete();
+            $table->foreignId('jalan_id')
+                ->nullable()
+                ->constrained('master_jalan')
+                ->nullOnDelete();
             $table->string('kode_tiang', 20)->unique();
             $table->string('jenis_lampu', 50)->nullable();
             $table->integer('watt')->nullable();

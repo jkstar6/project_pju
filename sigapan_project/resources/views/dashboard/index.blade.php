@@ -98,7 +98,7 @@
             </div>
             <p class="text-gray-400 text-xs mt-4">Surveyor, Teknisi, dan Admin</p>
         </a>
-         <a href="/tindakan-teknisi" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-pink-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
+        <a href="/tindakan-teknisi" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-pink-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
             <div>
                 <div class="flex justify-between items-start">
                     <h4 class="text-gray-600 font-semibold text-sm">Tindakan Teknisi</h4>
@@ -111,6 +111,20 @@
                 <h2 class="text-4xl font-bold text-gray-800 mt-2">37</h2>
             </div>
             <p class="text-gray-400 text-xs mt-4">Hasil Tindakan Teknisi</p>
+        </a>
+        <a href="/aset-pju" class="group bg-white p-6 rounded-xl shadow-sm border-l-4 border-pink-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50">
+            <div>
+                <div class="flex justify-between items-start">
+                    <h4 class="text-gray-600 font-semibold text-sm">Aset PJU</h4>
+                    <div class="bg-pink-500 p-2 rounded-full text-white transition-transform duration-300 group-hover:scale-110">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="text-4xl font-bold text-gray-800 mt-2">37</h2>
+            </div>
+            <p class="text-gray-400 text-xs mt-4">Jumlah aset PJU</p>
         </a>
 
     </div>

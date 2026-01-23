@@ -2,18 +2,19 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\AduanController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\AsetPjuController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Operator\HomeController;
 use App\Http\Controllers\Landing\BerandaController;
 use App\Http\Controllers\Admin\Settings\RolesController;
 use App\Http\Controllers\Admin\Settings\UsersController;
-use App\Http\Controllers\Admin\Settings\NavigationsController;
-use App\Http\Controllers\Admin\Settings\PreferencesController;
 
 // ✅ Tambahan untuk Aduan
-use App\Http\Controllers\AduanController;
+use App\Http\Controllers\Admin\Settings\NavigationsController;
+use App\Http\Controllers\Admin\Settings\PreferencesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -87,6 +88,18 @@ Route::middleware('auth', 'verified')->group(function () {
     // ===================================================================
     // PJU MANAGEMENT ROUTES
     // ===================================================================
+
+    /*
+    |--------------------------------------------------------------------------
+    | ASET PJU (FIX & KONSISTEN)
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/aset-pju', [AsetPjuController::class, 'index'])
+        ->name('admin.aset-pju.index');
+
+    Route::post('/aset-pju', [AsetPjuController::class, 'store'])
+        ->name('aset-pju.store');
+
 
     Route::prefix('/tim-lapangan')->name('tim-lapangan.')->group(function () {
         Route::get('/', [App\Http\Controllers\TimLapanganController::class, 'index'])->name('index');

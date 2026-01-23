@@ -273,4 +273,4 @@
                 });
         });
     </script>
-@endsectionx`
+@endsection

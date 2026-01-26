@@ -2,174 +2,83 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Models\AsetPju;
+use App\Models\ProgresPengerjaan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProgresPengerjaanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        // $this->setRule('progres-pengerjaan.read');
+        // 1. Ambil data progres (Grouped by aset agar tampil 1 row per aset)
+        $progresRaw = ProgresPengerjaan::with(['asetPju', 'user'])
+            ->orderBy('tgl_update', 'desc')
+            ->get();
 
-        // TODO: Replace with actual database query
-        // $progresPengerjaan = ProgresPengerjaan::with(['asetPju', 'user'])->latest()->get();
-        
-        // Mockup data
-        $progresPengerjaan = [
-            [
-                'id' => 1,
-                'aset_pju_id' => 10,
-                'kode_aset' => 'PJU-NEW-001',
-                'lokasi_proyek' => 'Jl. Ring Road Selatan',
-                'user_id' => 2,
-                'nama_petugas' => 'Budi Santoso',
-                'tahapan' => 'Galian',
-                'tgl_update' => '2025-01-15 08:00:00',
-                'keterangan' => 'Galian pondasi tiang selesai, kedalaman 1.5m',
-                'latitude_log' => -7.812345,
-                'longitude_log' => 110.398765,
-                'persentase' => 20
-            ],
-            [
-                'id' => 2,
-                'aset_pju_id' => 10,
-                'kode_aset' => 'PJU-NEW-001',
-                'lokasi_proyek' => 'Jl. Ring Road Selatan',
-                'user_id' => 2,
-                'nama_petugas' => 'Budi Santoso',
-                'tahapan' => 'Pengecoran',
-                'tgl_update' => '2025-01-16 10:30:00',
-                'keterangan' => 'Pengecoran pondasi selesai, menunggu kering',
-                'latitude_log' => -7.812345,
-                'longitude_log' => 110.398765,
-                'persentase' => 40
-            ],
-            [
-                'id' => 3,
-                'aset_pju_id' => 10,
-                'kode_aset' => 'PJU-NEW-001',
-                'lokasi_proyek' => 'Jl. Ring Road Selatan',
-                'user_id' => 2,
-                'nama_petugas' => 'Budi Santoso',
-                'tahapan' => 'Pemasangan Tiang dan Armatur',
-                'tgl_update' => '2025-01-18 09:00:00',
-                'keterangan' => 'Tiang dan armatur terpasang dengan baik',
-                'latitude_log' => -7.812345,
-                'longitude_log' => 110.398765,
-                'persentase' => 60
-            ],
-            [
-                'id' => 4,
-                'aset_pju_id' => 11,
-                'kode_aset' => 'PJU-NEW-002',
-                'lokasi_proyek' => 'Jl. Gedongkuning',
-                'user_id' => 3,
-                'nama_petugas' => 'Siti Aminah',
-                'tahapan' => 'Pemasangan Jaringan',
-                'tgl_update' => '2025-01-19 14:00:00',
-                'keterangan' => 'Pemasangan kabel jaringan selesai, siap testing',
-                'latitude_log' => -7.834567,
-                'longitude_log' => 110.412345,
-                'persentase' => 80
-            ],
-            [
-                'id' => 5,
-                'aset_pju_id' => 12,
-                'kode_aset' => 'PJU-NEW-003',
-                'lokasi_proyek' => 'Jl. Pathuk Barat',
-                'user_id' => 2,
-                'nama_petugas' => 'Budi Santoso',
-                'tahapan' => 'Selesai',
-                'tgl_update' => '2025-01-17 16:00:00',
-                'keterangan' => 'Proyek selesai 100%, lampu sudah menyala',
-                'latitude_log' => -7.845678,
-                'longitude_log' => 110.423456,
-                'persentase' => 100
-            ],
-        ];
+        $progresPengerjaan = $progresRaw->unique('aset_pju_id');
 
-        return view('progres-pengerjaan.index', compact('progresPengerjaan'));
+        // 2. LOGIKA BARU: Filter Aset untuk Dropdown Modal Tambah
+        // Ambil semua ID aset_pju yang sudah ada di tabel progres_pengerjaan
+        $usedAsetIds = ProgresPengerjaan::pluck('aset_pju_id')->toArray();
+
+        // Hanya ambil Aset PJU yang ID-nya TIDAK ADA di daftar $usedAsetIds
+        $listAset = AsetPju::whereNotIn('id', $usedAsetIds)
+            ->orderBy('kode_tiang', 'asc')
+            ->get();
+
+        return view('progres-pengerjaan.index', compact('progresPengerjaan', 'listAset'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        // $this->setRule('progres-pengerjaan.create');
+        $request->validate([
+            'aset_pju_id' => 'required|exists:aset_pju,id|unique:progres_pengerjaan,aset_pju_id', // Tambahan validasi unique biar aman
+            'tahapan'     => 'required',
+        ]);
 
-        // TODO: Implement database insertion
-        // ProgresPengerjaan::create($request->validated());
+        $aset = AsetPju::find($request->aset_pju_id);
+
+        ProgresPengerjaan::create([
+            'aset_pju_id'   => $request->aset_pju_id,
+            'user_id'       => Auth::id(),
+            'tahapan'       => $request->tahapan,
+            'tgl_update'    => now(), 
+            'keterangan'    => '-',
+            'latitude_log'  => $aset->latitude,
+            'longitude_log' => $aset->longitude,
+        ]);
 
         return redirect()->back()->with('success', 'Progres pengerjaan berhasil ditambahkan');
     }
 
-    /**
-     * Display the specified resource (by aset_pju_id).
-     */
-    public function show($asetPjuId)
-    {
-        // $this->setRule('progres-pengerjaan.read');
-
-        // TODO: Replace with actual database query
-        // $progresHistory = ProgresPengerjaan::where('aset_pju_id', $asetPjuId)
-        //     ->with('user')
-        //     ->orderBy('tgl_update', 'asc')
-        //     ->get();
-        
-        // Mockup data
-        $progresHistory = [
-            [
-                'id' => 1,
-                'tahapan' => 'Galian',
-                'tgl_update' => '2025-01-15 08:00:00',
-                'keterangan' => 'Galian pondasi tiang selesai, kedalaman 1.5m',
-                'nama_petugas' => 'Budi Santoso',
-                'persentase' => 20
-            ],
-            [
-                'id' => 2,
-                'tahapan' => 'Pengecoran',
-                'tgl_update' => '2025-01-16 10:30:00',
-                'keterangan' => 'Pengecoran pondasi selesai, menunggu kering',
-                'nama_petugas' => 'Budi Santoso',
-                'persentase' => 40
-            ],
-            [
-                'id' => 3,
-                'tahapan' => 'Pemasangan Tiang dan Armatur',
-                'tgl_update' => '2025-01-18 09:00:00',
-                'keterangan' => 'Tiang dan armatur terpasang dengan baik',
-                'nama_petugas' => 'Budi Santoso',
-                'persentase' => 60
-            ],
-        ];
-
-        $asetInfo = [
-            'id' => $asetPjuId,
-            'kode_aset' => 'PJU-NEW-001',
-            'lokasi' => 'Jl. Ring Road Selatan',
-            'latitude' => -7.812345,
-            'longitude' => 110.398765,
-        ];
-
-        return view('progres-pengerjaan.show', compact('progresHistory', 'asetInfo'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
-        // $this->setRule('progres-pengerjaan.update');
+        $request->validate([
+            'tahapan' => 'required',
+        ]);
 
-        // TODO: Implement database update
-        // $progres = ProgresPengerjaan::findOrFail($id);
-        // $progres->update($request->validated());
+        $progres = ProgresPengerjaan::findOrFail($id);
 
-        return redirect()->back()->with('success', 'Progres pengerjaan berhasil diperbarui');
+        $progres->update([
+            'tahapan'    => $request->tahapan,
+            'keterangan' => $request->keterangan,
+            'tgl_update' => now(), // Update waktu
+            'user_id'    => Auth::id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Progres berhasil diperbarui');
+    }
+
+    public function show($asetPjuId)
+    {
+        $progresHistory = ProgresPengerjaan::where('aset_pju_id', $asetPjuId)
+            ->with('user')
+            ->orderBy('tgl_update', 'desc')
+            ->get();
+
+        $asetInfo = AsetPju::findOrFail($asetPjuId);
+
+        return view('progres-pengerjaan.show', compact('progresHistory', 'asetInfo'));
     }
 }

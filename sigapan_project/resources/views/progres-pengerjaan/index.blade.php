@@ -2,10 +2,6 @@
 
 @section('title', 'Progres Pengerjaan')
 
-@section('breadcrumb')
-    {{-- {{ Breadcrumbs::render('progres-pengerjaan') }} --}}
-@endsection
-
 @push('styles')
     <link rel="stylesheet" href="{{ URL::asset('assets/admin/css/datatables-2.3.4/datatables.tailwindcss.css') }}">
 
@@ -60,7 +56,8 @@
                         <tr>
                             <th class="text-center">No.</th>
                             <th class="text-left">Kode Aset</th>
-                            <th class="text-left">Lokasi</th>
+                            <th class="text-left">Lokasi (Maps)</th>
+                            <th class="text-left">Keterangan</th>
                             <th class="text-left">Petugas</th>
                             <th class="text-center">Tahapan Terbaru</th>
                             <th class="text-center">Update Terbaru</th>
@@ -70,21 +67,8 @@
                     </thead>
 
                     <tbody>
-                        {{-- @can('progres-pengerjaan.read') --}}
                         @php
-                            $groupedProgres = collect($progresPengerjaan)->groupBy('aset_pju_id');
-
-                            // ENUM DB kamu
-                            $tahapanEnum = [
-                                'Galian',
-                                'Pengecoran',
-                                'Pemasangan Tiang dan Armatur',
-                                'Pemasangan Jaringan',
-                                'Selesai'
-                            ];
-
-                            // mapping persentase default (kalau persentase kosong)
-                            $autoMap = [
+                            $mapPersen = [
                                 'Galian' => 20,
                                 'Pengecoran' => 40,
                                 'Pemasangan Tiang dan Armatur' => 60,
@@ -93,15 +77,11 @@
                             ];
                         @endphp
 
-                        @foreach ($groupedProgres as $asetId => $progresses)
+                        @foreach ($progresPengerjaan as $item)
                             @php
-                                $latestProgres = $progresses->sortByDesc('tgl_update')->first();
-                                $tahapan = $latestProgres['tahapan'] ?? 'Galian';
-                                $persen = (int)($latestProgres['persentase'] ?? ($autoMap[$tahapan] ?? 0));
-                                $tglRaw = $latestProgres['tgl_update'] ?? null;
-                                $tglLabel = $tglRaw ? date('d M Y H:i', strtotime($tglRaw)) : '-';
+                                $tahapan = $item->tahapan;
+                                $persen = $mapPersen[$tahapan] ?? 0;
                                 
-                                // Badge class
                                 $badgeClass = match($tahapan) {
                                     'Galian' => 'tahapan-galian',
                                     'Pengecoran' => 'tahapan-pengecoran',
@@ -110,33 +90,59 @@
                                     'Selesai' => 'tahapan-selesai',
                                     default => 'tahapan-galian'
                                 };
+
+                                $desa = $item->asetPju->desa ?? '-';
+                                $kecamatan = $item->asetPju->kecamatan ?? '-';
+                                $lokasiText = "{$desa}, {$kecamatan}";
+                                $lat = $item->asetPju->latitude ?? null;
+                                $long = $item->asetPju->longitude ?? null;
                             @endphp
 
-                            <tr
-                                data-aset="{{ $latestProgres['aset_pju_id'] }}"
-                                data-is_db="1"
-                                data-kode_aset="{{ $latestProgres['kode_aset'] }}"
-                                data-lokasi="{{ $latestProgres['lokasi_proyek'] }}"
-                                data-petugas="{{ $latestProgres['nama_petugas'] }}"
+                            <tr data-id="{{ $item->id }}" 
+                                data-aset_id="{{ $item->aset_pju_id }}"
+                                data-kode="{{ $item->asetPju->kode_tiang ?? '-' }}"
+                                data-lokasi="{{ $lokasiText }}"
+                                data-petugas="{{ $item->user->name ?? '-' }}"
                                 data-tahapan="{{ $tahapan }}"
-                                data-persen="{{ $persen }}"
-                            >
+                                data-keterangan="{{ $item->keterangan }}">
+                                
                                 <td class="text-center">{{ $loop->iteration }}</td>
-                                <td class="text-left"><strong class="text-primary-500">{{ $latestProgres['kode_aset'] }}</strong></td>
-                                <td class="text-left">{{ $latestProgres['lokasi_proyek'] }}</td>
-                                <td class="text-left">{{ $latestProgres['nama_petugas'] }}</td>
+                                <td class="text-left"><strong class="text-primary-500">{{ $item->asetPju->kode_tiang ?? '-' }}</strong></td>
+                                
+                                {{-- Lokasi --}}
+                                <td class="text-left">
+                                    <div class="flex flex-col">
+                                        <span class="font-medium text-gray-700 dark:text-gray-200">{{ $lokasiText }}</span>
+                                        @if($lat && $long)
+                                            <a href="https://www.google.com/maps?q={{ $lat }},{{ $long }}" 
+                                               target="_blank" 
+                                               class="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-1">
+                                                <i class="material-symbols-outlined text-[14px]">map</i> Lihat Peta
+                                            </a>
+                                        @endif
+                                    </div>
+                                </td>
 
-                                {{-- ✅ Badge static (bukan dropdown) --}}
+                                {{-- Keterangan --}}
+                                <td class="text-left text-sm text-gray-600 dark:text-gray-400">
+                                    {{ Str::limit($item->keterangan ?? '-', 50) }}
+                                </td>
+
+                                <td class="text-left">{{ $item->user->name ?? '-' }}</td>
+
+                                {{-- Tahapan --}}
                                 <td class="text-center">
                                     <span class="badge-tahapan {{ $badgeClass }}">{{ $tahapan }}</span>
                                 </td>
 
-                                {{-- last update --}}
+                                {{-- Last Update (WIB) --}}
                                 <td class="text-center">
-                                    <span class="last-update">{{ $tglLabel }}</span>
+                                    <span class="last-update text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        {{ \Carbon\Carbon::parse($item->tgl_update)->timezone('Asia/Jakarta')->format('d M Y H:i') }}
+                                    </span>
                                 </td>
 
-                                {{-- ✅ Progress: BAR + TEXT --}}
+                                {{-- Progress --}}
                                 <td class="text-center">
                                     <div class="w-full max-w-[220px] mx-auto">
                                         <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
@@ -146,26 +152,16 @@
                                     </div>
                                 </td>
 
-                                {{-- ✅ Aksi: Edit + Hapus + Riwayat --}}
+                                {{-- Aksi --}}
                                 <td class="text-center">
                                     <div class="flex items-center gap-[12px] justify-center">
                                         <button type="button" class="btn-icon btn-edit text-blue-600 custom-tooltip" data-text="Edit">
                                             <i class="material-symbols-outlined">edit</i>
                                         </button>
-
-                                        <button type="button" class="btn-icon btn-delete text-danger-500 custom-tooltip" data-text="Hapus">
-                                            <i class="material-symbols-outlined">delete</i>
-                                        </button>
-
-                                        <a href="{{ route('progres-pengerjaan.show', $latestProgres['aset_pju_id']) }}"
-                                           class="btn-icon text-primary-500 custom-tooltip" data-text="Riwayat">
-                                            <i class="material-symbols-outlined">history</i>
-                                        </a>
                                     </div>
                                 </td>
                             </tr>
                         @endforeach
-                        {{-- @endcan --}}
                     </tbody>
                 </table>
             </div>
@@ -173,7 +169,7 @@
     </div>
 
     {{-- =========================
-        MODAL CREATE (frontend-only)
+        MODAL CREATE
     ========================== --}}
     <div id="modalCreate" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
         <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
@@ -184,45 +180,42 @@
                 </button>
             </div>
 
-            <form id="formCreate" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form action="{{ route('progres-pengerjaan.store') }}" method="POST" class="grid grid-cols-1 gap-4">
+                @csrf
+                
+                {{-- Pilih Aset (Filtered by Controller) --}}
                 <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Kode Aset</label>
-                    <input name="kode_aset" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Pilih Aset PJU</label>
+                    <select name="aset_pju_id" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                        <option value="">-- Pilih Kode Tiang / Lokasi --</option>
+                        @foreach($listAset as $aset)
+                            <option value="{{ $aset->id }}">
+                                {{ $aset->kode_tiang }} - {{ $aset->desa }}, {{ $aset->kecamatan }}
+                            </option>
+                        @endforeach
+                    </select>
+                    {{-- Pesan jika kosong --}}
+                    @if($listAset->isEmpty())
+                        <p class="text-xs text-amber-500 mt-1">Semua aset sudah dalam pengerjaan.</p>
+                    @endif
                 </div>
 
                 <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Petugas</label>
-                    <input name="petugas" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Lokasi</label>
-                    <input name="lokasi" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Tahapan</label>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Tahapan Awal</label>
                     <select name="tahapan" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
-                        <option value="Galian">Galian</option>
-                        <option value="Pengecoran">Pengecoran</option>
-                        <option value="Pemasangan Tiang dan Armatur">Pemasangan Tiang dan Armatur</option>
-                        <option value="Pemasangan Jaringan">Pemasangan Jaringan</option>
-                        <option value="Selesai">Selesai</option>
+                        <option value="Galian" selected>Galian (20%)</option>
+                        <option value="Pengecoran">Pengecoran (40%)</option>
+                        <option value="Pemasangan Tiang dan Armatur">Pemasangan Tiang dan Armatur (60%)</option>
+                        <option value="Pemasangan Jaringan">Pemasangan Jaringan (80%)</option>
+                        <option value="Selesai">Selesai (100%)</option>
                     </select>
                 </div>
 
-                {{-- ✅ progress auto by tahapan --}}
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Progress (Auto)</label>
-                    <input type="text" value="Akan mengikuti tahapan" disabled
-                           class="w-full mt-1 border rounded-md px-3 py-2 bg-gray-50 dark:bg-[#15203c] dark:border-[#15203c] text-sm">
-                </div>
-
-                <div class="md:col-span-2 flex justify-end gap-2 mt-2">
+                <div class="flex justify-end gap-2 mt-4">
                     <button type="button" class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
                         Batal
                     </button>
-                    <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600">
+                    <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600" {{ $listAset->isEmpty() ? 'disabled' : '' }}>
                         Simpan
                     </button>
                 </div>
@@ -231,7 +224,7 @@
     </div>
 
     {{-- =========================
-        MODAL EDIT (frontend-only) => progress bisa diubah di sini
+        MODAL EDIT
     ========================== --}}
     <div id="modalEdit" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
         <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
@@ -242,40 +235,41 @@
                 </button>
             </div>
 
-            <form id="formEdit" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="hidden" name="aset_pju_id">
-
+            <form id="formEdit" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @csrf
+                @method('PUT')
+                
+                {{-- Readonly Data --}}
                 <div>
                     <label class="text-sm text-gray-600 dark:text-gray-300">Kode Aset</label>
-                    <input name="kode_aset" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                    <input type="text" id="edit_kode" class="w-full mt-1 border rounded-md px-3 py-2 bg-gray-100 dark:bg-[#15203c] dark:border-[#15203c]" readonly>
                 </div>
 
                 <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Petugas</label>
-                    <input name="petugas" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Lokasi</label>
+                    <input type="text" id="edit_lokasi" class="w-full mt-1 border rounded-md px-3 py-2 bg-gray-100 dark:bg-[#15203c] dark:border-[#15203c]" readonly>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Petugas Update (Anda)</label>
+                    <input type="text" value="{{ Auth::user()->name }}" class="w-full mt-1 border rounded-md px-3 py-2 bg-gray-100 dark:bg-[#15203c] dark:border-[#15203c]" readonly>
+                </div>
+
+                {{-- Input Editable --}}
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Tahapan</label>
+                    <select name="tahapan" id="edit_tahapan" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
+                        <option value="Galian">Galian (20%)</option>
+                        <option value="Pengecoran">Pengecoran (40%)</option>
+                        <option value="Pemasangan Tiang dan Armatur">Pemasangan Tiang dan Armatur (60%)</option>
+                        <option value="Pemasangan Jaringan">Pemasangan Jaringan (80%)</option>
+                        <option value="Selesai">Selesai (100%)</option>
+                    </select>
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Lokasi</label>
-                    <input name="lokasi" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Tahapan</label>
-                    <select name="tahapan" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
-                        <option value="Galian">Galian</option>
-                        <option value="Pengecoran">Pengecoran</option>
-                        <option value="Pemasangan Tiang dan Armatur">Pemasangan Tiang dan Armatur</option>
-                        <option value="Pemasangan Jaringan">Pemasangan Jaringan</option>
-                        <option value="Selesai">Selesai</option>
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">* Persen otomatis mengikuti tahapan jika kamu kosongkan.</p>
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Persentase (0-100)</label>
-                    <input type="number" name="persen" min="0" max="100"
-                           class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Keterangan</label>
+                    <textarea name="keterangan" id="edit_keterangan" rows="3" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" placeholder="Masukkan keterangan progres..."></textarea>
                 </div>
 
                 <div class="md:col-span-2 flex justify-end gap-2 mt-2">
@@ -296,205 +290,55 @@
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
 
     <script>
-        const tahapanToPercent = {
-            "Galian": 20,
-            "Pengecoran": 40,
-            "Pemasangan Tiang dan Armatur": 60,
-            "Pemasangan Jaringan": 80,
-            "Selesai": 100
-        };
-
-        function nowLabel() {
-            const d = new Date();
-            return d.toLocaleString('id-ID', {
-                day:'2-digit', month:'short', year:'numeric',
-                hour:'2-digit', minute:'2-digit'
-            }).replace('.', '');
-        }
-
-        function clampPercent(p){
-            p = parseInt(p || 0, 10);
-            if (isNaN(p)) p = 0;
-            return Math.max(0, Math.min(100, p));
-        }
-
-        function getTahapanBadgeClass(tahapan) {
-            const map = {
-                'Galian': 'tahapan-galian',
-                'Pengecoran': 'tahapan-pengecoran',
-                'Pemasangan Tiang dan Armatur': 'tahapan-pemasangan-tiang',
-                'Pemasangan Jaringan': 'tahapan-pemasangan-jaringan',
-                'Selesai': 'tahapan-selesai'
-            };
-            return map[tahapan] || 'tahapan-galian';
-        }
-
         const dt = $('#data-table').DataTable({
             responsive: true,
-            order: [[5, 'desc']],
+            order: [[6, 'desc']], 
             pageLength: 25,
             columnDefs: [
-                { targets: [0,4,5,6,7], className: 'text-center' },
-                { targets: [1,2,3], className: 'text-left' }
+                { targets: [0,5,6,7,8], className: 'text-center' },
+                { targets: [1,2,3,4], className: 'text-left' }
             ]
         });
 
-        // ===== modal helpers =====
         const modalCreate = document.getElementById('modalCreate');
         const modalEdit = document.getElementById('modalEdit');
+        
         function openModal(m){ m.classList.add('active'); }
         function closeModal(m){ m.classList.remove('active'); }
 
         document.getElementById('btnOpenCreate').addEventListener('click', () => {
-            document.getElementById('formCreate').reset();
             openModal(modalCreate);
         });
 
         document.addEventListener('click', function(e){
-            if (e.target.closest('.btn-close-modal')) { closeModal(modalCreate); closeModal(modalEdit); }
+            if (e.target.closest('.btn-close-modal')) { 
+                closeModal(modalCreate); 
+                closeModal(modalEdit); 
+            }
             if (e.target === modalCreate) closeModal(modalCreate);
             if (e.target === modalEdit) closeModal(modalEdit);
         });
 
-        // ===== CREATE (UI): progress auto ikut tahapan =====
-        document.getElementById('formCreate').addEventListener('submit', function(e){
-            e.preventDefault();
-            const fd = new FormData(this);
-            const p = Object.fromEntries(fd.entries());
-
-            const asetId = Date.now();
-            const no = dt.rows().count() + 1;
-
-            const tahapan = p.tahapan || 'Galian';
-            const persen = tahapanToPercent[tahapan] ?? 0;
-            const badgeClass = getTahapanBadgeClass(tahapan);
-
-            const tahapanHtml = `<span class="badge-tahapan ${badgeClass}">${tahapan}</span>`;
-
-            const progressHtml = `
-                <div class="w-full max-w-[220px] mx-auto">
-                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
-                        <div class="progress-bar bg-primary-500 h-2.5 rounded-full" style="width:${persen}%"></div>
-                    </div>
-                    <span class="progress-text text-xs text-gray-600 dark:text-gray-400">${persen}%</span>
-                </div>
-            `;
-
-            const aksiHtml = `
-                <div class="flex items-center gap-[12px] justify-center">
-                    <button type="button" class="btn-icon btn-edit text-blue-600 custom-tooltip" data-text="Edit">
-                        <i class="material-symbols-outlined">edit</i>
-                    </button>
-                    <button type="button" class="btn-icon btn-delete text-danger-500 custom-tooltip" data-text="Hapus">
-                        <i class="material-symbols-outlined">delete</i>
-                    </button>
-                    <a href="javascript:void(0)" class="btn-icon text-primary-500 custom-tooltip" data-text="Riwayat (UI)">
-                        <i class="material-symbols-outlined">history</i>
-                    </a>
-                </div>
-            `;
-
-            const node = dt.row.add([
-                `${no}`,
-                `<strong class="text-primary-500">${(p.kode_aset || '-')}</strong>`,
-                `${(p.lokasi || '-')}`,
-                `${(p.petugas || '-')}`,
-                tahapanHtml,
-                `<span class="last-update">${nowLabel()}</span>`,
-                progressHtml,
-                aksiHtml
-            ]).draw(false).node();
-
-            node.dataset.aset = asetId;
-            node.dataset.is_db = "0";
-            node.dataset.kode_aset = p.kode_aset || '-';
-            node.dataset.lokasi = p.lokasi || '-';
-            node.dataset.petugas = p.petugas || '-';
-            node.dataset.tahapan = tahapan;
-            node.dataset.persen = persen;
-
-            closeModal(modalCreate);
-        });
-
-        // ===== OPEN EDIT MODAL =====
         document.addEventListener('click', function(e){
             const btn = e.target.closest('.btn-edit');
             if (!btn) return;
 
             const tr = btn.closest('tr');
-            const form = document.getElementById('formEdit');
+            const id = tr.dataset.id;
+            const kode = tr.dataset.kode;
+            const lokasi = tr.dataset.lokasi;
+            const tahapan = tr.dataset.tahapan;
+            const keterangan = tr.dataset.keterangan;
 
-            form.aset_pju_id.value = tr.dataset.aset || '';
-            form.kode_aset.value = tr.dataset.kode_aset || '';
-            form.lokasi.value = tr.dataset.lokasi || '';
-            form.petugas.value = tr.dataset.petugas || '';
-            form.tahapan.value = tr.dataset.tahapan || 'Galian';
-            form.persen.value = tr.dataset.persen || 0;
+            const form = document.getElementById('formEdit');
+            form.action = "{{ url('progres-pengerjaan') }}/" + id;
+
+            document.getElementById('edit_kode').value = kode;
+            document.getElementById('edit_lokasi').value = lokasi;
+            document.getElementById('edit_tahapan').value = tahapan;
+            document.getElementById('edit_keterangan').value = (keterangan === '-') ? '' : keterangan;
 
             openModal(modalEdit);
-        });
-
-        // ===== SUBMIT EDIT MODAL => update row + last update berubah =====
-        document.getElementById('formEdit').addEventListener('submit', function(e){
-            e.preventDefault();
-            const fd = new FormData(this);
-            const p = Object.fromEntries(fd.entries());
-
-            const tr = document.querySelector(`#data-table tbody tr[data-aset="${CSS.escape(p.aset_pju_id)}"]`);
-            if (!tr) { alert('Data tidak ditemukan'); return; }
-
-            const tahapan = p.tahapan || 'Galian';
-            const persen = (p.persen === '' || p.persen === null || typeof p.persen === 'undefined')
-                ? (tahapanToPercent[tahapan] ?? 0)
-                : clampPercent(p.persen);
-
-            const badgeClass = getTahapanBadgeClass(tahapan);
-
-            // update dataset
-            tr.dataset.kode_aset = p.kode_aset || '-';
-            tr.dataset.lokasi = p.lokasi || '-';
-            tr.dataset.petugas = p.petugas || '-';
-            tr.dataset.tahapan = tahapan;
-            tr.dataset.persen = persen;
-
-            // update via datatable
-            const row = dt.row(tr);
-            const data = row.data();
-
-            data[1] = `<strong class="text-primary-500">${(p.kode_aset || '-')}</strong>`;
-            data[2] = `${(p.lokasi || '-')}`;
-            data[3] = `${(p.petugas || '-')}`;
-            data[4] = `<span class="badge-tahapan ${badgeClass}">${tahapan}</span>`;
-            data[5] = `<span class="last-update">${nowLabel()}</span>`;
-            data[6] = `
-                <div class="w-full max-w-[220px] mx-auto">
-                    <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
-                        <div class="progress-bar bg-primary-500 h-2.5 rounded-full" style="width:${persen}%"></div>
-                    </div>
-                    <span class="progress-text text-xs text-gray-600 dark:text-gray-400">${persen}%</span>
-                </div>
-            `;
-
-            row.data(data).draw(false);
-            closeModal(modalEdit);
-        });
-
-        // ===== DELETE: UI only untuk row baru =====
-        document.addEventListener('click', function(e){
-            const btn = e.target.closest('.btn-delete');
-            if (!btn) return;
-
-            const tr = btn.closest('tr');
-            const isDb = tr.dataset.is_db === "1";
-
-            if (isDb) {
-                alert('Delete backend belum dipasang di halaman ini.\nKalau mau, aku bisa buat versi yang pakai route destroy.');
-                return;
-            }
-
-            if (confirm('Hapus data ini? (UI)')) {
-                dt.row(tr).remove().draw(false);
-            }
         });
     </script>
 @endpush

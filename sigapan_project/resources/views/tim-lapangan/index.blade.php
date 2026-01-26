@@ -11,43 +11,24 @@
 
     <style>
         #data-table td.text-center { vertical-align: middle; }
-        .kategori-select { min-width: 140px; }
 
         .btn-icon { cursor: pointer; }
         .material-symbols-outlined{ font-size:18px !important; }
 
-        .input-inline{
-            width: 100%;
-            border: 1px solid #e5e7eb;
-            border-radius: .375rem;
-            padding: .45rem .6rem;
-            font-size: .875rem;
-            background: #fff;
-        }
+        /* Modal */
+        .modal-overlay { display: none; }
+        .modal-overlay.active { display: flex; }
 
-        .btn-primary-mini{
-            border: 1px solid #3b82f6;
-            background: #3b82f6;
-            color: #fff;
-            padding: .45rem .75rem;
-            border-radius: .5rem;
-            font-size: .875rem;
+        /* Badge kategori */
+        .badge-kategori {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
         }
-
-        .btn-secondary-mini{
-            border: 1px solid #e5e7eb;
-            background: #fff;
-            padding: .45rem .75rem;
-            border-radius: .5rem;
-            font-size: .875rem;
-        }
-
-        .toolbar{
-            display:flex;
-            gap:10px;
-            align-items:center;
-            flex-wrap:wrap;
-        }
+        .kategori-teknisi { background: #dbeafe; color: #1e40af; }
+        .kategori-surveyor { background: #fef3c7; color: #92400e; }
     </style>
 @endpush
 
@@ -67,32 +48,10 @@
             {{-- ✅ CREATE UI (Frontend only) --}}
             <div class="trezo-card-subtitle sm:flex sm:items-center">
                 <button type="button" id="btn-open-create"
-                    class="btn-primary-mini">
-                    <span class="material-symbols-outlined" style="font-size:18px;vertical-align:-4px;">add</span>
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 transition">
+                    <span class="material-symbols-outlined" style="font-size:18px;">add</span>
                     Tambah Tim Baru
                 </button>
-            </div>
-        </div>
-
-        {{-- ✅ Form Create inline (tanpa modal & tanpa route) --}}
-        <div id="create-form" class="mb-4 hidden">
-            <div class="trezo-card bg-gray-50 dark:bg-[#15203c] p-4 rounded-md">
-                <div class="toolbar" style="display:grid;grid-template-columns: 2fr 1fr 2fr 1fr auto;gap:10px;">
-                    <input type="text" id="c_nama_tim" class="input-inline" placeholder="Nama Tim (contoh: Tim Teknisi 3)">
-                    <select id="c_kategori" class="input-inline">
-                        <option value="Teknisi">Teknisi</option>
-                        <option value="Surveyor">Surveyor</option>
-                    </select>
-                    <input type="text" id="c_ketua_tim" class="input-inline" placeholder="Ketua Tim (contoh: Budi Santoso)">
-                    <input type="number" id="c_jumlah" class="input-inline" placeholder="Jumlah" min="0">
-                    <div style="display:flex;gap:8px;justify-content:flex-end;">
-                        <button type="button" id="btn-cancel-create" class="btn-secondary-mini">Batal</button>
-                        <button type="button" id="btn-save-create" class="btn-primary-mini">Simpan</button>
-                    </div>
-                </div>
-                <small class="text-gray-500 block mt-2">
-                    * Ini hanya frontend dulu. Nanti kalau database sudah siap, tinggal ganti logic JS-nya ke AJAX.
-                </small>
             </div>
         </div>
 
@@ -115,59 +74,49 @@
                         @foreach ($initialData as $index => $tim)
                             @php
                                 $kategori = $tim['kategori'] ?? 'Teknisi';
+                                $badgeClass = $kategori === 'Teknisi' ? 'kategori-teknisi' : 'kategori-surveyor';
                             @endphp
                             <tr
                                 data-row="1"
                                 data-id="{{ $tim['id'] ?? '' }}"
-                                data-editing="0"
+                                data-is_db="1"
+                                data-nama_tim="{{ $tim['nama_tim'] ?? '-' }}"
+                                data-kategori="{{ $kategori }}"
+                                data-ketua_tim="{{ $tim['leader_name'] ?? '-' }}"
+                                data-jumlah="{{ $tim['jumlah_personel'] ?? 0 }}"
                             >
                                 <td class="text-center col-no">{{ $index + 1 }}</td>
 
                                 <td class="text-left col-nama">
-                                    <span class="view">{{ $tim['nama_tim'] ?? '-' }}</span>
+                                    <strong class="text-primary-500">{{ $tim['nama_tim'] ?? '-' }}</strong>
                                 </td>
 
                                 <td class="text-center col-kategori">
-                                    <select class="kategori-select input-inline view">
-                                        <option value="Teknisi" {{ $kategori==='Teknisi'?'selected':'' }}>Teknisi</option>
-                                        <option value="Surveyor" {{ $kategori==='Surveyor'?'selected':'' }}>Surveyor</option>
-                                    </select>
+                                    <span class="badge-kategori {{ $badgeClass }}">{{ $kategori }}</span>
                                 </td>
 
                                 <td class="text-left col-ketua">
-                                    <span class="view">{{ $tim['leader_name'] ?? '-' }}</span>
+                                    {{ $tim['leader_name'] ?? '-' }}
                                 </td>
 
                                 <td class="text-center col-jumlah">
-                                    <span class="view">{{ ($tim['jumlah_personel'] ?? 0) }} orang</span>
+                                    {{ ($tim['jumlah_personel'] ?? 0) }} orang
                                 </td>
 
                                 <td class="text-center col-created">
-                                    <span class="view">
-                                        {{ isset($tim['created_at']) ? date('d M Y', strtotime($tim['created_at'])) : date('d M Y') }}
-                                    </span>
+                                    {{ isset($tim['created_at']) ? date('d M Y', strtotime($tim['created_at'])) : date('d M Y') }}
                                 </td>
 
                                 <td class="text-center col-aksi">
                                     <div class="flex items-center gap-[10px] justify-center">
                                         {{-- EDIT --}}
-                                        <button type="button" class="btn-icon btn-edit" title="Edit">
-                                            <i class="material-symbols-outlined text-warning-500">edit</i>
-                                        </button>
-
-                                        {{-- SAVE (hidden default) --}}
-                                        <button type="button" class="btn-icon btn-save hidden" title="Simpan">
-                                            <i class="material-symbols-outlined text-primary-500">save</i>
-                                        </button>
-
-                                        {{-- CANCEL (hidden default) --}}
-                                        <button type="button" class="btn-icon btn-cancel hidden" title="Batal">
-                                            <i class="material-symbols-outlined text-gray-500">close</i>
+                                        <button type="button" class="btn-icon btn-edit text-blue-600 custom-tooltip" data-text="Edit">
+                                            <i class="material-symbols-outlined">edit</i>
                                         </button>
 
                                         {{-- DELETE --}}
-                                        <button type="button" class="btn-icon btn-delete" title="Hapus">
-                                            <i class="material-symbols-outlined text-danger-500">delete</i>
+                                        <button type="button" class="btn-icon btn-delete text-danger-500 custom-tooltip" data-text="Hapus">
+                                            <i class="material-symbols-outlined">delete</i>
                                         </button>
                                     </div>
                                 </td>
@@ -177,6 +126,100 @@
 
                 </table>
             </div>
+        </div>
+    </div>
+
+    {{-- MODAL CREATE --}}
+    <div id="modalCreate" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
+        <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Tambah Tim Lapangan</h5>
+                <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
+                    <i class="material-symbols-outlined">close</i>
+                </button>
+            </div>
+
+            <form id="formCreate" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Nama Tim</label>
+                    <input name="nama_tim" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" placeholder="Contoh: Tim Teknisi 3" required>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Kategori</label>
+                    <select name="kategori" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
+                        <option value="Teknisi">Teknisi</option>
+                        <option value="Surveyor">Surveyor</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Ketua Tim</label>
+                    <input name="ketua_tim" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" placeholder="Contoh: Budi Santoso" required>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Jumlah Personel</label>
+                    <input type="number" name="jumlah" min="0" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                </div>
+
+                <div class="md:col-span-2 flex justify-end gap-2 mt-2">
+                    <button type="button" class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- MODAL EDIT --}}
+    <div id="modalEdit" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
+        <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Edit Tim Lapangan</h5>
+                <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
+                    <i class="material-symbols-outlined">close</i>
+                </button>
+            </div>
+
+            <form id="formEdit" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" name="id">
+
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Nama Tim</label>
+                    <input name="nama_tim" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Kategori</label>
+                    <select name="kategori" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
+                        <option value="Teknisi">Teknisi</option>
+                        <option value="Surveyor">Surveyor</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Ketua Tim</label>
+                    <input name="ketua_tim" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                </div>
+
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-300">Jumlah Personel</label>
+                    <input type="number" name="jumlah" min="0" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                </div>
+
+                <div class="md:col-span-2 flex justify-end gap-2 mt-2">
+                    <button type="button" class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600">
+                        Update
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 @endsection
@@ -207,180 +250,10 @@
         dt.on('draw', renumber);
         renumber();
 
-        // === CREATE UI toggle ===
-        const createForm = document.getElementById('create-form');
-        document.getElementById('btn-open-create').addEventListener('click', () => {
-            createForm.classList.toggle('hidden');
-        });
-        document.getElementById('btn-cancel-create').addEventListener('click', () => {
-            createForm.classList.add('hidden');
-        });
-
-        // === CREATE (frontend only) ===
-        document.getElementById('btn-save-create').addEventListener('click', () => {
-            const nama = document.getElementById('c_nama_tim').value.trim();
-            const kategori = document.getElementById('c_kategori').value;
-            const ketua = document.getElementById('c_ketua_tim').value.trim() || '-';
-            const jumlah = document.getElementById('c_jumlah').value ? parseInt(document.getElementById('c_jumlah').value, 10) : 0;
-
-            if(!nama){
-                alert('Nama Tim wajib diisi!');
-                return;
-            }
-
-            const created = new Date();
-            const createdText = created.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
-
-            const rowHtml = `
-                <tr data-row="1" data-id="" data-editing="0">
-                    <td class="text-center col-no"></td>
-
-                    <td class="text-left col-nama">
-                        <span class="view">${escapeHtml(nama)}</span>
-                    </td>
-
-                    <td class="text-center col-kategori">
-                        <select class="kategori-select input-inline view">
-                            <option value="Teknisi" ${kategori==='Teknisi'?'selected':''}>Teknisi</option>
-                            <option value="Surveyor" ${kategori==='Surveyor'?'selected':''}>Surveyor</option>
-                        </select>
-                    </td>
-
-                    <td class="text-left col-ketua">
-                        <span class="view">${escapeHtml(ketua)}</span>
-                    </td>
-
-                    <td class="text-center col-jumlah">
-                        <span class="view">${jumlah} orang</span>
-                    </td>
-
-                    <td class="text-center col-created">
-                        <span class="view">${createdText}</span>
-                    </td>
-
-                    <td class="text-center col-aksi">
-                        <div class="flex items-center gap-[10px] justify-center">
-                            <button type="button" class="btn-icon btn-edit" title="Edit">
-                                <i class="material-symbols-outlined text-warning-500">edit</i>
-                            </button>
-                            <button type="button" class="btn-icon btn-save hidden" title="Simpan">
-                                <i class="material-symbols-outlined text-primary-500">save</i>
-                            </button>
-                            <button type="button" class="btn-icon btn-cancel hidden" title="Batal">
-                                <i class="material-symbols-outlined text-gray-500">close</i>
-                            </button>
-                            <button type="button" class="btn-icon btn-delete" title="Hapus">
-                                <i class="material-symbols-outlined text-danger-500">delete</i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-
-            const newRowNode = $(rowHtml);
-            dt.row.add(newRowNode).draw(false);
-
-            // reset form
-            document.getElementById('c_nama_tim').value = '';
-            document.getElementById('c_ketua_tim').value = '';
-            document.getElementById('c_jumlah').value = '';
-            document.getElementById('c_kategori').value = 'Teknisi';
-            createForm.classList.add('hidden');
-
-            renumber();
-        });
-
-        // === EDIT/DELETE handlers ===
-        document.addEventListener('click', function(e){
-            const btnEdit = e.target.closest('.btn-edit');
-            const btnSave = e.target.closest('.btn-save');
-            const btnCancel = e.target.closest('.btn-cancel');
-            const btnDelete = e.target.closest('.btn-delete');
-            const tr = e.target.closest('tr');
-            if(!tr) return;
-
-            // DELETE (frontend only)
-            if(btnDelete){
-                if(confirm('Yakin hapus data ini?')){
-                    dt.row(tr).remove().draw(false);
-                    renumber();
-                }
-                return;
-            }
-
-            // EDIT
-            if(btnEdit){
-                if(tr.dataset.editing === '1') return;
-                tr.dataset.editing = '1';
-
-                // backup original
-                tr._backup = {
-                    nama: tr.querySelector('.col-nama .view').textContent.trim(),
-                    ketua: tr.querySelector('.col-ketua .view').textContent.trim(),
-                    jumlah: tr.querySelector('.col-jumlah .view').textContent.trim().replace(' orang',''),
-                    kategori: tr.querySelector('.col-kategori select').value,
-                };
-
-                // turn into inputs (kecuali kategori tetap select)
-                tr.querySelector('.col-nama').innerHTML = `<input class="input-inline edit-nama" value="${escapeAttr(tr._backup.nama)}">`;
-                tr.querySelector('.col-ketua').innerHTML = `<input class="input-inline edit-ketua" value="${escapeAttr(tr._backup.ketua === '-' ? '' : tr._backup.ketua)}" placeholder="-">`;
-                tr.querySelector('.col-jumlah').innerHTML = `<input type="number" min="0" class="input-inline edit-jumlah" value="${escapeAttr(tr._backup.jumlah || '0')}">`;
-
-                // tombol
-                toggleButtons(tr, true);
-                return;
-            }
-
-            // CANCEL
-            if(btnCancel){
-                if(tr.dataset.editing !== '1') return;
-                restoreRow(tr);
-                toggleButtons(tr, false);
-                tr.dataset.editing = '0';
-                return;
-            }
-
-            // SAVE
-            if(btnSave){
-                const nama = tr.querySelector('.edit-nama')?.value?.trim();
-                const ketua = tr.querySelector('.edit-ketua')?.value?.trim() || '-';
-                const jumlah = tr.querySelector('.edit-jumlah')?.value ? parseInt(tr.querySelector('.edit-jumlah').value, 10) : 0;
-                const kategori = tr.querySelector('.col-kategori select')?.value || 'Teknisi';
-
-                if(!nama){
-                    alert('Nama Tim wajib diisi!');
-                    return;
-                }
-
-                // apply view
-                tr.querySelector('.col-nama').innerHTML = `<span class="view">${escapeHtml(nama)}</span>`;
-                tr.querySelector('.col-ketua').innerHTML = `<span class="view">${escapeHtml(ketua)}</span>`;
-                tr.querySelector('.col-jumlah').innerHTML = `<span class="view">${jumlah} orang</span>`;
-                // kategori tetep select (udah berubah)
-
-                toggleButtons(tr, false);
-                tr.dataset.editing = '0';
-
-                return;
-            }
-        });
-
-        function toggleButtons(tr, editing){
-            tr.querySelector('.btn-edit').classList.toggle('hidden', editing);
-            tr.querySelector('.btn-delete').classList.toggle('hidden', editing);
-            tr.querySelector('.btn-save').classList.toggle('hidden', !editing);
-            tr.querySelector('.btn-cancel').classList.toggle('hidden', !editing);
+        function getBadgeClass(kategori) {
+            return kategori === 'Teknisi' ? 'kategori-teknisi' : 'kategori-surveyor';
         }
 
-        function restoreRow(tr){
-            if(!tr._backup) return;
-            tr.querySelector('.col-nama').innerHTML = `<span class="view">${escapeHtml(tr._backup.nama)}</span>`;
-            tr.querySelector('.col-ketua').innerHTML = `<span class="view">${escapeHtml(tr._backup.ketua || '-')}</span>`;
-            tr.querySelector('.col-jumlah').innerHTML = `<span class="view">${escapeHtml(tr._backup.jumlah || '0')} orang</span>`;
-            tr.querySelector('.col-kategori select').value = tr._backup.kategori;
-        }
-
-        // === simple escape helpers ===
         function escapeHtml(str){
             return (str ?? '').toString()
                 .replaceAll('&','&amp;')
@@ -389,8 +262,154 @@
                 .replaceAll('"','&quot;')
                 .replaceAll("'","&#039;");
         }
-        function escapeAttr(str){
-            return escapeHtml(str).replaceAll('`','&#096;');
-        }
+
+        // === modal helpers ===
+        const modalCreate = document.getElementById('modalCreate');
+        const modalEdit = document.getElementById('modalEdit');
+        function openModal(m){ m.classList.add('active'); }
+        function closeModal(m){ m.classList.remove('active'); }
+
+        document.getElementById('btn-open-create').addEventListener('click', () => {
+            document.getElementById('formCreate').reset();
+            openModal(modalCreate);
+        });
+
+        document.addEventListener('click', function(e){
+            if (e.target.closest('.btn-close-modal')) {
+                closeModal(modalCreate); closeModal(modalEdit);
+            }
+            if (e.target === modalCreate) closeModal(modalCreate);
+            if (e.target === modalEdit) closeModal(modalEdit);
+        });
+
+        // === CREATE ===
+        document.getElementById('formCreate').addEventListener('submit', function(e){
+            e.preventDefault();
+            const fd = new FormData(this);
+            const p = Object.fromEntries(fd.entries());
+
+            const nama = p.nama_tim?.trim();
+            const kategori = p.kategori || 'Teknisi';
+            const ketua = p.ketua_tim?.trim() || '-';
+            const jumlah = p.jumlah ? parseInt(p.jumlah, 10) : 0;
+
+            if(!nama){
+                alert('Nama Tim wajib diisi!');
+                return;
+            }
+
+            const id = Date.now();
+            const created = new Date();
+            const createdText = created.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+            const badgeClass = getBadgeClass(kategori);
+
+            const aksiHtml = `
+                <div class="flex items-center gap-[10px] justify-center">
+                    <button type="button" class="btn-icon btn-edit text-blue-600 custom-tooltip" data-text="Edit">
+                        <i class="material-symbols-outlined">edit</i>
+                    </button>
+                    <button type="button" class="btn-icon btn-delete text-danger-500 custom-tooltip" data-text="Hapus">
+                        <i class="material-symbols-outlined">delete</i>
+                    </button>
+                </div>
+            `;
+
+            const node = dt.row.add([
+                '',
+                `<strong class="text-primary-500">${escapeHtml(nama)}</strong>`,
+                `<span class="badge-kategori ${badgeClass}">${escapeHtml(kategori)}</span>`,
+                `${escapeHtml(ketua)}`,
+                `${jumlah} orang`,
+                `${createdText}`,
+                aksiHtml
+            ]).draw(false).node();
+
+            node.dataset.row = "1";
+            node.dataset.id = id;
+            node.dataset.is_db = "0";
+            node.dataset.nama_tim = nama;
+            node.dataset.kategori = kategori;
+            node.dataset.ketua_tim = ketua;
+            node.dataset.jumlah = jumlah;
+
+            closeModal(modalCreate);
+            renumber();
+        });
+
+        // === OPEN EDIT ===
+        document.addEventListener('click', function(e){
+            const btn = e.target.closest('.btn-edit');
+            if (!btn) return;
+
+            const tr = btn.closest('tr');
+            const form = document.getElementById('formEdit');
+
+            form.id.value = tr.dataset.id || '';
+            form.nama_tim.value = tr.dataset.nama_tim || '';
+            form.kategori.value = tr.dataset.kategori || 'Teknisi';
+            form.ketua_tim.value = tr.dataset.ketua_tim || '';
+            form.jumlah.value = tr.dataset.jumlah || 0;
+
+            openModal(modalEdit);
+        });
+
+        // === EDIT SUBMIT ===
+        document.getElementById('formEdit').addEventListener('submit', function(e){
+            e.preventDefault();
+
+            const fd = new FormData(this);
+            const p = Object.fromEntries(fd.entries());
+            const id = p.id;
+
+            const nama = p.nama_tim?.trim();
+            const kategori = p.kategori || 'Teknisi';
+            const ketua = p.ketua_tim?.trim() || '-';
+            const jumlah = p.jumlah ? parseInt(p.jumlah, 10) : 0;
+
+            if(!nama){
+                alert('Nama Tim wajib diisi!');
+                return;
+            }
+
+            const tr = document.querySelector(`#data-table tbody tr[data-id="${CSS.escape(id)}"]`);
+            if (!tr) { alert('Data tidak ditemukan'); return; }
+
+            const badgeClass = getBadgeClass(kategori);
+
+            tr.dataset.nama_tim = nama;
+            tr.dataset.kategori = kategori;
+            tr.dataset.ketua_tim = ketua;
+            tr.dataset.jumlah = jumlah;
+
+            const row = dt.row(tr);
+            const data = row.data();
+
+            data[1] = `<strong class="text-primary-500">${escapeHtml(nama)}</strong>`;
+            data[2] = `<span class="badge-kategori ${badgeClass}">${escapeHtml(kategori)}</span>`;
+            data[3] = `${escapeHtml(ketua)}`;
+            data[4] = `${jumlah} orang`;
+
+            row.data(data).draw(false);
+            closeModal(modalEdit);
+        });
+
+        // === DELETE ===
+        document.addEventListener('click', function(e){
+            const btn = e.target.closest('.btn-delete');
+            if (!btn) return;
+
+            const tr = btn.closest('tr');
+            const isDb = tr.dataset.is_db === "1";
+
+            if (isDb) {
+                alert('Delete backend belum dipasang di halaman ini.');
+                return;
+            }
+
+            if(confirm('Yakin hapus data ini?')){
+                dt.row(tr).remove().draw(false);
+                renumber();
+            }
+        });
     </script>
 @endpush

@@ -13,13 +13,26 @@
         #data-table td.text-center { vertical-align: middle; }
         #data-table td:last-child, #data-table td:last-child * { pointer-events: auto; }
 
-        .tahapan-select{ min-width: 240px; }
         .btn-icon{ cursor:pointer; position:relative; z-index:10; }
         .material-symbols-outlined{ font-size:18px !important; }
 
         /* modal */
         .modal-overlay{ display:none; }
         .modal-overlay.active{ display:flex; }
+
+        /* Badge tahapan */
+        .badge-tahapan {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .tahapan-galian { background: #fef3c7; color: #92400e; }
+        .tahapan-pengecoran { background: #ddd6fe; color: #5b21b6; }
+        .tahapan-pemasangan-tiang { background: #bfdbfe; color: #1e40af; }
+        .tahapan-pemasangan-jaringan { background: #bbf7d0; color: #166534; }
+        .tahapan-selesai { background: #d1fae5; color: #065f46; }
     </style>
 @endpush
 
@@ -49,8 +62,8 @@
                             <th class="text-left">Kode Aset</th>
                             <th class="text-left">Lokasi</th>
                             <th class="text-left">Petugas</th>
-                            <th class="text-center">Tahapan Terakhir</th>
-                            <th class="text-center">Update Terakhir</th>
+                            <th class="text-center">Tahapan Terbaru</th>
+                            <th class="text-center">Update Terbaru</th>
                             <th class="text-center">Progress</th>
                             <th class="text-center">Aksi</th>
                         </tr>
@@ -87,6 +100,16 @@
                                 $persen = (int)($latestProgres['persentase'] ?? ($autoMap[$tahapan] ?? 0));
                                 $tglRaw = $latestProgres['tgl_update'] ?? null;
                                 $tglLabel = $tglRaw ? date('d M Y H:i', strtotime($tglRaw)) : '-';
+                                
+                                // Badge class
+                                $badgeClass = match($tahapan) {
+                                    'Galian' => 'tahapan-galian',
+                                    'Pengecoran' => 'tahapan-pengecoran',
+                                    'Pemasangan Tiang dan Armatur' => 'tahapan-pemasangan-tiang',
+                                    'Pemasangan Jaringan' => 'tahapan-pemasangan-jaringan',
+                                    'Selesai' => 'tahapan-selesai',
+                                    default => 'tahapan-galian'
+                                };
                             @endphp
 
                             <tr
@@ -103,21 +126,17 @@
                                 <td class="text-left">{{ $latestProgres['lokasi_proyek'] }}</td>
                                 <td class="text-left">{{ $latestProgres['nama_petugas'] }}</td>
 
-                                {{-- ✅ dropdown hanya 1x --}}
+                                {{-- ✅ Badge static (bukan dropdown) --}}
                                 <td class="text-center">
-                                    <select class="tahapan-select border border-gray-200 dark:border-[#15203c] rounded-md px-3 py-2 text-sm bg-white dark:bg-[#0c1427]">
-                                        @foreach($tahapanEnum as $opt)
-                                            <option value="{{ $opt }}" {{ $tahapan===$opt?'selected':'' }}>{{ $opt }}</option>
-                                        @endforeach
-                                    </select>
+                                    <span class="badge-tahapan {{ $badgeClass }}">{{ $tahapan }}</span>
                                 </td>
 
-                                {{-- last update (akan berubah saat edit / change dropdown) --}}
+                                {{-- last update --}}
                                 <td class="text-center">
                                     <span class="last-update">{{ $tglLabel }}</span>
                                 </td>
 
-                                {{-- ✅ Progress: BAR + TEXT SAJA (TIDAK ADA INPUT) --}}
+                                {{-- ✅ Progress: BAR + TEXT --}}
                                 <td class="text-center">
                                     <div class="w-full max-w-[220px] mx-auto">
                                         <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
@@ -127,7 +146,7 @@
                                     </div>
                                 </td>
 
-                                {{-- ✅ Aksi: Edit + Hapus + Riwayat (ICON HISTORY SAJA, TANPA (UI)) --}}
+                                {{-- ✅ Aksi: Edit + Hapus + Riwayat --}}
                                 <td class="text-center">
                                     <div class="flex items-center gap-[12px] justify-center">
                                         <button type="button" class="btn-icon btn-edit text-blue-600 custom-tooltip" data-text="Edit">
@@ -192,7 +211,7 @@
                     </select>
                 </div>
 
-                {{-- ✅ progress hanya bisa diubah dari modal edit, jadi create kita pakai auto by tahapan --}}
+                {{-- ✅ progress auto by tahapan --}}
                 <div>
                     <label class="text-sm text-gray-600 dark:text-gray-300">Progress (Auto)</label>
                     <input type="text" value="Akan mengikuti tahapan" disabled
@@ -212,7 +231,7 @@
     </div>
 
     {{-- =========================
-        MODAL EDIT (frontend-only) => progress hanya bisa diubah di sini
+        MODAL EDIT (frontend-only) => progress bisa diubah di sini
     ========================== --}}
     <div id="modalEdit" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
         <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
@@ -299,20 +318,15 @@
             return Math.max(0, Math.min(100, p));
         }
 
-        function setRowProgress(tr, percent) {
-            percent = clampPercent(percent);
-            tr.dataset.persen = percent;
-
-            const bar = tr.querySelector('.progress-bar');
-            const txt = tr.querySelector('.progress-text');
-
-            if (bar) bar.style.width = percent + '%';
-            if (txt) txt.innerText = percent + '%';
-        }
-
-        function setLastUpdate(tr) {
-            const el = tr.querySelector('.last-update');
-            if (el) el.innerText = nowLabel();
+        function getTahapanBadgeClass(tahapan) {
+            const map = {
+                'Galian': 'tahapan-galian',
+                'Pengecoran': 'tahapan-pengecoran',
+                'Pemasangan Tiang dan Armatur': 'tahapan-pemasangan-tiang',
+                'Pemasangan Jaringan': 'tahapan-pemasangan-jaringan',
+                'Selesai': 'tahapan-selesai'
+            };
+            return map[tahapan] || 'tahapan-galian';
         }
 
         const dt = $('#data-table').DataTable({
@@ -342,23 +356,6 @@
             if (e.target === modalEdit) closeModal(modalEdit);
         });
 
-        // ===== dropdown tahapan di table: boleh diganti, tapi progress auto (tanpa input manual) =====
-        document.addEventListener('change', function(e){
-            if (!e.target.classList.contains('tahapan-select')) return;
-
-            const tr = e.target.closest('tr');
-            const tahapan = e.target.value;
-
-            tr.dataset.tahapan = tahapan;
-
-            // auto percent sesuai tahapan
-            const auto = tahapanToPercent[tahapan] ?? 0;
-            setRowProgress(tr, auto);
-
-            // update last update
-            setLastUpdate(tr);
-        });
-
         // ===== CREATE (UI): progress auto ikut tahapan =====
         document.getElementById('formCreate').addEventListener('submit', function(e){
             e.preventDefault();
@@ -370,16 +367,9 @@
 
             const tahapan = p.tahapan || 'Galian';
             const persen = tahapanToPercent[tahapan] ?? 0;
+            const badgeClass = getTahapanBadgeClass(tahapan);
 
-            const tahapanHtml = `
-                <select class="tahapan-select border border-gray-200 dark:border-[#15203c] rounded-md px-3 py-2 text-sm bg-white dark:bg-[#0c1427]">
-                    <option value="Galian" ${tahapan==='Galian'?'selected':''}>Galian</option>
-                    <option value="Pengecoran" ${tahapan==='Pengecoran'?'selected':''}>Pengecoran</option>
-                    <option value="Pemasangan Tiang dan Armatur" ${tahapan==='Pemasangan Tiang dan Armatur'?'selected':''}>Pemasangan Tiang dan Armatur</option>
-                    <option value="Pemasangan Jaringan" ${tahapan==='Pemasangan Jaringan'?'selected':''}>Pemasangan Jaringan</option>
-                    <option value="Selesai" ${tahapan==='Selesai'?'selected':''}>Selesai</option>
-                </select>
-            `;
+            const tahapanHtml = `<span class="badge-tahapan ${badgeClass}">${tahapan}</span>`;
 
             const progressHtml = `
                 <div class="w-full max-w-[220px] mx-auto">
@@ -390,7 +380,6 @@
                 </div>
             `;
 
-            // UI icon "riwayat" juga (bukan tulisan (UI))
             const aksiHtml = `
                 <div class="flex items-center gap-[12px] justify-center">
                     <button type="button" class="btn-icon btn-edit text-blue-600 custom-tooltip" data-text="Edit">
@@ -436,10 +425,10 @@
             const form = document.getElementById('formEdit');
 
             form.aset_pju_id.value = tr.dataset.aset || '';
-            form.kode_aset.value = tr.dataset.kode_aset || tr.children[1]?.innerText?.trim() || '';
-            form.lokasi.value = tr.dataset.lokasi || tr.children[2]?.innerText?.trim() || '';
-            form.petugas.value = tr.dataset.petugas || tr.children[3]?.innerText?.trim() || '';
-            form.tahapan.value = tr.querySelector('.tahapan-select')?.value || tr.dataset.tahapan || 'Galian';
+            form.kode_aset.value = tr.dataset.kode_aset || '';
+            form.lokasi.value = tr.dataset.lokasi || '';
+            form.petugas.value = tr.dataset.petugas || '';
+            form.tahapan.value = tr.dataset.tahapan || 'Galian';
             form.persen.value = tr.dataset.persen || 0;
 
             openModal(modalEdit);
@@ -459,6 +448,8 @@
                 ? (tahapanToPercent[tahapan] ?? 0)
                 : clampPercent(p.persen);
 
+            const badgeClass = getTahapanBadgeClass(tahapan);
+
             // update dataset
             tr.dataset.kode_aset = p.kode_aset || '-';
             tr.dataset.lokasi = p.lokasi || '-';
@@ -473,19 +464,8 @@
             data[1] = `<strong class="text-primary-500">${(p.kode_aset || '-')}</strong>`;
             data[2] = `${(p.lokasi || '-')}`;
             data[3] = `${(p.petugas || '-')}`;
-
-            data[4] = `
-                <select class="tahapan-select border border-gray-200 dark:border-[#15203c] rounded-md px-3 py-2 text-sm bg-white dark:bg-[#0c1427]">
-                    <option value="Galian" ${tahapan==='Galian'?'selected':''}>Galian</option>
-                    <option value="Pengecoran" ${tahapan==='Pengecoran'?'selected':''}>Pengecoran</option>
-                    <option value="Pemasangan Tiang dan Armatur" ${tahapan==='Pemasangan Tiang dan Armatur'?'selected':''}>Pemasangan Tiang dan Armatur</option>
-                    <option value="Pemasangan Jaringan" ${tahapan==='Pemasangan Jaringan'?'selected':''}>Pemasangan Jaringan</option>
-                    <option value="Selesai" ${tahapan==='Selesai'?'selected':''}>Selesai</option>
-                </select>
-            `;
-
+            data[4] = `<span class="badge-tahapan ${badgeClass}">${tahapan}</span>`;
             data[5] = `<span class="last-update">${nowLabel()}</span>`;
-
             data[6] = `
                 <div class="w-full max-w-[220px] mx-auto">
                     <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">

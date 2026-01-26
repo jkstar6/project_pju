@@ -11,7 +11,6 @@
 
     <style>
         #data-table td.text-center { vertical-align: middle; }
-        #data-table td.text-center .select-sm { margin: 0 auto; display: inline-block; min-width: 130px; }
 
         /* modal */
         .modal-overlay { display: none; }
@@ -26,6 +25,20 @@
             z-index: 10;
             cursor: pointer;
         }
+
+        /* Badge styling */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .badge-nyala { background: #dbeafe; color: #1e40af; }
+        .badge-mati { background: #fed7aa; color: #c2410c; }
+        .badge-rusak { background: #fecaca; color: #991b1b; }
+        .badge-ada { background: #d1fae5; color: #065f46; }
+        .badge-tidak-ada { background: #fee2e2; color: #991b1b; }
     </style>
 @endpush
 
@@ -80,6 +93,16 @@
                                 $kondisi = $log['kondisi'];
                                 $keberadaan = $log['keberadaan'];
                                 $catatan = $log['catatan_kerusakan'] ?? '-';
+                                
+                                // Badge classes
+                                $kondisiBadge = match($kondisi) {
+                                    'Nyala' => 'badge-nyala',
+                                    'Mati' => 'badge-mati',
+                                    'Rusak Fisik' => 'badge-rusak',
+                                    default => 'badge-nyala'
+                                };
+                                
+                                $keberadaanBadge = $keberadaan === 'Ada' ? 'badge-ada' : 'badge-tidak-ada';
                             @endphp
 
                             <tr
@@ -94,52 +117,35 @@
                                 data-catatan_kerusakan="{{ $catatan }}"
                             >
                                 <td class="text-center">{{ $index + 1 }}</td>
-                                <td class="text-left">{{ $kode }}</td>
+                                <td class="text-left"><strong class="text-primary-500">{{ $kode }}</strong></td>
                                 <td class="text-left">{{ $lokasi }}</td>
                                 <td class="text-left">{{ $surveyor }}</td>
                                 <td class="text-center">{{ date('d M Y', strtotime($tglRaw)) }}</td>
-
                                 <td class="text-center">
-                                    <select
-                                        class="select-sm kondisi-select border border-gray-200 dark:border-[#15203c] rounded-md px-2 py-1 text-sm bg-white dark:bg-[#0c1427]"
-                                        data-id="{{ $id }}"
-                                    >
-                                        <option value="Nyala" {{ $kondisi=='Nyala'?'selected':'' }}>Nyala</option>
-                                        <option value="Mati" {{ $kondisi=='Mati'?'selected':'' }}>Mati</option>
-                                        <option value="Rusak Fisik" {{ $kondisi=='Rusak Fisik'?'selected':'' }}>Rusak Fisik</option>
-                                    </select>
+                                    <span class="badge {{ $kondisiBadge }}">{{ $kondisi }}</span>
                                 </td>
-
                                 <td class="text-center">
-                                    <select
-                                        class="select-sm keberadaan-select border border-gray-200 dark:border-[#15203c] rounded-md px-2 py-1 text-sm bg-white dark:bg-[#0c1427]"
-                                        data-id="{{ $id }}"
-                                    >
-                                        <option value="Ada" {{ $keberadaan=='Ada'?'selected':'' }}>Ada</option>
-                                        <option value="Tidak Ada" {{ $keberadaan=='Tidak Ada'?'selected':'' }}>Tidak Ada</option>
-                                    </select>
+                                    <span class="badge {{ $keberadaanBadge }}">{{ $keberadaan }}</span>
                                 </td>
-
                                 <td class="text-left">{{ $catatan }}</td>
 
                                 <td class="text-center">
                                     <div class="flex items-center gap-[9px] justify-center">
-                                        {{-- DETAIL (tanpa route, biar tidak error) --}}
-                                        <a href="javascript:void(0)"
-                                           class="btn-detail text-primary-500 leading-none custom-tooltip"
-                                           data-id="{{ $id }}"
-                                           data-text="Detail">
+                                        {{-- DETAIL --}}
+                                        <button type="button"
+                                                class="btn-detail text-primary-500 leading-none custom-tooltip"
+                                                data-text="Detail">
                                             <i class="material-symbols-outlined !text-md">visibility</i>
-                                        </a>
+                                        </button>
 
-                                        {{-- EDIT UI --}}
+                                        {{-- EDIT --}}
                                         <button type="button"
                                                 class="btn-edit text-blue-600 leading-none custom-tooltip"
-                                                data-text="Edit (UI)">
+                                                data-text="Edit">
                                             <i class="material-symbols-outlined !text-md">edit</i>
                                         </button>
 
-                                        {{-- DELETE DB (punya kamu) --}}
+                                        {{-- DELETE --}}
                                         <form action="{{ route('log-survey.destroy', $id) }}" method="post" class="d-inline js-delete-db">
                                             @csrf
                                             @method('delete')
@@ -340,35 +346,6 @@
             ]
         });
 
-        // dropdown styling
-        function kondisiClass(val){
-            if (val === 'Rusak Fisik') return ['bg-red-50','text-red-700','border-red-200'];
-            if (val === 'Mati') return ['bg-orange-50','text-orange-700','border-orange-200'];
-            return ['bg-blue-50','text-blue-700','border-blue-200'];
-        }
-        function keberadaanClass(val){
-            if (val === 'Tidak Ada') return ['bg-red-50','text-red-700','border-red-200'];
-            return ['bg-blue-50','text-blue-700','border-blue-200'];
-        }
-        function applySelectStyle(select, kind){
-            const remove = [
-                'bg-red-50','text-red-700','border-red-200',
-                'bg-orange-50','text-orange-700','border-orange-200',
-                'bg-blue-50','text-blue-700','border-blue-200'
-            ];
-            select.classList.remove(...remove);
-            const add = (kind === 'kondisi') ? kondisiClass(select.value) : keberadaanClass(select.value);
-            select.classList.add(...add);
-        }
-
-        document.querySelectorAll('.kondisi-select').forEach(el => applySelectStyle(el,'kondisi'));
-        document.querySelectorAll('.keberadaan-select').forEach(el => applySelectStyle(el,'keberadaan'));
-
-        document.addEventListener('change', function(e){
-            if (e.target.classList.contains('kondisi-select')) applySelectStyle(e.target,'kondisi');
-            if (e.target.classList.contains('keberadaan-select')) applySelectStyle(e.target,'keberadaan');
-        });
-
         // modal helpers
         const modalCreate = document.getElementById('modalCreate');
         const modalEdit = document.getElementById('modalEdit');
@@ -397,7 +374,17 @@
             return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
         }
 
-        // DETAIL -> open modal
+        function getBadgeClass(type, value) {
+            if (type === 'kondisi') {
+                if (value === 'Nyala') return 'badge-nyala';
+                if (value === 'Mati') return 'badge-mati';
+                if (value === 'Rusak Fisik') return 'badge-rusak';
+                return 'badge-nyala';
+            }
+            return value === 'Ada' ? 'badge-ada' : 'badge-tidak-ada';
+        }
+
+        // DETAIL
         document.addEventListener('click', function(e){
             const btn = e.target.closest('.btn-detail');
             if (!btn) return;
@@ -406,23 +393,23 @@
             const tr = btn.closest('tr');
             if (!tr) return;
 
-            document.getElementById('dKode').innerText = tr.dataset.kode_aset || tr.children[1]?.innerText?.trim() || '-';
-            document.getElementById('dLokasi').innerText = tr.dataset.lokasi_aset || tr.children[2]?.innerText?.trim() || '-';
-            document.getElementById('dSurveyor').innerText = tr.dataset.nama_surveyor || tr.children[3]?.innerText?.trim() || '-';
+            document.getElementById('dKode').innerText = tr.dataset.kode_aset || '-';
+            document.getElementById('dLokasi').innerText = tr.dataset.lokasi_aset || '-';
+            document.getElementById('dSurveyor').innerText = tr.dataset.nama_surveyor || '-';
 
             const raw = tr.dataset.tgl_survey || '';
-            document.getElementById('dTanggal').innerText = raw ? formatDateToDMY(raw) : (tr.children[4]?.innerText?.trim() || '-');
+            document.getElementById('dTanggal').innerText = raw ? formatDateToDMY(raw) : '-';
 
-            document.getElementById('dKondisi').innerText = tr.querySelector('.kondisi-select')?.value || tr.dataset.kondisi || '-';
-            document.getElementById('dKeberadaan').innerText = tr.querySelector('.keberadaan-select')?.value || tr.dataset.keberadaan || '-';
+            document.getElementById('dKondisi').innerText = tr.dataset.kondisi || '-';
+            document.getElementById('dKeberadaan').innerText = tr.dataset.keberadaan || '-';
 
-            const cat = tr.dataset.catatan_kerusakan || tr.children[7]?.innerText?.trim() || '-';
+            const cat = tr.dataset.catatan_kerusakan || '-';
             document.getElementById('dCatatan').innerText = cat;
 
             openModal(modalDetail);
         });
 
-        // CREATE (frontend-only) => row baru pakai delete UI icon
+        // CREATE
         document.getElementById('formCreate').addEventListener('submit', function(e){
             e.preventDefault();
             const fd = new FormData(this);
@@ -440,26 +427,15 @@
             const keberadaan = p.keberadaan || 'Ada';
             const catatan = (p.catatan_kerusakan && p.catatan_kerusakan.trim()) ? p.catatan_kerusakan : '-';
 
-            const kondisiHtml = `
-                <select class="select-sm kondisi-select border border-gray-200 dark:border-[#15203c] rounded-md px-2 py-1 text-sm bg-white dark:bg-[#0c1427]" data-id="${id}">
-                    <option value="Nyala" ${kondisi==='Nyala'?'selected':''}>Nyala</option>
-                    <option value="Mati" ${kondisi==='Mati'?'selected':''}>Mati</option>
-                    <option value="Rusak Fisik" ${kondisi==='Rusak Fisik'?'selected':''}>Rusak Fisik</option>
-                </select>
-            `;
-            const keberadaanHtml = `
-                <select class="select-sm keberadaan-select border border-gray-200 dark:border-[#15203c] rounded-md px-2 py-1 text-sm bg-white dark:bg-[#0c1427]" data-id="${id}">
-                    <option value="Ada" ${keberadaan==='Ada'?'selected':''}>Ada</option>
-                    <option value="Tidak Ada" ${keberadaan==='Tidak Ada'?'selected':''}>Tidak Ada</option>
-                </select>
-            `;
+            const kondisiBadge = getBadgeClass('kondisi', kondisi);
+            const keberadaanBadge = getBadgeClass('keberadaan', keberadaan);
 
             const aksiHtml = `
                 <div class="flex items-center gap-[9px] justify-center">
-                    <a href="javascript:void(0)" class="btn-detail text-primary-500 leading-none custom-tooltip" data-id="${id}" data-text="Detail">
+                    <button type="button" class="btn-detail text-primary-500 leading-none custom-tooltip" data-text="Detail">
                         <i class="material-symbols-outlined !text-md">visibility</i>
-                    </a>
-                    <button type="button" class="btn-edit text-blue-600 leading-none custom-tooltip" data-text="Edit (UI)">
+                    </button>
+                    <button type="button" class="btn-edit text-blue-600 leading-none custom-tooltip" data-text="Edit">
                         <i class="material-symbols-outlined !text-md">edit</i>
                     </button>
                     <button type="button" class="btn-delete text-danger-500 leading-none custom-tooltip" data-text="Delete (UI)">
@@ -470,12 +446,12 @@
 
             const node = dt.row.add([
                 `${no}`,
-                `${kode}`,
+                `<strong class="text-primary-500">${kode}</strong>`,
                 `${lokasi}`,
                 `${surveyor}`,
                 `${tglLabel}`,
-                kondisiHtml,
-                keberadaanHtml,
+                `<span class="badge ${kondisiBadge}">${kondisi}</span>`,
+                `<span class="badge ${keberadaanBadge}">${keberadaan}</span>`,
                 `${catatan}`,
                 aksiHtml
             ]).draw(false).node();
@@ -490,9 +466,6 @@
             node.dataset.keberadaan = keberadaan;
             node.dataset.catatan_kerusakan = catatan;
 
-            node.querySelectorAll('.kondisi-select').forEach(el => applySelectStyle(el,'kondisi'));
-            node.querySelectorAll('.keberadaan-select').forEach(el => applySelectStyle(el,'keberadaan'));
-
             closeModal(modalCreate);
         });
 
@@ -505,13 +478,13 @@
             const form = document.getElementById('formEdit');
 
             form.id.value = tr.dataset.id || '';
-            form.kode_aset.value = tr.dataset.kode_aset || tr.children[1]?.innerText?.trim() || '';
-            form.lokasi_aset.value = tr.dataset.lokasi_aset || tr.children[2]?.innerText?.trim() || '';
-            form.nama_surveyor.value = tr.dataset.nama_surveyor || tr.children[3]?.innerText?.trim() || '';
+            form.kode_aset.value = tr.dataset.kode_aset || '';
+            form.lokasi_aset.value = tr.dataset.lokasi_aset || '';
+            form.nama_surveyor.value = tr.dataset.nama_surveyor || '';
             form.tgl_survey.value = tr.dataset.tgl_survey || '';
-            form.kondisi.value = tr.querySelector('.kondisi-select')?.value || tr.dataset.kondisi || 'Nyala';
-            form.keberadaan.value = tr.querySelector('.keberadaan-select')?.value || tr.dataset.keberadaan || 'Ada';
-            form.catatan_kerusakan.value = tr.dataset.catatan_kerusakan || tr.children[7]?.innerText?.trim() || '';
+            form.kondisi.value = tr.dataset.kondisi || 'Nyala';
+            form.keberadaan.value = tr.dataset.keberadaan || 'Ada';
+            form.catatan_kerusakan.value = tr.dataset.catatan_kerusakan || '';
 
             openModal(modalEdit);
         });
@@ -544,45 +517,32 @@
             tr.dataset.keberadaan = keberadaan;
             tr.dataset.catatan_kerusakan = catatan;
 
+            const kondisiBadge = getBadgeClass('kondisi', kondisi);
+            const keberadaanBadge = getBadgeClass('keberadaan', keberadaan);
+
             const row = dt.row(tr);
             const data = row.data();
 
-            data[1] = `${kode}`;
+            data[1] = `<strong class="text-primary-500">${kode}</strong>`;
             data[2] = `${lokasi}`;
             data[3] = `${surveyor}`;
             data[4] = `${tglLabel}`;
-
-            data[5] = `
-                <select class="select-sm kondisi-select border border-gray-200 dark:border-[#15203c] rounded-md px-2 py-1 text-sm bg-white dark:bg-[#0c1427]" data-id="${id}">
-                    <option value="Nyala" ${kondisi==='Nyala'?'selected':''}>Nyala</option>
-                    <option value="Mati" ${kondisi==='Mati'?'selected':''}>Mati</option>
-                    <option value="Rusak Fisik" ${kondisi==='Rusak Fisik'?'selected':''}>Rusak Fisik</option>
-                </select>
-            `;
-            data[6] = `
-                <select class="select-sm keberadaan-select border border-gray-200 dark:border-[#15203c] rounded-md px-2 py-1 text-sm bg-white dark:bg-[#0c1427]" data-id="${id}">
-                    <option value="Ada" ${keberadaan==='Ada'?'selected':''}>Ada</option>
-                    <option value="Tidak Ada" ${keberadaan==='Tidak Ada'?'selected':''}>Tidak Ada</option>
-                </select>
-            `;
+            data[5] = `<span class="badge ${kondisiBadge}">${kondisi}</span>`;
+            data[6] = `<span class="badge ${keberadaanBadge}">${keberadaan}</span>`;
             data[7] = `${catatan}`;
 
             row.data(data).draw(false);
-
-            tr.querySelectorAll('.kondisi-select').forEach(el => applySelectStyle(el,'kondisi'));
-            tr.querySelectorAll('.keberadaan-select').forEach(el => applySelectStyle(el,'keberadaan'));
-
             closeModal(modalEdit);
         });
 
-        // DELETE UI (frontend-only) untuk row baru
+        // DELETE UI
         document.addEventListener('click', function(e){
             const btn = e.target.closest('.btn-delete');
             if (!btn) return;
 
             const tr = btn.closest('tr');
             const isDb = tr?.dataset?.is_db === "1";
-            if (isDb) return; // row DB hapus pakai form backend
+            if (isDb) return;
 
             if (confirm('Hapus data ini? (UI)')) {
                 dt.row(tr).remove().draw(false);

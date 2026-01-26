@@ -6,16 +6,18 @@ use App\Http\Controllers\AduanController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\AsetPjuController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LogSurveyController;
+use App\Http\Controllers\TimLapanganController;
+use App\Http\Controllers\TiketPerbaikanController;
+use App\Http\Controllers\TindakanTeknisiController;
+use App\Http\Controllers\ProgresPengerjaanController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Operator\HomeController;
 use App\Http\Controllers\Landing\BerandaController;
 use App\Http\Controllers\Admin\Settings\RolesController;
 use App\Http\Controllers\Admin\Settings\UsersController;
-
-// ✅ Tambahan untuk Aduan
 use App\Http\Controllers\Admin\Settings\NavigationsController;
 use App\Http\Controllers\Admin\Settings\PreferencesController;
-use App\Http\Controllers\TiketPerbaikanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,11 +25,7 @@ use App\Http\Controllers\TiketPerbaikanController;
 |--------------------------------------------------------------------------
 */
 
-/*
-|--------------------------------------------------------------------------
-| Landing Routes
-|--------------------------------------------------------------------------
-*/
+/* ---- Landing Routes */
 Route::get('/', function () {
     return view('home');
 });
@@ -43,19 +41,12 @@ Route::get('/aduan', function () {
 
 // Proses Simpan Aduan
 Route::post('/aduan', [AduanController::class, 'store'])->name('aduan.store');
-
-// =========================================================================
-// ✅ PERBAIKAN DI SINI:
-// Menggunakan Controller agar data yang Diterima bisa muncul
-// =========================================================================
 Route::get('/daftar-aduan', [AduanController::class, 'daftarAduan'])->name('daftar-aduan');
-
-// Detail Aduan (Opsional: Bisa diarahkan ke controller jika ingin detailnya dinamis juga)
 Route::get('/detail-aduan/{id}', [AduanController::class, 'detail'])->name('aduan.detail');
 
 /*
 |--------------------------------------------------------------------------
-| Admin Routes
+| Admin Routes (Protected by Auth)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth', 'verified')->group(function () {
@@ -63,98 +54,74 @@ Route::middleware('auth', 'verified')->group(function () {
     /* ---- Dashboard */
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    /* ---- Halaman Aduan (Admin List) */
-    Route::get('/halaman-aduan', [AduanController::class, 'index'])
-        ->name('halaman-aduan.index');
+    /* ---- Aduan Management */
+    Route::get('/halaman-aduan', [AduanController::class, 'index'])->name('halaman-aduan.index');
+    Route::post('/aduan/{id}/verifikasi', [AduanController::class, 'verifikasi'])->name('aduan.verifikasi');
+    Route::post('/aduan/{id}/tolak', [AduanController::class, 'tolak'])->name('aduan.tolak');
+    Route::delete('/aduan/{id}', [AduanController::class, 'destroy'])->name('aduan.hapus');
 
-    // =========================================================
-    // ✅ LOGIC VERIFIKASI ADUAN
-    // =========================================================
-    Route::post('/aduan/{id}/verifikasi', [AduanController::class, 'verifikasi'])
-        ->name('aduan.verifikasi');
-
-    Route::post('/aduan/{id}/tolak', [AduanController::class, 'tolak'])
-        ->name('aduan.tolak');
-
-    // HAPUS
-    Route::delete('/aduan/{id}', [AduanController::class, 'destroy'])
-        ->name('aduan.hapus');
-    // =========================================================
-
-    /* ---- My Profile */
+    /* ---- Profile Management */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // ===================================================================
-    // PJU MANAGEMENT ROUTES
-    // ===================================================================
+    /* ---- Aset PJU Management */
+    Route::get('/aset-pju', [AsetPjuController::class, 'index'])->name('admin.aset-pju.index');
+    Route::post('/aset-pju', [AsetPjuController::class, 'store'])->name('aset-pju.store');
 
-    /*
-    |--------------------------------------------------------------------------
-    | ASET PJU (FIX & KONSISTEN)
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/aset-pju', [AsetPjuController::class, 'index'])
-        ->name('admin.aset-pju.index');
-
-    Route::post('/aset-pju', [AsetPjuController::class, 'store'])
-        ->name('aset-pju.store');
-
-
+    /* ---- Tim Lapangan */
     Route::prefix('/tim-lapangan')->name('tim-lapangan.')->group(function () {
-        Route::get('/', [App\Http\Controllers\TimLapanganController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\TimLapanganController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [App\Http\Controllers\TimLapanganController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [App\Http\Controllers\TimLapanganController::class, 'update'])->name('update');
-        Route::delete('/{id}', [App\Http\Controllers\TimLapanganController::class, 'destroy'])->name('destroy');
+        Route::get('/', [TimLapanganController::class, 'index'])->name('index');
+        Route::post('/', [TimLapanganController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [TimLapanganController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [TimLapanganController::class, 'update'])->name('update');
+        Route::delete('/{id}', [TimLapanganController::class, 'destroy'])->name('destroy');
     });
 
+    /* ---- Tindakan Teknisi */
     Route::prefix('/tindakan-teknisi')->name('tindakan-teknisi.')->group(function () {
-        Route::get('/', [App\Http\Controllers\TindakanTeknisiController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\TindakanTeknisiController::class, 'store'])->name('store');
-        Route::get('/{id}', [App\Http\Controllers\TindakanTeknisiController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [App\Http\Controllers\TindakanTeknisiController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [App\Http\Controllers\TindakanTeknisiController::class, 'update'])->name('update');
-        Route::delete('/{id}', [App\Http\Controllers\TindakanTeknisiController::class, 'destroy'])->name('destroy');
+        Route::get('/', [TindakanTeknisiController::class, 'index'])->name('index');
+        Route::post('/', [TindakanTeknisiController::class, 'store'])->name('store');
+        Route::get('/{id}', [TindakanTeknisiController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [TindakanTeknisiController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [TindakanTeknisiController::class, 'update'])->name('update');
+        Route::delete('/{id}', [TindakanTeknisiController::class, 'destroy'])->name('destroy');
     });
 
+    /* ---- Log Survey (FIXED) */
     Route::prefix('/log-survey')->name('log-survey.')->group(function () {
-        Route::get('/', [App\Http\Controllers\LogSurveyController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\LogSurveyController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [App\Http\Controllers\LogSurveyController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [App\Http\Controllers\LogSurveyController::class, 'update'])->name('update');
-        Route::delete('/{id}', [App\Http\Controllers\LogSurveyController::class, 'destroy'])->name('destroy');
+        Route::get('/', [LogSurveyController::class, 'index'])->name('index');
+        Route::post('/', [LogSurveyController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [LogSurveyController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [LogSurveyController::class, 'update'])->name('update');
+        Route::delete('/{id}', [LogSurveyController::class, 'destroy'])->name('destroy');
     });
 
+    /* ---- Tiket Perbaikan */
     Route::prefix('/tiket-perbaikan')->name('tiket-perbaikan.')->group(function () {
-    // Route untuk mengambil daftar aduan terverifikasi (JSON) untuk Modal Create
-    Route::get('/get-verified-aduan', [TiketPerbaikanController::class, 'getVerifiedAduan'])->name('get-verified-aduan');
-    
-    Route::get('/', [TiketPerbaikanController::class, 'index'])->name('index');
-    Route::post('/', [TiketPerbaikanController::class, 'store'])->name('store');
-    Route::get('/{id}', [TiketPerbaikanController::class, 'show'])->name('show');
-    
-    // Update data (Edit via Modal)
-    Route::put('/{id}', [TiketPerbaikanController::class, 'update'])->name('update');
-    
-    Route::delete('/{id}', [TiketPerbaikanController::class, 'destroy'])->name('destroy');
-});
-
-    Route::prefix('/progres-pengerjaan')->name('progres-pengerjaan.')->group(function () {
-        Route::get('/', [App\Http\Controllers\ProgresPengerjaanController::class, 'index'])->name('index');
-        Route::post('/', [App\Http\Controllers\ProgresPengerjaanController::class, 'store'])->name('store');
-        Route::get('/{asetPjuId}', [App\Http\Controllers\ProgresPengerjaanController::class, 'show'])->name('show');
-        Route::put('/{id}', [App\Http\Controllers\ProgresPengerjaanController::class, 'update'])->name('update');
+        Route::get('/get-verified-aduan', [TiketPerbaikanController::class, 'getVerifiedAduan'])->name('get-verified-aduan');
+        Route::get('/', [TiketPerbaikanController::class, 'index'])->name('index');
+        Route::post('/', [TiketPerbaikanController::class, 'store'])->name('store');
+        Route::get('/{id}', [TiketPerbaikanController::class, 'show'])->name('show');
+        Route::put('/{id}', [TiketPerbaikanController::class, 'update'])->name('update');
+        Route::delete('/{id}', [TiketPerbaikanController::class, 'destroy'])->name('destroy');
     });
 
-    /* ---- Settings */
+    /* ---- Progres Pengerjaan */
+    Route::prefix('/progres-pengerjaan')->name('progres-pengerjaan.')->group(function () {
+        Route::get('/', [ProgresPengerjaanController::class, 'index'])->name('index');
+        Route::post('/', [ProgresPengerjaanController::class, 'store'])->name('store');
+        Route::get('/{asetPjuId}', [ProgresPengerjaanController::class, 'show'])->name('show');
+        Route::put('/{id}', [ProgresPengerjaanController::class, 'update'])->name('update');
+    });
+
+    /* ---- Settings Management */
     Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
-        Route::resource('users', UsersController::class)->names('users');
-        Route::resource('roles', RolesController::class)->names('roles');
+        Route::resource('users', UsersController::class);
+        Route::resource('roles', RolesController::class);
         Route::put('/roles/{role}/permissions', [RolesController::class, 'givePermission'])->name('roles.permissions');
-        Route::resource('navs', NavigationsController::class)->names('navs');
-        Route::resource('preferences', PreferencesController::class)->names('preferences');
+        Route::resource('navs', NavigationsController::class);
+        Route::resource('preferences', PreferencesController::class);
     });
 });
 

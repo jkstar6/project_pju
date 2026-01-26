@@ -454,403 +454,437 @@
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
-            const map = L.map('map').setView([-7.89610, 110.33843], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+    // Initialize map
+    const map = L.map('map').setView([-7.89610, 110.33843], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-            const lampPanel = document.getElementById('lampPanel');
-            const overlay = document.getElementById('panelOverlay');
-            const searchInput = document.getElementById('addressSearch');
-            const searchBtn = document.getElementById('searchBtn');
-            const searchLoading = document.getElementById('searchLoading');
-            const toggleCablesBtn = document.getElementById('toggleCables');
-            const toggleClusterBtn = document.getElementById('toggleCluster');
-            
-            let searchMarker;
-            let cablesVisible = false;
-            let clusteringEnabled = true;
+    // DOM elements
+    const lampPanel = document.getElementById('lampPanel');
+    const overlay = document.getElementById('panelOverlay');
+    const searchInput = document.getElementById('addressSearch');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchLoading = document.getElementById('searchLoading');
+    const toggleCablesBtn = document.getElementById('toggleCables');
+    const toggleClusterBtn = document.getElementById('toggleCluster');
+    
+    // State variables
+    let searchMarker;
+    let cablesVisible = false;
+    let clusteringEnabled = true;
 
-            // Layer groups for filtering
-            const markerClusters = L.markerClusterGroup({
-                maxClusterRadius: 50,
-                spiderfyOnMaxZoom: true,
-                showCoverageOnHover: false,
-                zoomToBoundsOnClick: true
-            });
+    // Layer groups
+    const markerClusters = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true
+    });
 
-            const nonClusteredLayer = L.layerGroup();
+    const nonClusteredLayer = L.layerGroup();
+    const panelLayer = L.layerGroup();
+    const cableLayer = L.layerGroup();
 
-            const panelLayer = L.layerGroup();
-            const layers = {
-                'Aktif': L.layerGroup(),
-                'Pindah': L.layerGroup(),
-                'Pengerjaan': L.layerGroup(),
-                'Usulan': L.layerGroup(),
-                'Mati': L.layerGroup(),
-                'Panel': panelLayer
-            };
+    // Track active filters
+    const activeFilters = new Set(['Aktif', 'Pindah', 'Pengerjaan', 'Usulan', 'Mati', 'Panel']);
 
-            // Track active filters
-            const activeFilters = new Set(['Aktif', 'Pindah', 'Pengerjaan', 'Usulan', 'Mati', 'Panel']);
+    // Helper functions
+    function getColor(warna) {
+        const colors = {
+            'Hijau': '#10b981',
+            'Merah': '#ef4444',
+            'Biru': '#3b82f6',
+            'Hitam': '#111827',
+            'Kuning': '#facc15'
+        };
+        return colors[warna] || '#facc15';
+    }
 
-            // Helper functions
-            function getColor(warna) {
-                const colors = {
-                    'Hijau': '#10b981',
-                    'Merah': '#ef4444',
-                    'Biru': '#3b82f6',
-                    'Hitam': '#111827',
-                    'Kuning': '#facc15'
-                };
-                return colors[warna] || '#facc15';
-            }
+    function getFasaColor(fasa) {
+        const colors = { 'R': '#ef4444', 'S': '#facc15', 'T': '#3b82f6' };
+        return colors[fasa] || '#6b7280';
+    }
 
-            function getFasaColor(fasa) {
-                const colors = { 'R': '#ef4444', 'S': '#facc15', 'T': '#3b82f6' };
-                return colors[fasa] || '#6b7280';
-            }
+    // Search functionality
+    async function handleSearch() {
+        const query = searchInput.value.trim();
+        if (!query) return;
 
-            // Search functionality
-            async function handleSearch() {
-                const query = searchInput.value.trim();
-                if (!query) return;
+        searchLoading.classList.remove('hidden');
+        
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+            const data = await response.json();
 
-                searchLoading.classList.remove('hidden');
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
                 
-                try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
-                    const data = await response.json();
-
-                    if (data && data.length > 0) {
-                        const lat = parseFloat(data[0].lat);
-                        const lon = parseFloat(data[0].lon);
-                        
-                        map.flyTo([lat, lon], 17);
-                        
-                        if (searchMarker) map.removeLayer(searchMarker);
-                        searchMarker = L.marker([lat, lon]).addTo(map)
-                            .bindPopup(`<b>Lokasi Ditemukan</b><br>${data[0].display_name}`)
-                            .openPopup();
-                    } else {
-                        alert("Lokasi tidak ditemukan. Coba masukkan nama jalan yang lebih spesifik.");
-                    }
-                } catch (error) {
-                    console.error("Search error:", error);
-                    alert("Terjadi kesalahan saat mencari lokasi.");
-                } finally {
-                    searchLoading.classList.add('hidden');
-                }
+                map.flyTo([lat, lon], 17);
+                
+                if (searchMarker) map.removeLayer(searchMarker);
+                searchMarker = L.marker([lat, lon]).addTo(map)
+                    .bindPopup(`<b>Lokasi Ditemukan</b><br>${data[0].display_name}`)
+                    .openPopup();
+            } else {
+                alert("Lokasi tidak ditemukan. Coba masukkan nama jalan yang lebih spesifik.");
             }
+        } catch (error) {
+            console.error("Search error:", error);
+            alert("Terjadi kesalahan saat mencari lokasi.");
+        } finally {
+            searchLoading.classList.add('hidden');
+        }
+    }
 
-            searchBtn.onclick = handleSearch;
-            searchInput.onkeypress = (e) => { if (e.key === 'Enter') handleSearch(); };
+    searchBtn.onclick = handleSearch;
+    searchInput.onkeypress = (e) => { if (e.key === 'Enter') handleSearch(); };
 
-            // Detail panel functions
-            function openDetail(light) {
-                const connection = koneksiPJUKWH.find(k => k.aset_pju_id === light.id);
-                const panel = connection ? panelKWH.find(p => p.id === connection.panel_kwh_id) : null;
+    // Detail panel function
+    function openDetail(light) {
+        const connection = koneksiPJUKWH.find(k => k.aset_pju_id === light.id);
+        const panel = connection ? panelKWH.find(p => p.id === connection.panel_kwh_id) : null;
 
-                const pjuContent = `
-                    <div class="badge">${light.kode_tiang}</div>
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Status</span>
-                            <span>${light.status_aset}</span>
-                        </div>
+        const pjuContent = `
+            <div class="badge">${light.kode_tiang}</div>
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span>${light.status_aset}</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Jenis Lampu</span>
+                    <span>${light.jenis_lampu}</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Daya</span>
+                    <span>${light.watt} Watt</span>
+                </div>
+            </div>
+            <div style="font-size: 12px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                <strong>Wilayah</strong><br>
+                ${light.kecamatan}, ${light.desa}
+            </div>
+            <a href="https://www.google.com/maps/search/?api=1&query=${light.latitude},${light.longitude}"
+               target="_blank" class="map-link">Buka di Google Maps</a>
+        `;
+
+        const kwhContent = panel ? `
+            <div class="badge" style="background: #fef3c7; color: #92400e;">${panel.no_pelanggan_pln}</div>
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Lokasi Panel</span>
+                    <span>${panel.lokasi_panel}</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Daya VA</span>
+                    <span>${panel.daya_va} VA</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Koordinat</span>
+                    <span style="font-size: 11px;">${panel.latitude.toFixed(5)}, ${panel.longitude.toFixed(5)}</span>
+                </div>
+            </div>
+            <a href="https://www.google.com/maps/search/?api=1&query=${panel.latitude},${panel.longitude}"
+               target="_blank" class="map-link" style="background: #f59e0b;">Lihat Panel di Maps</a>
+        ` : `<p class="text-gray-400 text-sm">Tidak ada panel KWH yang terhubung.</p>`;
+
+        const cableContent = connection ? `
+            <div class="info-card" style="background: #dbeafe;">
+                <div class="info-row">
+                    <span class="info-label">Status Koneksi</span>
+                    <span style="color: #0369a1; font-weight: 700;">${connection.status_koneksi}</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Nomor MCB Panel</span>
+                    <span style="font-family: monospace; font-weight: 600;">${connection.nomor_mcb_panel}</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Fasa</span>
+                    <span style="color: ${getFasaColor(connection.fasa)}; font-weight: 700; font-size: 18px;">${connection.fasa}</span>
+                </div>
+            </div>
+            ${connection.tgl_koneksi ? `
+                <div class="info-card">
+                    <div class="info-row">
+                        <span class="info-label">Tanggal Koneksi</span>
+                        <span>${new Date(connection.tgl_koneksi).toLocaleDateString('id-ID')}</span>
                     </div>
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Jenis Lampu</span>
-                            <span>${light.jenis_lampu}</span>
-                        </div>
+                </div>
+            ` : ''}
+            ${connection.panjang_kabel_est ? `
+                <div class="info-card">
+                    <div class="info-row">
+                        <span class="info-label">Panjang Kabel</span>
+                        <span>${connection.panjang_kabel_est} meter</span>
                     </div>
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Daya</span>
-                            <span>${light.watt} Watt</span>
-                        </div>
+                </div>
+            ` : ''}
+            ${connection.keterangan_jalur ? `
+                <div class="info-card">
+                    <div class="info-row">
+                        <span class="info-label">Keterangan Jalur</span>
                     </div>
-                    <div style="font-size: 12px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px;">
-                        <strong>Wilayah</strong><br>
-                        ${light.kecamatan}, ${light.desa}
+                    <div style="font-size: 12px; margin-top: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #14b8a6;">
+                        ${connection.keterangan_jalur}
                     </div>
-                    <a href="https://www.google.com/maps/search/?api=1&query=${light.latitude},${light.longitude}"
-                       target="_blank" class="map-link">Buka di Google Maps</a>
-                `;
+                </div>
+            ` : ''}
+        ` : `<p class="text-gray-400 text-sm">Tidak ada koneksi kabel terdaftar.</p>`;
 
-                const kwhContent = panel ? `
-                    <div class="badge" style="background: #fef3c7; color: #92400e;">${panel.no_pelanggan_pln}</div>
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Lokasi Panel</span>
-                            <span>${panel.lokasi_panel}</span>
-                        </div>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Daya VA</span>
-                            <span>${panel.daya_va} VA</span>
-                        </div>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Koordinat</span>
-                            <span style="font-size: 11px;">${panel.latitude.toFixed(5)}, ${panel.longitude.toFixed(5)}</span>
-                        </div>
-                    </div>
-                    <a href="https://www.google.com/maps/search/?api=1&query=${panel.latitude},${panel.longitude}"
-                       target="_blank" class="map-link" style="background: #f59e0b;">Lihat Panel di Maps</a>
-                ` : `<p class="text-gray-400 text-sm">Tidak ada panel KWH yang terhubung.</p>`;
+        document.getElementById('tab-pju').innerHTML = pjuContent;
+        document.getElementById('tab-kwh').innerHTML = kwhContent;
+        document.getElementById('tab-cables').innerHTML = cableContent;
 
-                const cableContent = connection ? `
-                    <div class="info-card" style="background: #dbeafe;">
-                        <div class="info-row">
-                            <span class="info-label">Status Koneksi</span>
-                            <span style="color: #0369a1; font-weight: 700;">${connection.status_koneksi}</span>
-                        </div>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Nomor MCB Panel</span>
-                            <span style="font-family: monospace; font-weight: 600;">${connection.nomor_mcb_panel}</span>
-                        </div>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Fasa</span>
-                            <span style="color: ${getFasaColor(connection.fasa)}; font-weight: 700; font-size: 18px;">${connection.fasa}</span>
-                        </div>
-                    </div>
-                    ${connection.tgl_koneksi ? `
-                        <div class="info-card">
-                            <div class="info-row">
-                                <span class="info-label">Tanggal Koneksi</span>
-                                <span>${new Date(connection.tgl_koneksi).toLocaleDateString('id-ID')}</span>
-                            </div>
-                        </div>
-                    ` : ''}
-                    ${connection.panjang_kabel_est ? `
-                        <div class="info-card">
-                            <div class="info-row">
-                                <span class="info-label">Panjang Kabel</span>
-                                <span>${connection.panjang_kabel_est} meter</span>
-                            </div>
-                        </div>
-                    ` : ''}
-                    ${connection.keterangan_jalur ? `
-                        <div class="info-card">
-                            <div class="info-row">
-                                <span class="info-label">Keterangan Jalur</span>
-                            </div>
-                            <div style="font-size: 12px; margin-top: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #14b8a6;">
-                                ${connection.keterangan_jalur}
-                            </div>
-                        </div>
-                    ` : ''}
-                ` : `<p class="text-gray-400 text-sm">Tidak ada koneksi kabel terdaftar.</p>`;
+        lampPanel.classList.add('active');
+        overlay.style.display = 'block';
 
-                document.getElementById('tab-pju').innerHTML = pjuContent;
-                document.getElementById('tab-kwh').innerHTML = kwhContent;
-                document.getElementById('tab-cables').innerHTML = cableContent;
+        // Reset to PJU tab
+        document.querySelectorAll('.detail-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelector('[data-tab="pju"]').classList.add('active');
+        document.querySelectorAll('.detail-tab-content').forEach(content => content.style.display = 'none');
+        document.getElementById('tab-pju').style.display = 'block';
+    }
 
-                lampPanel.classList.add('active');
-                overlay.style.display = 'block';
+    // Tab switching
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('detail-tab')) {
+            const tabName = e.target.dataset.tab;
+            document.querySelectorAll('.detail-tab-content').forEach(content => content.style.display = 'none');
+            document.querySelectorAll('.detail-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).style.display = 'block';
+            e.target.classList.add('active');
+        }
+    });
 
-                document.querySelectorAll('.detail-tab').forEach(tab => tab.classList.remove('active'));
-                document.querySelector('[data-tab="pju"]').classList.add('active');
-                document.querySelectorAll('.detail-tab-content').forEach(content => content.style.display = 'none');
-                document.getElementById('tab-pju').style.display = 'block';
-            }
+    // Close panel
+    document.getElementById('closePanel').onclick = () => {
+        lampPanel.classList.remove('active');
+        overlay.style.display = 'none';
+    };
+    
+    overlay.onclick = () => {
+        lampPanel.classList.remove('active');
+        overlay.style.display = 'none';
+    };
 
-            // Tab switching
-            document.addEventListener('click', (e) => {
-                if (e.target.classList.contains('detail-tab')) {
-                    const tabName = e.target.dataset.tab;
-                    document.querySelectorAll('.detail-tab-content').forEach(content => content.style.display = 'none');
-                    document.querySelectorAll('.detail-tab').forEach(tab => tab.classList.remove('active'));
-                    document.getElementById(`tab-${tabName}`).style.display = 'block';
-                    e.target.classList.add('active');
-                }
-            });
+    // GPS button
+    document.getElementById('gpsBtn').onclick = () => {
+        navigator.geolocation.getCurrentPosition((pos) => {
+            map.flyTo([pos.coords.latitude, pos.coords.longitude], 18);
+        }, () => alert("Izin lokasi ditolak atau tidak tersedia."));
+    };
 
-            // Close panel
-            document.getElementById('closePanel').onclick = () => {
-                lampPanel.classList.remove('active');
-                overlay.style.display = 'none';
-            };
-            overlay.onclick = () => {
-                lampPanel.classList.remove('active');
-                overlay.style.display = 'none';
-            };
+    // Draw cables function
+    function drawCables() {
+        cableLayer.clearLayers();
 
-            // GPS button
-            document.getElementById('gpsBtn').onclick = () => {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    map.flyTo([pos.coords.latitude, pos.coords.longitude], 18);
-                }, () => alert("Izin lokasi ditolak atau tidak tersedia."));
-            };
+        if (!cablesVisible) {
+            map.removeLayer(cableLayer);
+            return;
+        }
 
-            // Cable layer group
-            const cableLayer = L.layerGroup();
+        koneksiPJUKWH.forEach(connection => {
+            const light = streetLights.find(l => l.id === connection.aset_pju_id);
+            const panel = panelKWH.find(p => p.id === connection.panel_kwh_id);
 
-            // Draw cables
-            function drawCables() {
-                cableLayer.clearLayers();
-
-                if (!cablesVisible) {
-                    map.removeLayer(cableLayer);
-                    return;
-                }
-
-                koneksiPJUKWH.forEach(connection => {
-                    const light = streetLights.find(l => l.id === connection.aset_pju_id);
-                    const panel = panelKWH.find(p => p.id === connection.panel_kwh_id);
-
-                    if (light && panel && connection.status_koneksi === 'Aktif' && 
-                        activeFilters.has(light.status_aset) && activeFilters.has('Panel')) {
-                        const line = L.polyline(
-                            [[panel.latitude, panel.longitude], [light.latitude, light.longitude]],
-                            { 
-                                color: getFasaColor(connection.fasa), 
-                                weight: 3, 
-                                opacity: 0.7,
-                                dashArray: '5, 10'
-                            }
-                        );
-
-                        line.bindTooltip(`${connection.nomor_mcb_panel} - Fasa ${connection.fasa}`, {
-                            permanent: false,
-                            direction: 'center',
-                            className: 'cable-tooltip'
-                        });
-
-                        cableLayer.addLayer(line);
+            if (light && panel && connection.status_koneksi === 'Aktif' && 
+                activeFilters.has(light.status_aset) && activeFilters.has('Panel')) {
+                const line = L.polyline(
+                    [[panel.latitude, panel.longitude], [light.latitude, light.longitude]],
+                    { 
+                        color: getFasaColor(connection.fasa), 
+                        weight: 3, 
+                        opacity: 0.7,
+                        dashArray: '5, 10'
                     }
+                );
+
+                line.bindTooltip(`${connection.nomor_mcb_panel} - Fasa ${connection.fasa}`, {
+                    permanent: false,
+                    direction: 'center',
+                    className: 'cable-tooltip'
                 });
 
-                if (cablesVisible) {
-                    cableLayer.addTo(map);
-                }
+                cableLayer.addLayer(line);
             }
+        });
 
-            // Toggle cables
-            toggleCablesBtn.onclick = () => {
-                cablesVisible = !cablesVisible;
-                toggleCablesBtn.classList.toggle('active');
-                toggleCablesBtn.textContent = cablesVisible ? 'Hide Cables' : 'Show Cables';
-                drawCables();
-            };
+        if (cablesVisible) {
+            cableLayer.addTo(map);
+        }
+    }
 
-            // Update map layers
-            function updateLayers() {
-                markerClusters.clearLayers();
+    // Toggle cables
+    toggleCablesBtn.onclick = () => {
+        cablesVisible = !cablesVisible;
+        toggleCablesBtn.classList.toggle('active');
+        toggleCablesBtn.textContent = cablesVisible ? 'Hide Cables' : 'Show Cables';
+        drawCables();
+    };
+
+    // Toggle clustering
+    toggleClusterBtn.onclick = () => {
+        clusteringEnabled = !clusteringEnabled;
+        toggleClusterBtn.classList.toggle('active');
+        toggleClusterBtn.textContent = clusteringEnabled ? 'Clustering ON' : 'Clustering OFF';
+        updateLayers();
+    };
+
+    // Update map layers - FIXED VERSION
+    function updateLayers() {
+        // Clear all layers first
+        markerClusters.clearLayers();
+        nonClusteredLayer.clearLayers();
+        panelLayer.clearLayers();
+        
+        // Remove all layers from map
+        map.removeLayer(markerClusters);
+        map.removeLayer(nonClusteredLayer);
+        map.removeLayer(panelLayer);
+
+        // Add panel markers (always non-clustered)
+        if (activeFilters.has('Panel')) {
+            panelKWH.forEach(panel => {
+                const panelIcon = L.divIcon({
+                    className: 'custom-panel-icon',
+                    html: `<div style="background: #f59e0b; color: black; width: 32px; height: 32px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">KWH</div>`,
+                    iconSize: [32, 32]
+                });
+
+                L.marker([panel.latitude, panel.longitude], { icon: panelIcon })
+                    .addTo(panelLayer)
+                    .bindPopup(`
+                        <div style="font-size: 13px;">
+                            <strong style="color: #f59e0b;">Panel KWH</strong><br>
+                            <strong>No. PLN:</strong> ${panel.no_pelanggan_pln}<br>
+                            <strong>Lokasi:</strong> ${panel.lokasi_panel}<br>
+                            <strong>Daya:</strong> ${panel.daya_va} VA
+                        </div>
+                    `);
+            });
+            panelLayer.addTo(map);
+        }
+
+        // Add streetlight markers with glow effects
+        const glowLayers = L.layerGroup();
+        
+        streetLights.forEach(light => {
+            if (activeFilters.has(light.status_aset)) {
+                const color = getColor(light.warna_map);
                 
-                Object.values(layers).forEach(layer => layer.clearLayers());
-
-                // Add panel markers
-                if (activeFilters.has('Panel')) {
-                    panelKWH.forEach(panel => {
-                        const panelIcon = L.divIcon({
-                            className: 'custom-panel-icon',
-                            html: `<div style="background: #f59e0b; color: black; width: 32px; height: 32px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">KWH</div>`,
-                            iconSize: [32, 32]
-                        });
-
-                        L.marker([panel.latitude, panel.longitude], { icon: panelIcon })
-                            .addTo(panelLayer)
-                            .bindPopup(`
-                                <div style="font-size: 13px;">
-                                    <strong style="color: #f59e0b;">Panel KWH</strong><br>
-                                    <strong>No. PLN:</strong> ${panel.no_pelanggan_pln}<br>
-                                    <strong>Lokasi:</strong> ${panel.lokasi_panel}<br>
-                                    <strong>Daya:</strong> ${panel.daya_va} VA
-                                </div>
-                            `);
+                // Create glow effect for certain statuses
+                if (['Aktif', 'Mati', 'Pengerjaan'].includes(light.status_aset)) {
+                    const glow = L.circleMarker([light.latitude, light.longitude], {
+                        radius: 25,
+                        fillColor: color,
+                        color: color,
+                        weight: 0,
+                        opacity: 0.3,
+                        fillOpacity: 0.2,
+                        interactive: false
                     });
-                    panelLayer.addTo(map);
-                } else {
-                    map.removeLayer(panelLayer);
-                }
-
-                // Add streetlight markers
-                streetLights.forEach(light => {
-                    if (activeFilters.has(light.status_aset)) {
-                        const color = getColor(light.warna_map);
-                        
-                        if (['Aktif', 'Mati', 'Pengerjaan'].includes(light.status_aset)) {
-                            const glow = L.circleMarker([light.latitude, light.longitude], {
-                                radius: 25,
-                                fillColor: color,
-                                color: color,
-                                weight: 0,
-                                opacity: 0.75,
-                                fillOpacity: 0.5,
-                                interactive: false
-                            });
-                            layers[light.status_aset].addLayer(glow);
-                        }
-                        
-                        const marker = L.circleMarker([light.latitude, light.longitude], {
-                            radius: 10,
-                            fillColor: color,
-                            color: "#fff",
-                            weight: 2,
-                            fillOpacity: 1
-                        })
-                        .bindTooltip(light.kode_tiang)
-                        .on('click', () => openDetail(light));
-
-                        markerClusters.addLayer(marker);
-                    }
-                });
-
-                map.addLayer(markerClusters);
-                drawCables();
-
-                // Update legend items
-                document.querySelectorAll('.legend-item').forEach(item => {
-                    const status = item.dataset.status;
-                    if (status && activeFilters.has(status)) {
-                        item.classList.remove('disabled');
-                    } else if (status) {
-                        item.classList.add('disabled');
-                    }
-                });
-            }
-
-            // Filter functionality
-            document.querySelectorAll('.legend-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', (e) => {
-                    const filter = e.target.dataset.filter;
-                    if (e.target.checked) {
-                        activeFilters.add(filter);
+                    
+                    if (clusteringEnabled) {
+                        // In clustering mode, add glow to separate layer (not clustered)
+                        glowLayers.addLayer(glow);
                     } else {
-                        activeFilters.delete(filter);
+                        // In non-clustering mode, add glow to main layer
+                        nonClusteredLayer.addLayer(glow);
                     }
-                    updateLayers();
-                });
-            });
+                }
+                
+                // Create main marker
+                const marker = L.circleMarker([light.latitude, light.longitude], {
+                    radius: 10,
+                    fillColor: color,
+                    color: "#fff",
+                    weight: 2,
+                    fillOpacity: 1
+                })
+                .bindTooltip(light.kode_tiang, { direction: 'top', offset: [0, -10] })
+                .on('click', () => openDetail(light));
 
-            // Select/Deselect all
-            document.getElementById('selectAll').onclick = () => {
-                document.querySelectorAll('.legend-checkbox').forEach(cb => {
-                    cb.checked = true;
-                    activeFilters.add(cb.dataset.filter);
-                });
-                updateLayers();
-            };
+                // Add to appropriate layer based on clustering state
+                if (clusteringEnabled) {
+                    markerClusters.addLayer(marker);
+                } else {
+                    nonClusteredLayer.addLayer(marker);
+                }
+            }
+        });
 
-            document.getElementById('deselectAll').onclick = () => {
-                document.querySelectorAll('.legend-checkbox').forEach(cb => {
-                    cb.checked = false;
-                    activeFilters.delete(cb.dataset.filter);
-                });
-                updateLayers();
-            };
+        // Add glow layer if clustering is enabled
+        if (clusteringEnabled && glowLayers.getLayers().length > 0) {
+            glowLayers.addTo(map);
+        }
 
-            // Initialize map
+        // Add the appropriate marker layer to map
+        if (clusteringEnabled) {
+            map.addLayer(markerClusters);
+        } else {
+            map.addLayer(nonClusteredLayer);
+        }
+        
+        // Redraw cables
+        drawCables();
+
+        // Update legend items visual state
+        document.querySelectorAll('.legend-item').forEach(item => {
+            const status = item.dataset.status;
+            if (status && activeFilters.has(status)) {
+                item.classList.remove('disabled');
+            } else if (status) {
+                item.classList.add('disabled');
+            }
+        });
+    }
+
+    // Filter functionality
+    document.querySelectorAll('.legend-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const filter = e.target.dataset.filter;
+            if (e.target.checked) {
+                activeFilters.add(filter);
+            } else {
+                activeFilters.delete(filter);
+            }
             updateLayers();
         });
+    });
+
+    // Select/Deselect all buttons
+    document.getElementById('selectAll').onclick = () => {
+        document.querySelectorAll('.legend-checkbox').forEach(cb => {
+            cb.checked = true;
+            activeFilters.add(cb.dataset.filter);
+        });
+        updateLayers();
+    };
+
+    document.getElementById('deselectAll').onclick = () => {
+        document.querySelectorAll('.legend-checkbox').forEach(cb => {
+            cb.checked = false;
+            activeFilters.delete(cb.dataset.filter);
+        });
+        updateLayers();
+    };
+
+    // Initialize map with all layers
+    updateLayers();
+});
     </script>
 @endpush

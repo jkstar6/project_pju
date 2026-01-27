@@ -70,6 +70,8 @@
                             <th class="text-center">No. Tiket</th>
                             <th class="text-left">Lokasi PJU</th>
                             <th class="text-left">Hasil Pengecekan</th>
+                            <th class="text-left">Suku Cadang</th>
+                            <th class="text-center">Foto Bukti</th>
                             <th class="text-left">Teknisi</th>
                             <th class="text-center">Waktu Tindakan</th>
                             <th class="text-center">Aksi</th>
@@ -81,6 +83,22 @@
                             @php
                                 $id = $log['id'] ?? ('seed-' . $loop->iteration);
                                 $createdAt = isset($log['created_at']) ? date('d M Y H:i', strtotime($log['created_at'])) : '-';
+                                
+                                // Parse suku cadang dari JSON
+                                $sukuCadang = '-';
+                                if (!empty($log['suku_cadang'])) {
+                                    $sukuCadangData = is_string($log['suku_cadang']) 
+                                        ? json_decode($log['suku_cadang'], true) 
+                                        : $log['suku_cadang'];
+                                    
+                                    if (is_array($sukuCadangData) && count($sukuCadangData) > 0) {
+                                        $items = [];
+                                        foreach ($sukuCadangData as $key => $value) {
+                                            $items[] = ucfirst($key) . ': ' . $value;
+                                        }
+                                        $sukuCadang = implode(', ', $items);
+                                    }
+                                }
                             @endphp
 
                             <tr
@@ -89,6 +107,8 @@
                                 data-kode_aset="{{ $log['kode_aset'] ?? '-' }}"
                                 data-lokasi_aset="{{ $log['lokasi_aset'] ?? '-' }}"
                                 data-hasil_cek="{{ e($log['hasil_cek'] ?? '-') }}"
+                                data-suku_cadang="{{ e($sukuCadang) }}"
+                                data-foto_bukti_selesai="{{ $log['foto_bukti_selesai'] ?? '' }}"
                                 data-nama_teknisi="{{ $log['nama_teknisi'] ?? '-' }}"
                                 data-created_at="{{ $createdAt }}"
                             >
@@ -107,6 +127,23 @@
                                     <div class="max-w-xs">
                                         {{ \Illuminate\Support\Str::limit(($log['hasil_cek'] ?? '-'), 60) }}
                                     </div>
+                                </td>
+
+                                <td class="text-left">
+                                    <div class="max-w-xs text-sm">
+                                        {{ \Illuminate\Support\Str::limit($sukuCadang, 50) }}
+                                    </div>
+                                </td>
+
+                                <td class="text-center">
+                                    @if (!empty($log['foto_bukti_selesai']))
+                                        <img src="{{ asset('storage/' . $log['foto_bukti_selesai']) }}" 
+                                             alt="Foto Bukti" 
+                                             class="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 mx-auto"
+                                             onclick="window.open(this.src, '_blank')">
+                                    @else
+                                        <span class="text-gray-400 text-sm">Tidak ada foto</span>
+                                    @endif
                                 </td>
 
                                 <td class="text-left">{{ $log['nama_teknisi'] ?? '-' }}</td>
@@ -182,6 +219,22 @@
                     <div class="yam-kv">
                         <span class="yam-label">Hasil Pengecekan</span>
                         <div class="yam-value" id="d_hasil_cek">-</div>
+                    </div>
+                </div>
+
+                <div class="yam-grid yam-grid-1" style="margin-top:12px;">
+                    <div class="yam-kv">
+                        <span class="yam-label">Suku Cadang</span>
+                        <div class="yam-value" id="d_suku_cadang">-</div>
+                    </div>
+                </div>
+
+                <div class="yam-grid yam-grid-1" style="margin-top:12px;">
+                    <div class="yam-kv">
+                        <span class="yam-label">Foto Bukti Selesai</span>
+                        <div class="yam-value" id="d_foto_bukti_selesai">
+                            <span class="text-gray-400">Tidak ada foto</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -389,6 +442,17 @@
                 document.getElementById('d_lokasi_aset').textContent = tr.dataset.lokasi_aset || '-';
                 document.getElementById('d_created_at').textContent = tr.dataset.created_at || '-';
                 document.getElementById('d_hasil_cek').textContent = tr.dataset.hasil_cek || '-';
+                document.getElementById('d_suku_cadang').textContent = tr.dataset.suku_cadang || '-';
+                
+                // Handle foto bukti
+                const fotoContainer = document.getElementById('d_foto_bukti_selesai');
+                const fotoUrl = tr.dataset.foto_bukti_selesai;
+                if (fotoUrl) {
+                    fotoContainer.innerHTML = `<img src="/storage/${fotoUrl}" alt="Foto Bukti" class="w-full max-w-md rounded cursor-pointer hover:opacity-80" onclick="window.open(this.src, '_blank')">`;
+                } else {
+                    fotoContainer.innerHTML = '<span class="text-gray-400">Tidak ada foto</span>';
+                }
+                
                 openModal('modal-detail');
                 return;
             }
@@ -437,6 +501,8 @@
                     `<strong class="text-primary-500">${escapeHtml(no_tiket)}</strong>`,
                     buildLokasiCell(kode_aset, lokasi_aset),
                     `<div class="max-w-xs">${escapeHtml(limitText(hasil_cek, 60))}</div>`,
+                    `<div class="max-w-xs text-sm">-</div>`, // Suku Cadang
+                    `<span class="text-gray-400 text-sm">Tidak ada foto</span>`, // Foto Bukti
                     `${escapeHtml(nama_teknisi)}`,
                     `${escapeHtml(createdAt)}`,
                     buildAksiCell()
@@ -447,6 +513,8 @@
                 node.dataset.kode_aset = kode_aset;
                 node.dataset.lokasi_aset = lokasi_aset;
                 node.dataset.hasil_cek = hasil_cek;
+                node.dataset.suku_cadang = '-';
+                node.dataset.foto_bukti_selesai = '';
                 node.dataset.nama_teknisi = nama_teknisi;
                 node.dataset.created_at = createdAt;
             }else{
@@ -456,11 +524,15 @@
                         data-kode_aset="${escapeHtml(kode_aset)}"
                         data-lokasi_aset="${escapeHtml(lokasi_aset)}"
                         data-hasil_cek="${escapeHtml(hasil_cek)}"
+                        data-suku_cadang="-"
+                        data-foto_bukti_selesai=""
                         data-nama_teknisi="${escapeHtml(nama_teknisi)}"
                         data-created_at="${escapeHtml(createdAt)}">
                         <td class="text-center"><strong class="text-primary-500">${escapeHtml(no_tiket)}</strong></td>
                         <td class="text-left">${buildLokasiCell(kode_aset, lokasi_aset)}</td>
                         <td class="text-left"><div class="max-w-xs">${escapeHtml(limitText(hasil_cek, 60))}</div></td>
+                        <td class="text-left"><div class="max-w-xs text-sm">-</div></td>
+                        <td class="text-center"><span class="text-gray-400 text-sm">Tidak ada foto</span></td>
                         <td class="text-left">${escapeHtml(nama_teknisi)}</td>
                         <td class="text-center">${escapeHtml(createdAt)}</td>
                         <td class="text-center">${buildAksiCell()}</td>
@@ -503,13 +575,16 @@
                 dt.cell(rowIdx, 0).data(`<strong class="text-primary-500">${escapeHtml(no_tiket)}</strong>`);
                 dt.cell(rowIdx, 1).data(buildLokasiCell(kode_aset, lokasi_aset));
                 dt.cell(rowIdx, 2).data(`<div class="max-w-xs">${escapeHtml(limitText(hasil_cek, 60))}</div>`);
-                dt.cell(rowIdx, 3).data(`${escapeHtml(nama_teknisi)}`);
+                // Kolom 3 (Suku Cadang) dan 4 (Foto) tidak diupdate karena tidak ada di form edit
+                dt.cell(rowIdx, 5).data(`${escapeHtml(nama_teknisi)}`);
                 dt.draw(false);
             }else{
                 tr.children[0].innerHTML = `<strong class="text-primary-500">${escapeHtml(no_tiket)}</strong>`;
                 tr.children[1].innerHTML = buildLokasiCell(kode_aset, lokasi_aset);
                 tr.children[2].innerHTML = `<div class="max-w-xs">${escapeHtml(limitText(hasil_cek, 60))}</div>`;
-                tr.children[3].textContent = nama_teknisi;
+                // tr.children[3] = Suku Cadang (tidak diupdate)
+                // tr.children[4] = Foto Bukti (tidak diupdate)
+                tr.children[5].textContent = nama_teknisi;
             }
 
             closeModal('modal-edit');

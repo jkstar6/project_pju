@@ -9,14 +9,16 @@
 @push('styles')
     {{-- Style dari Log Survey (DataTables Tailwind) --}}
     <link rel="stylesheet" href="{{ URL::asset('assets/admin/css/datatables-2.3.4/datatables.tailwindcss.css') }}">
-    
+
     {{-- Leaflet CSS (Bawaan Aset PJU - Tetap Dipertahankan) --}}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
     <style>
         /* Style Tambahan agar mirip Log Survey */
-        #data-table td.text-center { vertical-align: middle; }
-        
+        #data-table td.text-center {
+            vertical-align: middle;
+        }
+
         /* Map Styles (Bawaan Aset PJU) */
         #map-aset {
             height: 300px;
@@ -25,6 +27,7 @@
             border: 2px solid #e5e7eb;
             z-index: 10;
         }
+
         /* Pastikan container modal punya z-index lebih tinggi dari peta */
         #modalTambahAset {
             z-index: 9999;
@@ -35,7 +38,7 @@
 @section('content')
     {{-- Wrapper Container disamakan dengan Log Survey (Trezo Card) --}}
     <div class="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
-        
+
         {{-- Header Card --}}
         <div class="trezo-card-header mb-[20px] md:mb-[25px] sm:flex sm:items-center sm:justify-between">
             <div class="trezo-card-title">
@@ -73,40 +76,51 @@
                     </thead>
                     <tbody>
                         @foreach ($asetPju as $index => $item)
-                        <tr>
-                            <td class="text-center">{{ $index + 1 }}</td>
-                            <td class="text-left font-semibold">{{ $item->kode_tiang }}</td>
-                            <td class="text-left">{{ $item->jenis_lampu ?? '-' }}</td>
-                            <td class="text-left">{{ $item->watt ?? '-' }} W</td>
-                            <td class="text-center">
-                                <span class="px-2 py-1 text-xs rounded
-                                    @if($item->status_aset == 'Usulan') bg-yellow-100 text-yellow-700
+                            <tr>
+                                <td class="text-center">{{ $index + 1 }}</td>
+                                <td class="text-left font-semibold">{{ $item->kode_tiang }}</td>
+                                <td class="text-left">{{ $item->jenis_lampu ?? '-' }}</td>
+                                <td class="text-left">{{ $item->watt ?? '-' }} W</td>
+                                <td class="text-center">
+                                    <span
+                                        class="px-2 py-1 text-xs rounded
+                                    @if ($item->status_aset == 'Usulan') bg-yellow-100 text-yellow-700
                                     @elseif($item->status_aset == 'Pengerjaan') bg-blue-100 text-blue-700
                                     @elseif($item->status_aset == 'Terelialisasi') bg-green-100 text-green-700
-                                    @elseif($item->status_aset == 'Mati') bg-red-100 text-red-700
-                                    @endif">
-                                    {{ $item->status_aset }}
-                                </span>
-                            </td>
-                            <td class="text-left">{{ $item->kecamatan ?? '-' }}</td>
-                            <td class="text-left">{{ $item->desa ?? '-' }}</td>
-                            <td class="text-center">
-                                @if($item->latitude && $item->longitude)
-                                    <a href="https://www.google.com/maps?q={{ $item->latitude }},{{ $item->longitude }}"
-                                       target="_blank" class="text-blue-500 hover:underline flex items-center justify-center gap-1">
-                                       <i class="material-symbols-outlined text-sm">location_on</i> Maps
-                                    </a>
-                                @else
-                                    <span class="text-gray-400">-</span>
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                <div class="flex justify-center gap-2">
-                                    <button class="text-blue-500 hover:text-blue-700 transition"><i class="material-symbols-outlined text-md">edit</i></button>
-                                    <button class="text-red-500 hover:text-red-700 transition"><i class="material-symbols-outlined text-md">delete</i></button>
-                                </div>
-                            </td>
-                        </tr>
+                                    @elseif($item->status_aset == 'Mati') bg-red-100 text-red-700 @endif">
+                                        {{ $item->status_aset }}
+                                    </span>
+                                </td>
+                                <td class="text-left">{{ $item->kecamatan ?? '-' }}</td>
+                                <td class="text-left">{{ $item->desa ?? '-' }}</td>
+                                <td class="text-center">
+                                    @if ($item->latitude && $item->longitude)
+                                        <a href="https://www.google.com/maps?q={{ $item->latitude }},{{ $item->longitude }}"
+                                            target="_blank"
+                                            class="text-blue-500 hover:underline flex items-center justify-center gap-1">
+                                            <i class="material-symbols-outlined text-sm">location_on</i> Maps
+                                        </a>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <div class="flex justify-center gap-2">
+                                        <button class="text-blue-500 hover:text-blue-700 transition"><i
+                                                class="material-symbols-outlined text-md">edit</i></button>
+                                        <form action="{{ route('aset-pju.destroy', $item->id) }}" method="POST"
+                                            onsubmit="return confirm('Yakin ingin menghapus aset ini?')">
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button type="submit" class="text-red-500 hover:text-red-700 transition">
+                                                <i class="material-symbols-outlined text-md">delete</i>
+                                            </button>
+                                        </form>
+
+                                    </div>
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
@@ -166,18 +180,21 @@
                             <div class="grid grid-cols-2 gap-3 mt-3">
                                 <div>
                                     <span class="text-[10px] uppercase text-gray-500">Latitude</span>
-                                    <input id="aset-lat" name="latitude" readonly class="w-full border px-3 py-2 bg-gray-50 text-sm">
+                                    <input id="aset-lat" name="latitude" readonly
+                                        class="w-full border px-3 py-2 bg-gray-50 text-sm">
                                 </div>
                                 <div>
                                     <span class="text-[10px] uppercase text-gray-500">Longitude</span>
-                                    <input id="aset-lng" name="longitude" readonly class="w-full border px-3 py-2 bg-gray-50 text-sm">
+                                    <input id="aset-lng" name="longitude" readonly
+                                        class="w-full border px-3 py-2 bg-gray-50 text-sm">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex justify-end gap-2 mt-6">
-                        <button type="button" onclick="closeTambahAset()" class="border px-4 py-2 rounded hover:bg-gray-100">
+                        <button type="button" onclick="closeTambahAset()"
+                            class="border px-4 py-2 rounded hover:bg-gray-100">
                             Batal
                         </button>
                         <button type="submit" class="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600">
@@ -194,7 +211,7 @@
 @push('scripts')
     {{-- Leaflet JS (Bawaan) --}}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
+
     {{-- DataTables JS (Disamakan dengan Log Survey) --}}
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
@@ -214,9 +231,14 @@
                 responsive: true,
                 pageLength: 25,
                 // Memastikan text alignment sesuai header
-                columnDefs: [
-                    { targets: [0, 4, 7, 8], className: 'text-center' },
-                    { targets: [1, 2, 3, 5, 6], className: 'text-left' }
+                columnDefs: [{
+                        targets: [0, 4, 7, 8],
+                        className: 'text-center'
+                    },
+                    {
+                        targets: [1, 2, 3, 5, 6],
+                        className: 'text-left'
+                    }
                 ]
             });
         });
@@ -227,7 +249,7 @@
 
         function openTambahAset() {
             document.getElementById('modalTambahAset').classList.remove('hidden');
-            
+
             // Timeout sedikit lebih lama untuk memastikan modal transisi selesai
             setTimeout(() => {
                 initMapAset();
@@ -236,7 +258,7 @@
 
         function closeTambahAset() {
             document.getElementById('modalTambahAset').classList.add('hidden');
-            
+
             // Reset Map saat modal ditutup agar tidak terjadi penumpukan instance
             if (asetMap) {
                 asetMap.remove();
@@ -259,12 +281,17 @@
             // FUNGSI KRUSIAL: Memaksa peta mengenali ukuran container yang baru muncul
             asetMap.invalidateSize();
 
-            asetMap.on('click', function (e) {
-                const { lat, lng } = e.latlng;
+            asetMap.on('click', function(e) {
+                const {
+                    lat,
+                    lng
+                } = e.latlng;
 
                 if (!asetMarker) {
-                    asetMarker = L.marker([lat, lng], { draggable: true }).addTo(asetMap);
-                    
+                    asetMarker = L.marker([lat, lng], {
+                        draggable: true
+                    }).addTo(asetMap);
+
                     asetMarker.on('dragend', function() {
                         const pos = asetMarker.getLatLng();
                         setLatLng(pos.lat, pos.lng);

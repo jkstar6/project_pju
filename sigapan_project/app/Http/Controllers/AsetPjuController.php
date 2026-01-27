@@ -48,4 +48,15 @@ class AsetPjuController extends Controller
             ->route('admin.aset-pju.index')
             ->with('success', 'Aset PJU berhasil disimpan');
     }
+
+    public function destroy($id)
+    {
+        $aset = AsetPju::findOrFail($id);
+        $aset->delete();
+
+        return redirect()
+            ->route('admin.aset-pju.index')
+            ->with('success', 'Aset PJU berhasil dihapus');
+    }
+
 }

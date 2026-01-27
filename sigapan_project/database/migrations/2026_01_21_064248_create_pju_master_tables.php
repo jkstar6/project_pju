@@ -26,8 +26,8 @@ return new class extends Migration
             $table->id();
             $table->string('nama_jalan');
             $table->enum('kategori_jalan', ['Nasional', 'Provinsi', 'Kabupaten', 'Desa', 'Lingkungan'])->default('Kabupaten');
-            $table->decimal('lebar_jalan', 4, 2)->nullable();
-            $table->decimal('panjang_jalan', 8, 2)->nullable();
+            $table->decimal('lebar_jalan', 8, 2)->nullable();
+           $table->decimal('panjang_jalan', 12, 2)->nullable();
             $table->enum('tipe_perkerasan', ['Aspal', 'Beton', 'Paving', 'Tanah'])->default('Aspal');
             $table->timestamps();
         });

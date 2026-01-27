@@ -140,7 +140,22 @@
             <p class="text-gray-400 dark:text-gray-500 text-xs mt-4">Jumlah aset PJU</p>
         </a>
 
+        {{-- ✅ Card 9: Master Jalan (BARU) --}}
+        <a href="/master-jalan" class="group bg-white dark:bg-[#0c1427] p-6 rounded-xl shadow-sm border-l-4 border-indigo-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50 dark:hover:bg-[#1a2942]">
+            <div>
+                <div class="flex justify-between items-start">
+                    <h4 class="text-gray-600 dark:text-gray-400 font-semibold text-sm">Master Jalan</h4>
+                    <div class="bg-indigo-500 p-2 rounded-full text-white transition-transform duration-300 group-hover:scale-110">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="text-4xl font-bold text-gray-800 dark:text-gray-100 mt-2">15</h2>
+            </div>
+            <p class="text-gray-400 dark:text-gray-500 text-xs mt-4">Data ruas jalan</p>
+        </a>
+
     </div>
 </div>
-        
 @endsection

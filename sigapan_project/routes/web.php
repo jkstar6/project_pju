@@ -11,6 +11,7 @@ use App\Http\Controllers\TimLapanganController;
 use App\Http\Controllers\TiketPerbaikanController;
 use App\Http\Controllers\TindakanTeknisiController;
 use App\Http\Controllers\ProgresPengerjaanController;
+use App\Http\Controllers\MasterJalanController; // ✅ TAMBAHAN BARU
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Operator\HomeController;
 use App\Http\Controllers\Landing\BerandaController;
@@ -69,6 +70,14 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/aset-pju', [AsetPjuController::class, 'index'])->name('admin.aset-pju.index');
     Route::post('/aset-pju', [AsetPjuController::class, 'store'])->name('aset-pju.store');
 
+    /* ---- Master Jalan (✅ TAMBAHAN ROUTE BARU) */
+    Route::prefix('/master-jalan')->name('master-jalan.')->group(function () {
+        Route::get('/', [MasterJalanController::class, 'index'])->name('index');
+        Route::post('/', [MasterJalanController::class, 'store'])->name('store');
+        Route::put('/{id}', [MasterJalanController::class, 'update'])->name('update');
+        // Route::delete('/{id}', [MasterJalanController::class, 'destroy'])->name('destroy'); // Opsional jika nanti butuh hapus
+    });
+
     /* ---- Tim Lapangan */
     Route::prefix('/tim-lapangan')->name('tim-lapangan.')->group(function () {
         Route::get('/', [TimLapanganController::class, 'index'])->name('index');
@@ -88,7 +97,7 @@ Route::middleware('auth', 'verified')->group(function () {
         Route::delete('/{id}', [TindakanTeknisiController::class, 'destroy'])->name('destroy');
     });
 
-    /* ---- Log Survey (FIXED) */
+    /* ---- Log Survey */
     Route::prefix('/log-survey')->name('log-survey.')->group(function () {
         Route::get('/', [LogSurveyController::class, 'index'])->name('index');
         Route::post('/', [LogSurveyController::class, 'store'])->name('store');

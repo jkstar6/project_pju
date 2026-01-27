@@ -1,25 +1,25 @@
 @extends('layouts.app')
 
-@section('title', 'aduan')
+@section('title', 'Aduan PJU')
 
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   :root{
-    --panel:#d9d9d9;
+    --panel:#dddddd;
     --field:#ededed;
     --text:#111827;
     --muted:#6b7280;
-    --stroke: rgba(17,24,39,0.75);
-    --softstroke: rgba(17,24,39,0.18);
+    --stroke: rgba(107,114,128,0.4);
+    --softstroke: rgba(107,114,128,0.18);
   }
 
   /* ====== PAGE ====== */
   .aduan-page { padding: 60px 0 90px; background:#fff; }
   .aduan-title {
     text-align:center;
-    font-size:48px;
-    font-weight:900;
+    font-size:42px;
+    font-weight:600;
     letter-spacing:-0.02em;
     margin: 0 0 22px;
     color: var(--text);
@@ -43,7 +43,7 @@
     border: 1px solid var(--softstroke);
     background:#fff;
     color:#111;
-    font-weight:900;
+    font-weight:600;
     font-size: 13px;
     text-decoration:none;
     box-shadow: 0 10px 24px rgba(0,0,0,0.06);
@@ -72,7 +72,7 @@
 
   /* ====== FIELD ====== */
   .field { margin-bottom: 20px; }
-  .label { font-size:15px; font-weight:900; color: var(--text); margin-bottom: 8px; }
+  .label { font-size:15px; font-weight:600; color: var(--text); margin-bottom: 8px; }
 
   /* ====== INPUT ====== */
   .input, .textarea {
@@ -89,8 +89,8 @@
   }
   .input::placeholder, .textarea::placeholder { color: var(--muted); }
   .input:focus, .textarea:focus {
-    border-color:#000;
-    box-shadow: 0 0 0 4px rgba(0,0,0,0.10);
+    border-color:#6b7280;
+    box-shadow: 0 0 0 4px rgba(107,114,128,0.10);
   }
   .textarea { height: 180px; resize:none; line-height:1.45; }
 
@@ -100,8 +100,8 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     background-image:
-      linear-gradient(45deg, transparent 50%, #111 50%),
-      linear-gradient(135deg, #111 50%, transparent 50%);
+      linear-gradient(45deg, transparent 50%, #6b7280 50%),
+      linear-gradient(135deg, #6b7280 50%, transparent 50%);
     background-position:
       calc(100% - 22px) 50%,
       calc(100% - 16px) 50%;
@@ -114,13 +114,13 @@
   /* ====== UPLOAD ====== */
   .upload-row { display:flex; align-items:center; gap:16px; }
   .btn-file {
-    background:#000;
+    background:#374151;
     color:#fff;
     border:none;
     border-radius:12px;
     padding: 12px 26px;
     font-size:14px;
-    font-weight:900;
+    font-weight:600;
     cursor:pointer;
     transition:.15s ease;
   }
@@ -128,7 +128,7 @@
   .file-hint { color: var(--muted); font-size:13px; }
 
   /* ====== MAP ====== */
-  .map-label { font-size:15px; font-weight:900; color: var(--text); margin-bottom:10px; }
+  .map-label { font-size:15px; font-weight:600; color: var(--text); margin-bottom:10px; }
 
   .map-wrap {
     position: relative;
@@ -225,15 +225,15 @@
     margin-top: 26px;
     padding: 20px 16px;
     border-radius: 18px;
-    background:#000;
+    background:#374151;
     color:#fff;
     font-size:19px;
-    font-weight:900;
+    font-weight:600;
     border:none;
     cursor:pointer;
     transition:.15s ease;
   }
-  .submit-btn:hover { transform: translateY(-1px); }
+  .submit-btn:hover { background: #999999; }
 
   /* ====== Responsive ====== */
   @media (max-width: 1200px) {
@@ -274,7 +274,7 @@
 
       @if ($errors->any())
         <div style="margin-bottom:14px; padding:12px 14px; border-radius:14px; background:#fdecec; border:1px solid #f3b4b4; color:#a11;">
-          <div style="font-weight:900; margin-bottom:6px;">Ada input yang perlu diperbaiki.</div>
+          <div style="font-weight:600; margin-bottom:6px;">Ada input yang perlu diperbaiki.</div>
           <ul style="margin:0; padding-left:18px;">
             @foreach ($errors->all() as $err)
               <li>{{ $err }}</li>

@@ -113,10 +113,10 @@
             </div>
         </div>
 
-        {{-- MODAL TAMBAH ASET (Logika Tetap Sama) --}}
+        {{-- MODAL TAMBAH ASET - DIPERBAIKI AGAR TIDAK TERPOTONG --}}
         <div id="modalTambahAset"
-            class="fixed inset-0 hidden bg-black/50 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-themedark-card rounded-lg w-full max-w-xl p-6 shadow-xl">
+            class="fixed inset-0 hidden bg-black/50 flex items-start justify-center p-4 overflow-y-auto pt-10 pb-10">
+            <div class="bg-white dark:bg-themedark-card rounded-lg w-full max-w-xl p-6 shadow-xl mb-auto">
 
                 <h3 class="text-lg font-semibold mb-4">Tambah Aset PJU</h3>
 

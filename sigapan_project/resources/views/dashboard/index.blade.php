@@ -7,9 +7,9 @@
 @endsection
 
 @section('content')
- <div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
+
         {{-- Card 1: Aduan Masuk --}}
         <a href="/halaman-aduan" class="group bg-white dark:bg-[#0c1427] p-6 rounded-xl shadow-sm border-l-4 border-blue-600 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50 dark:hover:bg-[#1a2942]">
             <div>
@@ -140,7 +140,7 @@
             <p class="text-gray-400 dark:text-gray-500 text-xs mt-4">Jumlah aset PJU</p>
         </a>
 
-        {{-- ✅ Card 9: Master Jalan (BARU) --}}
+        {{-- Card 9: Master Jalan --}}
         <a href="/master-jalan" class="group bg-white dark:bg-[#0c1427] p-6 rounded-xl shadow-sm border-l-4 border-indigo-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50 dark:hover:bg-[#1a2942]">
             <div>
                 <div class="flex justify-between items-start">
@@ -156,6 +156,7 @@
             <p class="text-gray-400 dark:text-gray-500 text-xs mt-4">Data ruas jalan</p>
         </a>
 
+        {{-- Card 10: Panel Kwh --}}
         <a href="/panel-kwh" class="group bg-white dark:bg-[#0c1427] p-6 rounded-xl shadow-sm border-l-4 border-indigo-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50 dark:hover:bg-[#1a2942]">
             <div>
                 <div class="flex justify-between items-start">
@@ -168,7 +169,26 @@
                 </div>
                 <h2 class="text-4xl font-bold text-gray-800 dark:text-gray-100 mt-2">15</h2>
             </div>
-            <p class="text-gray-400 dark:text-gray-500 text-xs mt-4">Data ruas jalan</p>
+            <p class="text-gray-400 dark:text-gray-500 text-xs mt-4">Data panel KWh</p>
+        </a>
+
+        {{-- ✅ Card 11: Koneksi Jaringan (BARU) --}}
+        <a href="/koneksi-jaringan" class="group bg-white dark:bg-[#0c1427] p-6 rounded-xl shadow-sm border-l-4 border-fuchsia-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50 dark:hover:bg-[#1a2942]">
+            <div>
+                <div class="flex justify-between items-start">
+                    <h4 class="text-gray-600 dark:text-gray-400 font-semibold text-sm">Koneksi Jaringan</h4>
+                    <div class="bg-fuchsia-500 p-2 rounded-full text-white transition-transform duration-300 group-hover:scale-110">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 12h8m-8 0a4 4 0 010-8h8a4 4 0 010 8m-8 0a4 4 0 000 8h8a4 4 0 000-8" />
+                        </svg>
+                    </div>
+                </div>
+
+                {{-- angka dinamis (kirim dari controller), fallback 0 --}}
+                <h2 class="text-4xl font-bold text-gray-800 dark:text-gray-100 mt-2">{{ $koneksiCount ?? 0 }}</h2>
+            </div>
+            <p class="text-gray-400 dark:text-gray-500 text-xs mt-4">Mapping jalur kabel PJU → Panel KWh</p>
         </a>
 
     </div>

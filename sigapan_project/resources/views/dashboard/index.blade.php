@@ -92,7 +92,7 @@
         </a>
 
         {{-- Card 6: User --}}
-        <a href="/users" class="group bg-white dark:bg-[#0c1427] p-6 rounded-xl shadow-sm border-l-4 border-orange-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50 dark:hover:bg-[#1a2942]">
+        <a href="/settings/users" class="group bg-white dark:bg-[#0c1427] p-6 rounded-xl shadow-sm border-l-4 border-orange-500 flex flex-col justify-between min-h-[160px] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50 dark:hover:bg-[#1a2942]">
             <div>
                 <div class="flex justify-between items-start">
                     <h4 class="text-gray-600 dark:text-gray-400 font-semibold text-sm">User</h4>

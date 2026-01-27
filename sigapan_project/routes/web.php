@@ -70,6 +70,8 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::post('/aset-pju', [AsetPjuController::class, 'store'])->name('aset-pju.store');
     Route::delete('/aset-pju/{id}', [AsetPjuController::class, 'destroy'])
     ->name('aset-pju.destroy');
+    Route::put('/aset-pju/{id}', [AsetPjuController::class, 'update'])
+    ->name('aset-pju.update');
 
     /* ---- Tim Lapangan */
     Route::prefix('/tim-lapangan')->name('tim-lapangan.')->group(function () {

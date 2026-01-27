@@ -32,6 +32,14 @@
         #modalTambahAset {
             z-index: 9999;
         }
+
+        #map-edit-aset {
+            height: 300px;
+            width: 100%;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            z-index: 10;
+        }
     </style>
 @endpush
 
@@ -106,8 +114,11 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="flex justify-center gap-2">
-                                        <button class="text-blue-500 hover:text-blue-700 transition"><i
-                                                class="material-symbols-outlined text-md">edit</i></button>
+                                        <button onclick='openEditAset(@json($item))'
+                                            class="text-blue-500 hover:text-blue-700 transition">
+                                            <i class="material-symbols-outlined text-md">edit</i>
+                                        </button>
+
                                         <form action="{{ route('aset-pju.destroy', $item->id) }}" method="POST"
                                             onsubmit="return confirm('Yakin ingin menghapus aset ini?')">
                                             @csrf
@@ -127,7 +138,7 @@
             </div>
         </div>
 
-        {{-- MODAL TAMBAH ASET - DIPERBAIKI AGAR TIDAK TERPOTONG --}}
+        {{-- MODAL TAMBAH ASET --}}
         <div id="modalTambahAset"
             class="fixed inset-0 hidden bg-black/50 flex items-start justify-center p-4 overflow-y-auto pt-10 pb-10">
             <div class="bg-white dark:bg-themedark-card rounded-lg w-full max-w-xl p-6 shadow-xl mb-auto">
@@ -204,6 +215,93 @@
                 </form>
             </div>
         </div>
+
+        {{-- MODAL EDIT ASET --}}
+        <div id="modalEditAset"
+            class="fixed inset-0 hidden bg-black/50 flex items-start justify-center p-4 overflow-y-auto pt-10 pb-10">
+
+            <div class="bg-white dark:bg-themedark-card rounded-lg w-full max-w-xl p-6 shadow-xl mb-auto">
+
+                <h3 class="text-lg font-semibold mb-4">Edit Aset PJU</h3>
+
+                <form id="formEditAset" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <input type="hidden" id="edit-id">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-1">
+                            <label class="text-sm font-medium">Kode Tiang</label>
+                            <input name="kode_tiang" id="edit-kode" required
+                                class="w-full border rounded px-3 py-2 mt-1">
+                        </div>
+
+                        <div class="col-span-1">
+                            <label class="text-sm font-medium">Jenis Lampu</label>
+                            <input name="jenis_lampu" id="edit-jenis" class="w-full border rounded px-3 py-2 mt-1">
+                        </div>
+
+                        <div class="col-span-1">
+                            <label class="text-sm font-medium">Watt</label>
+                            <input name="watt" id="edit-watt" type="number"
+                                class="w-full border rounded px-3 py-2 mt-1">
+                        </div>
+
+                        <div class="col-span-1">
+                            <label class="text-sm font-medium">Status Aset</label>
+                            <select name="status_aset" id="edit-status" class="w-full border rounded px-3 py-2 mt-1">
+                                <option>Usulan</option>
+                                <option>Pengerjaan</option>
+                                <option>Terelialisasi</option>
+                                <option>Mati</option>
+                            </select>
+                        </div>
+
+                        <div class="col-span-1">
+                            <label class="text-sm font-medium">Kecamatan</label>
+                            <input name="kecamatan" id="edit-kecamatan" class="w-full border rounded px-3 py-2 mt-1">
+                        </div>
+
+                        <div class="col-span-1">
+                            <label class="text-sm font-medium">Desa</label>
+                            <input name="desa" id="edit-desa" class="w-full border rounded px-3 py-2 mt-1">
+                        </div>
+
+                        <div class="col-span-2">
+                            <label class="text-sm font-medium block mb-2">Pilih Lokasi di Peta</label>
+                            <div id="map-edit-aset"></div>
+
+                            <div class="grid grid-cols-2 gap-3 mt-3">
+                                <div>
+                                    <span class="text-[10px] uppercase text-gray-500">Latitude</span>
+                                    <input id="edit-lat" name="latitude" readonly
+                                        class="w-full border px-3 py-2 bg-gray-50 text-sm">
+                                </div>
+                                <div>
+                                    <span class="text-[10px] uppercase text-gray-500">Longitude</span>
+                                    <input id="edit-lng" name="longitude" readonly
+                                        class="w-full border px-3 py-2 bg-gray-50 text-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 mt-6">
+                        <button type="button" onclick="closeEditAset()"
+                            class="border px-4 py-2 rounded hover:bg-gray-100">
+                            Batal
+                        </button>
+                        <button type="submit" class="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600">
+                            Update Aset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+
 
     </div>
 @endsection
@@ -307,6 +405,87 @@
         function setLatLng(lat, lng) {
             document.getElementById('aset-lat').value = lat.toFixed(8);
             document.getElementById('aset-lng').value = lng.toFixed(8);
+        }
+
+        function openEditAset(data) {
+            document.getElementById('modalEditAset').classList.remove('hidden');
+
+            document.getElementById('edit-kode').value = data.kode_tiang;
+            document.getElementById('edit-jenis').value = data.jenis_lampu ?? '';
+            document.getElementById('edit-watt').value = data.watt ?? '';
+            document.getElementById('edit-status').value = data.status_aset;
+            document.getElementById('edit-kecamatan').value = data.kecamatan ?? '';
+            document.getElementById('edit-desa').value = data.desa ?? '';
+
+            document.getElementById('edit-lat').value = data.latitude;
+            document.getElementById('edit-lng').value = data.longitude;
+
+            document.getElementById('formEditAset').action =
+                `{{ url('/aset-pju') }}/${data.id}`;
+
+            // init map edit SETELAH modal tampil
+            setTimeout(() => {
+                if (data.latitude && data.longitude) {
+                    initMapEdit(data.latitude, data.longitude);
+                }
+            }, 400);
+        }
+
+        function closeEditAset() {
+            document.getElementById('modalEditAset').classList.add('hidden');
+
+            if (editMap) {
+                editMap.remove();
+                editMap = null;
+                editMarker = null;
+            }
+        }
+
+
+        // ======================
+        // MAP EDIT ASET
+        // ======================
+        let editMap = null;
+        let editMarker = null;
+
+        function initMapEdit(lat, lng) {
+            if (editMap) {
+                editMap.remove();
+                editMap = null;
+                editMarker = null;
+            }
+
+            editMap = L.map('map-edit-aset').setView([lat, lng], 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(editMap);
+
+            editMap.invalidateSize();
+
+            editMarker = L.marker([lat, lng], {
+                draggable: true
+            }).addTo(editMap);
+
+            editMarker.on('dragend', function() {
+                const pos = editMarker.getLatLng();
+                setEditLatLng(pos.lat, pos.lng);
+            });
+
+            editMap.on('click', function(e) {
+                const {
+                    lat,
+                    lng
+                } = e.latlng;
+                editMarker.setLatLng([lat, lng]);
+                setEditLatLng(lat, lng);
+            });
+        }
+
+        function setEditLatLng(lat, lng) {
+            document.getElementById('edit-lat').value = lat.toFixed(8);
+            document.getElementById('edit-lng').value = lng.toFixed(8);
         }
     </script>
 @endpush

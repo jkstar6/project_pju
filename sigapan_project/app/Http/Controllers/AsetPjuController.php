@@ -59,4 +59,30 @@ class AsetPjuController extends Controller
             ->with('success', 'Aset PJU berhasil dihapus');
     }
 
+    public function update(Request $request, $id)
+    {
+        $aset = AsetPju::findOrFail($id);
+
+        $request->validate([
+            'kode_tiang' => 'required|unique:aset_pju,kode_tiang,' . $aset->id,
+            'latitude'   => 'required',
+            'longitude'  => 'required',
+        ]);
+
+        $aset->update([
+            'kode_tiang'  => $request->kode_tiang,
+            'jenis_lampu' => $request->jenis_lampu,
+            'watt'        => $request->watt,
+            'status_aset' => $request->status_aset,
+            'latitude'    => $request->latitude,
+            'longitude'   => $request->longitude,
+            'kecamatan'   => $request->kecamatan,
+            'desa'        => $request->desa,
+        ]);
+
+        return redirect()
+            ->route('admin.aset-pju.index')
+            ->with('success', 'Aset PJU berhasil diperbarui');
+    }
+
 }

@@ -317,7 +317,7 @@
         <div class="container mx-auto px-4 mb-4 search-container">
             <div class="max-w-2xl mx-auto flex shadow-sm bg-white rounded-lg overflow-hidden border">
                 <input id="addressSearch" type="text" placeholder="Masukkan nama jalan atau tempat..." class="flex-1 px-4 py-3 outline-none text-sm">
-                <button id="searchBtn" class="px-6 bg-teal-600 text-white font-semibold hover:bg-teal-700 transition cursor-pointer">Search</button>
+                <button id="searchBtn" class="px-6 bg-teal-600 text-gray-100 font-semibold hover:bg-teal-700 transition cursor-pointer">Search</button>
             </div>
             <div id="searchLoading" class="text-center text-xs text-teal-600 mt-2 hidden italic">Mencari lokasi...</div>
         </div>

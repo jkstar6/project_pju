@@ -68,8 +68,8 @@ Route::middleware('auth', 'verified')->group(function () {
     /* ---- Aset PJU Management */
     Route::get('/aset-pju', [AsetPjuController::class, 'index'])->name('admin.aset-pju.index');
     Route::post('/aset-pju', [AsetPjuController::class, 'store'])->name('aset-pju.store');
-    Route::delete('/aset-pju/{id}', [AsetPjuController::class, 'destroy'])
-    ->name('aset-pju.destroy');
+    // Route::delete('/aset-pju/{id}', [AsetPjuController::class, 'destroy'])
+    // ->name('aset-pju.destroy');
     Route::put('/aset-pju/{id}', [AsetPjuController::class, 'update'])
     ->name('aset-pju.update');
 

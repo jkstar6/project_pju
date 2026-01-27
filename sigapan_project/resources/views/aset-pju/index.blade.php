@@ -118,17 +118,6 @@
                                             class="text-blue-500 hover:text-blue-700 transition">
                                             <i class="material-symbols-outlined text-md">edit</i>
                                         </button>
-
-                                        <form action="{{ route('aset-pju.destroy', $item->id) }}" method="POST"
-                                            onsubmit="return confirm('Yakin ingin menghapus aset ini?')">
-                                            @csrf
-                                            @method('DELETE')
-
-                                            <button type="submit" class="text-red-500 hover:text-red-700 transition">
-                                                <i class="material-symbols-outlined text-md">delete</i>
-                                            </button>
-                                        </form>
-
                                     </div>
                                 </td>
                             </tr>

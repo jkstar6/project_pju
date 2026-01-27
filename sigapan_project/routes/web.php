@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\Settings\RolesController;
 use App\Http\Controllers\Admin\Settings\UsersController;
 use App\Http\Controllers\Admin\Settings\NavigationsController;
 use App\Http\Controllers\Admin\Settings\PreferencesController;
+use App\Http\Controllers\PanelKwhController;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,6 +81,14 @@ Route::middleware('auth', 'verified')->group(function () {
         Route::post('/', [MasterJalanController::class, 'store'])->name('store');
         Route::put('/{id}', [MasterJalanController::class, 'update'])->name('update');
         // Route::delete('/{id}', [MasterJalanController::class, 'destroy'])->name('destroy'); // Opsional jika nanti butuh hapus
+    });
+
+    /* ---- Panel KWh Management (✅ TAMBAHAN ROUTE BARU) */
+    Route::prefix('/panel-kwh')->name('panel-kwh.')->group(function () {
+        Route::get('/', [PanelKwhController::class, 'index'])->name('index');
+        Route::post('/', [PanelKwhController::class, 'store'])->name('store');
+        Route::put('/{id}', [PanelKwhController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PanelKwhController::class, 'destroy'])->name('destroy');
     });
 
     /* ---- Tim Lapangan */

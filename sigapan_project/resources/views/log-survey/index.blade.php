@@ -274,6 +274,7 @@
 
 @push('scripts')
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
+    <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
     <script>
         $(document).ready(function() {
             const dt = $('#data-table').DataTable({

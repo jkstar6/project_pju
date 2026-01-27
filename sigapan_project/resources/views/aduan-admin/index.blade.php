@@ -265,6 +265,5 @@
         }
     });
 }
-
     </script>
 @endpush

@@ -4,14 +4,13 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ URL::asset('assets/admin/css/datatables-2.3.4/datatables.tailwindcss.css') }}">
-    {{-- Leaflet CSS --}}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <style>
         #data-table td { vertical-align: top; }
         .modal-overlay { display: none; }
         .modal-overlay.active { display: flex; }
-        
-        /* Map Container */
+
         #map-panel {
             height: 350px;
             width: 100%;
@@ -21,7 +20,6 @@
             z-index: 10;
         }
 
-        /* Custom Style untuk Tombol Lokasi di Map */
         .leaflet-custom-control {
             background: white;
             width: 340px;
@@ -61,7 +59,8 @@
         <div class="trezo-card-header mb-[20px] md:mb-[25px] sm:flex sm:items-center sm:justify-between border-b pb-4">
             <h5 class="mb-0 text-lg font-bold">Data @yield('title')</h5>
             <div class="mt-3 sm:mt-0">
-                <button type="button" id="btn-open-create" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 transition shadow-sm text-sm font-medium">
+                <button type="button" id="btn-open-create"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 transition shadow-sm text-sm font-medium">
                     <span class="material-symbols-outlined">add</span> Tambah Panel Baru
                 </button>
             </div>
@@ -101,62 +100,84 @@
                                 <td class="text-left">
                                     <div class="flex flex-col gap-1">
                                         <span class="text-sm font-medium text-gray-700">{{ $item->lokasi_panel }}</span>
-                                        <a href="https://www.google.com/maps?q={{ $item->latitude }},{{ $item->longitude }}" target="_blank" class="text-blue-500 hover:underline text-xs inline-flex items-center">
+                                        <a href="https://www.google.com/maps?q={{ $item->latitude }},{{ $item->longitude }}"
+                                           target="_blank"
+                                           class="text-blue-500 hover:underline text-xs inline-flex items-center">
                                             <i class="material-symbols-outlined !text-[14px] mr-1">location_on</i> Lihat di Map
                                         </a>
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-bold">{{ number_format($item->daya_va) }} VA</span>
+                                    <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-bold">
+                                        {{ number_format($item->daya_va) }} VA
+                                    </span>
                                 </td>
                                 <td class="text-center">
                                     <div class="flex items-center gap-3 justify-center">
-                                        <button class="btn-edit text-blue-500 hover:text-blue-700 transition"><i class="material-symbols-outlined">edit</i></button>
+                                        <button class="btn-edit text-blue-500 hover:text-blue-700 transition">
+                                            <i class="material-symbols-outlined">edit</i>
+                                        </button>
+
                                         <form action="{{ route('panel-kwh.destroy', $item->id) }}" method="POST" class="inline">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Hapus data ini?')" class="text-red-500 hover:text-red-700 transition"><i class="material-symbols-outlined">delete</i></button>
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" onclick="return confirm('Hapus data ini?')"
+                                                    class="text-red-500 hover:text-red-700 transition">
+                                                <i class="material-symbols-outlined">delete</i>
+                                            </button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
+
                 </table>
             </div>
         </div>
     </div>
 
-    {{-- MODAL FORM (Dipakai bersama untuk Create & Edit) --}}
+    {{-- MODAL --}}
     <div id="modalPanel" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
         <div class="w-full max-w-2xl rounded-lg bg-white dark:bg-[#0c1427] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4 border-b pb-3">
                 <h5 id="modalTitle" class="text-xl font-bold">Tambah Panel KWh</h5>
-                <button type="button" class="btn-close-modal text-gray-400 hover:text-gray-600"><i class="material-symbols-outlined">close</i></button>
+                <button type="button" class="btn-close-modal text-gray-400 hover:text-gray-600">
+                    <i class="material-symbols-outlined">close</i>
+                </button>
             </div>
 
             <form id="formPanel" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
-                
+
                 <div class="md:col-span-1">
                     <label class="block text-sm font-semibold mb-1">No. Pelanggan PLN</label>
-                    <input name="no_pelanggan_pln" id="in_no_pelanggan" class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500" required>
+                    <input name="no_pelanggan_pln" id="in_no_pelanggan"
+                           class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500" required>
                 </div>
+
                 <div class="md:col-span-1">
                     <label class="block text-sm font-semibold mb-1">Daya (VA)</label>
-                    <input type="number" name="daya_va" id="in_daya_va" class="w-full border rounded-md px-3 py-2 outline-none" placeholder="1300">
+                    <input type="number" name="daya_va" id="in_daya_va"
+                           class="w-full border rounded-md px-3 py-2 outline-none" placeholder="1300">
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold mb-1 text-primary-600 italic">Klik pada peta atau isi koordinat manual:</label>
+                    <label class="block text-sm font-semibold mb-1 text-primary-600 italic">
+                        Klik pada peta atau isi koordinat manual:
+                    </label>
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <span class="text-[10px] text-gray-400 uppercase">Latitude</span>
-                            <input type="number" step="any" name="latitude" id="lat-input" class="w-full border rounded-md px-3 py-1.5 bg-blue-50/30" required>
+                            <input type="number" step="any" name="latitude" id="lat-input"
+                                   class="w-full border rounded-md px-3 py-1.5 bg-blue-50/30" required>
                         </div>
                         <div>
                             <span class="text-[10px] text-gray-400 uppercase">Longitude</span>
-                            <input type="number" step="any" name="longitude" id="lng-input" class="w-full border rounded-md px-3 py-1.5 bg-blue-50/30" required>
+                            <input type="number" step="any" name="longitude" id="lng-input"
+                                   class="w-full border rounded-md px-3 py-1.5 bg-blue-50/30" required>
                         </div>
                     </div>
                 </div>
@@ -167,27 +188,49 @@
 
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold mb-1">Lokasi Deskripsi</label>
-                    <textarea name="lokasi_panel" id="in_lokasi" rows="2" class="w-full border rounded-md px-3 py-2 outline-none" required></textarea>
+                    <textarea name="lokasi_panel" id="in_lokasi" rows="2"
+                              class="w-full border rounded-md px-3 py-2 outline-none" required></textarea>
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold mb-1">Catatan Admin</label>
-                    <textarea name="catatan_admin_pln" id="in_catatan" rows="1" class="w-full border rounded-md px-3 py-2 outline-none"></textarea>
+                    <textarea name="catatan_admin_pln" id="in_catatan" rows="1"
+                              class="w-full border rounded-md px-3 py-2 outline-none"></textarea>
                 </div>
 
                 <div class="md:col-span-2 flex justify-end gap-3 mt-4">
-                    <button type="button" class="btn-close-modal px-5 py-2 rounded-md bg-gray-100 hover:bg-gray-200 font-medium">Batal</button>
-                    <button type="submit" class="px-5 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 font-medium shadow-md">Simpan Data</button>
+                    <button type="button" class="btn-close-modal px-5 py-2 rounded-md bg-gray-100 hover:bg-gray-200 font-medium">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 font-medium shadow-md">
+                        Simpan Data
+                    </button>
                 </div>
             </form>
         </div>
     </div>
+
+    {{-- ✅ JSON data panel existing (cara paling aman, anti parse error) --}}
+    <script type="application/json" id="panel-points-json">
+        {!! json_encode(
+            $panelKwh->map(function($p){
+                return [
+                    'id' => $p->id,
+                    'no_pelanggan' => $p->no_pelanggan_pln,
+                    'lokasi' => $p->lokasi_panel,
+                    'lat' => (float) $p->latitude,
+                    'lng' => (float) $p->longitude,
+                    'daya' => (int) $p->daya_va,
+                ];
+            })->values()->toArray(),
+            JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES
+        ) !!}
+    </script>
 @endsection
 
 @push('scripts')
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
-    {{-- Leaflet JS --}}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
@@ -195,32 +238,73 @@
             $('#data-table').DataTable({ responsive: true });
 
             const modal = document.getElementById('modalPanel');
-            const defaultLoc = [-7.8897, 110.3289]; // Pusat Bantul
-            let map, marker;
+            const defaultLoc = [-7.8897, 110.3289]; // Bantul
 
-            // -- Inisialisasi Peta --
-            function initMap(lat, lng) {
+            // ambil data JSON panel existing
+            const jsonEl = document.getElementById('panel-points-json');
+            const PANEL_POINTS = jsonEl ? JSON.parse(jsonEl.textContent) : [];
+
+            let map = null;
+            let marker = null;
+            let panelMarkersLayer = null;
+
+            const panelIcon = L.divIcon({
+                className: '',
+                html: `<div style="width:12px;height:12px;border-radius:50%;background:#10b981;border:2px solid #ffffff;box-shadow:0 1px 4px rgba(0,0,0,.35);"></div>`,
+                iconSize: [12, 12],
+                iconAnchor: [6, 6]
+            });
+
+            function renderExistingPanels(currentId = null) {
+                if (!map) return;
+
+                if (!panelMarkersLayer) panelMarkersLayer = L.layerGroup().addTo(map);
+                panelMarkersLayer.clearLayers();
+
+                (PANEL_POINTS || []).forEach(p => {
+                    if (p.lat === null || p.lng === null) return;
+                    if (currentId && Number(p.id) === Number(currentId)) return;
+
+                    const m = L.marker([p.lat, p.lng], { icon: panelIcon, interactive: true })
+                        .bindPopup(`
+                            <div style="font-size:12px;line-height:1.3">
+                                <div><b>Panel:</b> ${p.no_pelanggan}</div>
+                                <div><b>Daya:</b> ${p.daya} VA</div>
+                                <div style="margin-top:4px;color:#6b7280">${p.lokasi || ''}</div>
+                            </div>
+                        `);
+
+                    panelMarkersLayer.addLayer(m);
+                });
+            }
+
+            function updateInputCoords(lat, lng) {
+                $('#lat-input').val(Number(lat).toFixed(8));
+                $('#lng-input').val(Number(lng).toFixed(8));
+            }
+
+            function initMap(lat, lng, currentId = null) {
                 if (!map) {
                     map = L.map('map-panel').setView([lat, lng], 15);
+
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '© OpenStreetMap'
                     }).addTo(map);
 
-                    marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+                    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
-                    // Sinkronisasi: Pin digeser -> Input berubah
+                    renderExistingPanels(currentId);
+
                     marker.on('dragend', function() {
-                        let pos = marker.getLatLng();
+                        const pos = marker.getLatLng();
                         updateInputCoords(pos.lat, pos.lng);
                     });
 
-                    // Sinkronisasi: Klik Peta -> Pin pindah & Input berubah
                     map.on('click', function(e) {
                         marker.setLatLng(e.latlng);
                         updateInputCoords(e.latlng.lat, e.latlng.lng);
                     });
 
-                    // Tombol Lokasi Saya (Kompas)
                     const LocationButton = L.Control.extend({
                         options: { position: 'topleft' },
                         onAdd: function() {
@@ -229,58 +313,58 @@
                             button.innerHTML = '🎯';
                             button.title = "Gunakan Lokasi Saat Ini";
                             button.onclick = function() {
-                                map.locate({setView: true, maxZoom: 16});
+                                map.locate({ setView: true, maxZoom: 16 });
                             };
                             return container;
                         }
                     });
+
                     map.addControl(new LocationButton());
 
                     map.on('locationfound', function(e) {
                         marker.setLatLng(e.latlng);
                         updateInputCoords(e.latlng.lat, e.latlng.lng);
                     });
+
                 } else {
                     map.setView([lat, lng], 15);
                     marker.setLatLng([lat, lng]);
+                    renderExistingPanels(currentId);
                 }
+
                 setTimeout(() => map.invalidateSize(), 300);
             }
 
-            function updateInputCoords(lat, lng) {
-                $('#lat-input').val(lat.toFixed(8));
-                $('#lng-input').val(lng.toFixed(8));
-            }
-
-            // Sinkronisasi: Input Manual -> Map & Pin Berubah
+            // input manual -> map ikut
             $('#lat-input, #lng-input').on('input', function() {
                 const lat = parseFloat($('#lat-input').val());
                 const lng = parseFloat($('#lng-input').val());
-                if (!isNaN(lat) && !isNaN(lng)) {
+                if (!isNaN(lat) && !isNaN(lng) && map && marker) {
                     map.setView([lat, lng]);
                     marker.setLatLng([lat, lng]);
                 }
             });
 
-            // -- Modal Open (Create) --
+            // CREATE
             $('#btn-open-create').click(function() {
                 $('#modalTitle').text('Tambah Panel KWh');
                 $('#formMethod').val('POST');
                 $('#formPanel').attr('action', "{{ route('panel-kwh.store') }}");
                 $('#formPanel')[0].reset();
-                
+
                 modal.classList.add('active');
-                initMap(defaultLoc[0], defaultLoc[1]);
+                initMap(defaultLoc[0], defaultLoc[1], null);
                 updateInputCoords(defaultLoc[0], defaultLoc[1]);
             });
 
-            // -- Modal Open (Edit) --
+            // EDIT
             $(document).on('click', '.btn-edit', function() {
                 const tr = $(this).closest('tr').data();
+
                 $('#modalTitle').text('Edit Panel KWh');
                 $('#formMethod').val('PUT');
                 $('#formPanel').attr('action', `/panel-kwh/${tr.id}`);
-                
+
                 $('#in_no_pelanggan').val(tr.no_pelanggan);
                 $('#in_daya_va').val(tr.daya_va);
                 $('#in_lokasi').val(tr.lokasi_panel);
@@ -289,7 +373,7 @@
                 $('#lng-input').val(tr.longitude);
 
                 modal.classList.add('active');
-                initMap(tr.latitude, tr.longitude);
+                initMap(tr.latitude, tr.longitude, tr.id);
             });
 
             $('.btn-close-modal').click(() => modal.classList.remove('active'));

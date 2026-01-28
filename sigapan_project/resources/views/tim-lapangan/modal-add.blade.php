@@ -3,114 +3,123 @@
     <div class="popup-dialog flex transition-all items-center justify-center min-h-screen px-4 sm:px-6">
         <div class="trezo-card w-full max-w-[95%] sm:max-w-[720px] md:max-w-[900px] lg:max-w-[1100px] bg-white dark:bg-[#0c1427] p-[20px] md:p-[25px] rounded-md">
             
-            {{-- START: Modal Header --}}
+            {{-- Header --}}
             <div class="trezo-card-header bg-gray-50 dark:bg-[#15203c] mb-[20px] md:mb-[25px] flex items-center justify-between -mx-[20px] md:-mx-[25px] -mt-[20px] md:-mt-[25px] p-[20px] md:p-[25px] rounded-t-md">
                 <div class="trezo-card-title">
-                    <h5 class="mb-0">
-                        Tambah Tim Lapangan Baru
-                    </h5>
+                    <h5 class="mb-0">Tambah Tim Lapangan Baru</h5>
                 </div>
                 <div class="trezo-card-subtitle">
-                    <button type="button" class="text-[23px] transition-all leading-none text-black dark:text-white hover:text-primary-500" id="modal-add-toggle">
-                        <i class="ri-close-fill"></i>
+                    <button type="button" class="btn-close-add text-[23px] transition-all leading-none text-black dark:text-white hover:text-primary-500">
+                        <i class="material-symbols-outlined">close</i>
                     </button>
                 </div>
             </div>
-            {{-- END: Modal Header --}}
 
-            {{-- START: Form Add --}}
-            <form action="{{ route('admin.tim-lapangan.store') }}" method="POST">
+            {{-- Form --}}
+            <form action="{{ route('tim-lapangan.store') }}" method="POST">
                 @csrf
-                {{-- START: Modal Body --}}
                 <div class="trezo-card-content pb-[20px] md:pb-[25px]">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-[20px] md:gap-[25px]">
-                        {{-- START: Nama Tim --}}
+                        
+                        {{-- Nama Tim --}}
                         <div>
-                            <label class="mb-[12px] font-medium block">
-                                Nama Tim
-                                <strong class="text-red-500">*</strong>
-                            </label>
-                            <input type="text" name="nama_tim" class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500" 
-                                placeholder="Contoh: Tim Teknisi 1" required>
+                            <label class="mb-[12px] font-medium block">Nama Tim <strong class="text-red-500">*</strong></label>
+                            <input type="text" name="nama_tim" class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all focus:border-primary-500" placeholder="Contoh: Tim Teknisi 1" required>
                         </div>
-                        {{-- END: Nama Tim --}}
 
-                        {{-- START: Kategori --}}
+                        {{-- Kategori --}}
                         <div>
-                            <label class="mb-[12px] font-medium block">
-                                Kategori Tim
-                                <strong class="text-red-500">*</strong>
-                            </label>
-                            <select name="kategori" class="select2 h-[45px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[13px] block w-full outline-0 cursor-pointer transition-all focus:border-primary-500" required>
-                                <option value="">- Pilih Kategori -</option>
+                            <label class="mb-[12px] font-medium block">Kategori Tim <strong class="text-red-500">*</strong></label>
+                            <select name="kategori" class="select2 h-[45px] rounded-md border border-gray-200" required>
                                 <option value="Teknisi">Teknisi</option>
                                 <option value="Surveyor">Surveyor</option>
                             </select>
                         </div>
-                        {{-- END: Kategori --}}
 
-                        {{-- START: Ketua Tim --}}
+                        {{-- Ketua Tim --}}
                         <div>
-                            <label class="mb-[12px] font-medium block">
-                                Ketua Tim
-                            </label>
-                            <select name="leader_id" class="select2 h-[45px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[13px] block w-full outline-0 cursor-pointer transition-all focus:border-primary-500">
+                            <label class="mb-[12px] font-medium block">Ketua Tim</label>
+                            <select name="leader_id" class="select2 h-[45px] rounded-md border border-gray-200">
                                 <option value="">- Pilih Ketua Tim -</option>
-                                {{-- TODO: Replace with actual users data from database --}}
-                                {{-- @foreach($users as $user) --}}
-                                <option value="2">Budi Santoso</option>
-                                <option value="3">Siti Aminah</option>
-                                <option value="4">Ahmad Fauzi</option>
-                                <option value="5">Dewi Sartika</option>
-                                <option value="6">Hendra Wijaya</option>
-                                {{-- @endforeach --}}
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
                             </select>
                         </div>
-                        {{-- END: Ketua Tim --}}
 
-                        {{-- START: Jumlah Personel --}}
+                        {{-- Jumlah Personel --}}
                         <div>
-                            <label class="mb-[12px] font-medium block">
-                                Jumlah Personel
-                                <strong class="text-red-500">*</strong>
-                            </label>
-                            <input type="number" name="jumlah_personel" min="1" class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500" 
-                                placeholder="Masukkan jumlah personel" required>
+                            <label class="mb-[12px] font-medium block">Jumlah Personel <strong class="text-red-500">*</strong></label>
+                            <input type="number" name="jumlah_personel" min="1" class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all focus:border-primary-500" required>
                         </div>
-                        {{-- END: Jumlah Personel --}}
+
                     </div>
                 </div>
-                {{-- END: Modal Body --}}
-                {{-- START: Modal Footer --}}
+
                 <div class="trezo-card-footer flex items-center justify-between -mx-[20px] md:-mx-[25px] px-[20px] md:px-[25px] pt-[20px] md:pt-[25px] border-t border-gray-100 dark:border-[#172036]">
-                    <button class="inline-block py-[10px] px-[30px] bg-danger-500 text-white transition-all hover:bg-danger-400 rounded-md border border-danger-500 hover:border-danger-400" type="button" id="modal-add-toggle">
-                        Batal
-                    </button>
-                    <button type="submit" class="inline-block py-[10px] px-[30px] bg-primary-500 text-white transition-all hover:bg-primary-400 rounded-md border border-primary-500 hover:border-primary-400 ltr:mr-[11px] rtl:ml-[11px] mb-[15px]">
-                        Simpan Data
-                    </button>
+                    <button type="button" class="btn-close-add inline-block py-[10px] px-[30px] bg-danger-500 text-white transition-all hover:bg-danger-400 rounded-md">Batal</button>
+                    <button type="submit" class="inline-block py-[10px] px-[30px] bg-primary-500 text-white transition-all hover:bg-primary-400 rounded-md">Simpan Data</button>
                 </div>
-                {{-- END: Modal Footer --}}
             </form>
-            {{-- END: Form Add --}}
 
         </div>
     </div>
 </div>
-{{-- END: Modal --}}
 
-@push('scripts')
-<script>
-    // Add New Popup Toggle
-    const addNewPopupID = document.getElementById("modal-add");
-    if (addNewPopupID) {
-        var buttons = document.querySelectorAll("#modal-add-toggle");
-        buttons.forEach(function(button) {
-            button.addEventListener("click", function() {
-                var divElement = document.getElementById("modal-add");
-                divElement.classList.toggle("active");
-            });
-        });
-    }
-</script>
-@endpush
+<div class="modal-overlay" id="modal-add">
+    <div class="popup-dialog w-full max-w-[95%] sm:max-w-[700px] bg-white dark:bg-[#0c1427] p-5 rounded-md relative">
+        
+        {{-- Header --}}
+        <div class="flex items-center justify-between mb-5 border-b pb-4 dark:border-[#172036]">
+            <h5 class="text-lg font-semibold text-gray-800 dark:text-white">Tambah Tim Lapangan</h5>
+            <button type="button" class="btn-close-add text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        {{-- Form Create --}}
+        <form action="{{ route('tim-lapangan.store') }}" method="POST">
+            @csrf
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {{-- Nama Tim --}}
+                <div class="md:col-span-2">
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Nama Tim <span class="text-red-500">*</span></label>
+                    <input type="text" name="nama_tim" class="w-full h-[45px] rounded-md border border-gray-300 dark:border-[#172036] px-3 bg-white dark:bg-[#0c1427] dark:text-white" placeholder="Contoh: Tim Teknisi 1" required>
+                </div>
+
+                {{-- Kategori --}}
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Kategori <span class="text-red-500">*</span></label>
+                    <select name="kategori" class="select2 w-full" required>
+                        <option value="Teknisi">Teknisi</option>
+                        <option value="Surveyor">Surveyor</option>
+                    </select>
+                </div>
+
+                {{-- Ketua Tim --}}
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Ketua Tim</label>
+                    <select name="leader_id" class="select2 w-full">
+                        <option value="">- Pilih Ketua Tim -</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Jumlah Personel --}}
+                <div class="md:col-span-2">
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Jumlah Personel <span class="text-red-500">*</span></label>
+                    <input type="number" name="jumlah_personel" min="1" class="w-full h-[45px] rounded-md border border-gray-300 dark:border-[#172036] px-3 bg-white dark:bg-[#0c1427] dark:text-white" required>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="flex justify-end gap-2 pt-4 border-t dark:border-[#172036]">
+                <button type="button" class="btn-close-add px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600">Simpan Data</button>
+            </div>
+        </form>
+    </div>
+</div>

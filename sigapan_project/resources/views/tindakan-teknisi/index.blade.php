@@ -1,594 +1,217 @@
 @extends('layouts.admin.master')
 
-@section('title', 'Log Tindakan Teknisi')
-
-@section('breadcrumb')
-    {{-- {{ Breadcrumbs::render('tindakan-teknisi') }} --}}
-@endsection
+@section('title', 'Tindakan Teknisi')
 
 @push('styles')
     <link rel="stylesheet" href="{{ URL::asset('assets/admin/css/datatables-2.3.4/datatables.tailwindcss.css') }}">
     <style>
-        #data-table td.text-center { vertical-align: middle; }
-        .btn-icon { cursor: pointer; }
-        .material-symbols-outlined{ font-size:18px !important; }
-
-        /* Modal */
-        .yam-modal-backdrop{
-            position: fixed; inset: 0; background: rgba(0,0,0,.45);
-            display:none; align-items:center; justify-content:center;
-            z-index: 9999; padding: 16px;
-        }
-        .yam-modal{ width:100%; max-width:760px; background:#fff; border-radius:12px; overflow:hidden; }
-        .yam-modal-header{ padding:14px 18px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; }
-        .yam-modal-body{ padding:16px 18px; }
-        .yam-modal-footer{ padding:14px 18px; border-top:1px solid #eee; display:flex; gap:10px; justify-content:flex-end; }
-        .yam-input{ width:100%; border:1px solid #e5e7eb; border-radius:8px; padding:10px 12px; font-size:14px; outline:none; }
-        .yam-btn{ border-radius:10px; padding:9px 14px; font-size:14px; border:1px solid transparent; }
-        .yam-btn-primary{ background:#3b82f6; color:#fff; border-color:#3b82f6; }
-        .yam-btn-secondary{ background:#fff; color:#111827; border-color:#e5e7eb; }
-        .yam-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-        .yam-grid-1{ grid-template-columns:1fr; }
-        .yam-label{ font-size:12px; color:#6b7280; margin-bottom:6px; display:block; }
-        .yam-kv{ background:#f9fafb; border:1px solid #eef2f7; padding:10px 12px; border-radius:10px; }
-        .yam-value{ font-size:14px; color:#111827; white-space:pre-wrap; }
-
-        /* Toast */
-        .yam-toast{
-            position: fixed; right: 16px; bottom: 16px;
-            background:#111827; color:#fff; padding:10px 12px;
-            border-radius: 10px; font-size: 13px;
-            display:none; z-index: 10000;
-        }
+        #data-table td { vertical-align: top; }
+        .modal-overlay { display: none; }
+        .modal-overlay.active { display: flex; }
     </style>
 @endpush
 
-@section('content')
-    <div class="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
-        <div class="trezo-card-header mb-[20px] md:mb-[25px] sm:flex sm:items-center sm:justify-between">
-            <div class="trezo-card-title">
-                <h5 class="mb-0">Daftar @yield('title')</h5>
-            </div>
+@section('breadcrumb')
+    <nav class="flex mb-5" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{{ route('dashboard') }}" class="text-sm font-medium text-gray-700 hover:text-blue-600">Dashboard</a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-3 h-3 text-gray-400 mx-1" fill="none" viewBox="0 0 6 10"><path stroke="currentColor" stroke-width="2" d="m1 9 4-4-4-4"/></svg>
+                    <span class="ml-1 text-sm font-medium text-gray-500">@yield('title')</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+@endsection
 
-            {{-- CREATE UI --}}
-            <div class="trezo-card-subtitle sm:flex sm:items-center">
-                <button
-                    type="button"
-                    id="btn-open-create"
-                    class="trezo-card-dropdown-btn py-[5px] md:py-[6.5px] px-[12px] md:px-[19px] bg-primary-500 text-white transition-all hover:bg-primary-400 rounded-md border border-primary-500 hover:border-primary-400">
-                    <i class="ri-menu-add-line"></i>
-                    Tambah Log Tindakan
-                </button>
-            </div>
+@section('content')
+    <div class="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md shadow-sm">
+        <div class="trezo-card-header mb-[20px] md:mb-[25px] sm:flex sm:items-center sm:justify-between border-b pb-4">
+            <h5 class="mb-0 text-lg font-bold">Log @yield('title')</h5>
+            <button type="button" id="btn-open-create" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 transition text-sm font-medium">
+                <span class="material-symbols-outlined">add</span> Input Tindakan Baru
+            </button>
         </div>
 
-        <div class="trezo-card-content" id="dataTable">
+        @if(session('success'))
+            <div class="mb-4 p-3 bg-green-100 text-green-700 rounded-md text-sm border border-green-200">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <div class="trezo-card-content">
             <div class="table-responsive overflow-x-auto p-2">
                 <table id="data-table" class="display stripe group" style="width:100%">
                     <thead>
                         <tr>
-                            <th class="text-center">No. Tiket</th>
-                            <th class="text-left">Lokasi PJU</th>
+                            <th class="text-center">No</th>
+                            <th class="text-left">No Tiket & Identitas Lokasi</th>
                             <th class="text-left">Hasil Pengecekan</th>
                             <th class="text-left">Suku Cadang</th>
-                            <th class="text-center">Foto Bukti</th>
-                            <th class="text-left">Teknisi</th>
-                            <th class="text-center">Waktu Tindakan</th>
+                            <th class="text-center">Bukti</th> {{-- KOLOM DIKEMBALIKAN --}}
                             <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
-
-                    <tbody id="table-body">
-                        @foreach ($logTindakan as $log)
-                            @php
-                                $id = $log['id'] ?? ('seed-' . $loop->iteration);
-                                $createdAt = isset($log['created_at']) ? date('d M Y H:i', strtotime($log['created_at'])) : '-';
+                    <tbody>
+                        @foreach ($tindakan as $item)
+                            <tr data-id="{{ $item->id }}" data-tiket="{{ $item->tiket_perbaikan_id }}" data-hasil="{{ $item->hasil_cek }}" data-suku="{{ json_encode($item->suku_cadang) }}">
+                                <td class="text-center font-bold text-gray-400">{{ $loop->iteration }}</td>
                                 
-                                // Parse suku cadang dari JSON
-                                $sukuCadang = '-';
-                                if (!empty($log['suku_cadang'])) {
-                                    $sukuCadangData = is_string($log['suku_cadang']) 
-                                        ? json_decode($log['suku_cadang'], true) 
-                                        : $log['suku_cadang'];
-                                    
-                                    if (is_array($sukuCadangData) && count($sukuCadangData) > 0) {
-                                        $items = [];
-                                        foreach ($sukuCadangData as $key => $value) {
-                                            $items[] = ucfirst($key) . ': ' . $value;
-                                        }
-                                        $sukuCadang = implode(', ', $items);
-                                    }
-                                }
-                            @endphp
+                                <td class="text-left">
+                                    <div class="flex flex-col">
+                                        <strong class="text-primary-500 text-sm">Tiket #{{ $item->tiket->id ?? $item->tiket_perbaikan_id }}</strong>
+                                        
+                                        @if($item->tiket && $item->tiket->aset)
+                                            <span class="text-[11px] text-gray-700 font-bold uppercase mt-1">{{ $item->tiket->aset->kode_tiang }}</span>
+                                            <small class="text-[10px] text-gray-500 italic line-clamp-1">{{ $item->tiket->aset->lokasi_panel }}</small>
+                                        @elseif($item->tiket && $item->tiket->pengaduan)
+                                            {{-- Fallback jika aset_pju_id NULL --}}
+                                            <span class="text-[11px] text-orange-600 font-bold mt-1 uppercase">Lokasi Aduan:</span>
+                                            <small class="text-[10px] text-gray-400 italic line-clamp-2">"{{ $item->tiket->pengaduan->deskripsi_lokasi }}"</small>
+                                        @else
+                                            <span class="text-[10px] text-red-400 italic">Lokasi Tidak Terdeteksi</span>
+                                        @endif
+                                    </div>
+                                </td>
 
-                            <tr
-                                data-id="{{ $id }}"
-                                data-no_tiket="{{ $log['no_tiket'] ?? '-' }}"
-                                data-kode_aset="{{ $log['kode_aset'] ?? '-' }}"
-                                data-lokasi_aset="{{ $log['lokasi_aset'] ?? '-' }}"
-                                data-hasil_cek="{{ e($log['hasil_cek'] ?? '-') }}"
-                                data-suku_cadang="{{ e($sukuCadang) }}"
-                                data-foto_bukti_selesai="{{ $log['foto_bukti_selesai'] ?? '' }}"
-                                data-nama_teknisi="{{ $log['nama_teknisi'] ?? '-' }}"
-                                data-created_at="{{ $createdAt }}"
-                            >
+                                <td class="text-left">
+                                    <p class="text-xs text-gray-600 italic">"{{ Str::limit($item->hasil_cek, 80) }}"</p>
+                                </td>
+
+                                <td class="text-left">
+                                    @if($item->suku_cadang)
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach($item->suku_cadang as $sc)
+                                                <span class="bg-gray-100 text-[9px] px-2 py-0.5 rounded border border-gray-200">{{ $sc['nama'] }} ({{ $sc['jumlah'] }})</span>
+                                            @endforeach
+                                        </div>
+                                    @else <span class="text-gray-300 text-[10px]">-</span> @endif
+                                </td>
+
+                                {{-- KOLOM BUKTI FOTO DIKEMBALIKAN --}}
                                 <td class="text-center">
-                                    <strong class="text-primary-500">{{ $log['no_tiket'] ?? '-' }}</strong>
-                                </td>
-
-                                <td class="text-left">
-                                    <div>
-                                        <strong>{{ $log['kode_aset'] ?? '-' }}</strong><br>
-                                        <small class="text-gray-500">{{ $log['lokasi_aset'] ?? '-' }}</small>
-                                    </div>
-                                </td>
-
-                                <td class="text-left">
-                                    <div class="max-w-xs">
-                                        {{ \Illuminate\Support\Str::limit(($log['hasil_cek'] ?? '-'), 60) }}
-                                    </div>
-                                </td>
-
-                                <td class="text-left">
-                                    <div class="max-w-xs text-sm">
-                                        {{ \Illuminate\Support\Str::limit($sukuCadang, 50) }}
-                                    </div>
-                                </td>
-
-                                <td class="text-center">
-                                    @if (!empty($log['foto_bukti_selesai']))
-                                        <img src="{{ asset('storage/' . $log['foto_bukti_selesai']) }}" 
-                                             alt="Foto Bukti" 
-                                             class="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80 mx-auto"
-                                             onclick="window.open(this.src, '_blank')">
+                                    @if($item->foto_bukti_selesai)
+                                        <a href="{{ asset('storage/'.$item->foto_bukti_selesai) }}" target="_blank" class="text-blue-500 hover:text-blue-700 transition">
+                                            <i class="material-symbols-outlined !text-md">image</i>
+                                        </a>
                                     @else
-                                        <span class="text-gray-400 text-sm">Tidak ada foto</span>
+                                        <span class="text-gray-300 text-xs">-</span>
                                     @endif
                                 </td>
 
-                                <td class="text-left">{{ $log['nama_teknisi'] ?? '-' }}</td>
-
-                                <td class="text-center">{{ $createdAt }}</td>
-
                                 <td class="text-center">
-                                    <div class="flex items-center gap-[10px] justify-center">
-                                        {{-- ✅ DETAIL: BUTTON (bukan link) jadi tidak pindah halaman --}}
-                                        <button type="button" class="btn-icon btn-open-detail text-primary-500" title="Detail">
-                                            <i class="material-symbols-outlined">visibility</i>
-                                        </button>
-
-                                        <button type="button" class="btn-icon btn-open-edit text-warning-500" title="Edit">
-                                            <i class="material-symbols-outlined">edit</i>
-                                        </button>
-
-                                        <button type="button" class="btn-icon btn-delete-row text-danger-500" title="Delete">
-                                            <i class="material-symbols-outlined">delete</i>
-                                        </button>
+                                    <div class="flex items-center gap-2 justify-center">
+                                        <button class="btn-edit text-blue-500 transition"><i class="material-symbols-outlined">edit</i></button>
+                                        <form action="{{ route('tindakan-teknisi.destroy', $item->id) }}" method="POST" class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" onclick="return confirm('Hapus?')" class="text-red-400"><i class="material-symbols-outlined">delete</i></button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
-
                 </table>
             </div>
         </div>
     </div>
 
-    {{-- MODAL DETAIL --}}
-    <div class="yam-modal-backdrop" id="modal-detail">
-        <div class="yam-modal">
-            <div class="yam-modal-header">
-                <div style="font-weight:600;">Detail Log Tindakan</div>
-                <button type="button" class="btn-icon" data-close-modal="modal-detail">
-                    <i class="material-symbols-outlined">close</i>
-                </button>
+    {{-- MODAL TETAP SAMA SEPERTI SEBELUMNYA --}}
+    <div id="modalTindakan" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
+        <div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4 border-b pb-3">
+                <h5 id="modalTitle" class="text-xl font-bold">Input Tindakan Teknisi</h5>
+                <button type="button" class="btn-close-modal text-gray-400"><i class="material-symbols-outlined">close</i></button>
             </div>
-
-            <div class="yam-modal-body">
-                <div class="yam-grid">
-                    <div class="yam-kv">
-                        <span class="yam-label">No. Tiket</span>
-                        <div class="yam-value" id="d_no_tiket">-</div>
+            <form id="formTindakan" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="_method" id="formMethod" value="POST">
+                <div class="grid grid-cols-1 gap-5">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Pilih Tiket Perbaikan Aktif</label>
+                        <select name="tiket_perbaikan_id" id="in_tiket_id" class="w-full border rounded-md px-3 py-2 bg-white" required>
+                            <option value="">-- Pilih Tiket --</option>
+                            @foreach($tikets as $tkt)
+                                <option value="{{ $tkt->id }}">
+                                    #{{ $tkt->id }} | 
+                                    @if($tkt->aset) {{ $tkt->aset->kode_tiang }}
+                                    @else Aduan: {{ Str::limit($tkt->pengaduan->deskripsi_lokasi, 30) }} 
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="yam-kv">
-                        <span class="yam-label">Teknisi</span>
-                        <div class="yam-value" id="d_nama_teknisi">-</div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Hasil Pengecekan</label>
+                        <textarea name="hasil_cek" id="in_hasil_cek" rows="3" class="w-full border rounded-md px-3 py-2" required></textarea>
                     </div>
-                </div>
-
-                <div class="yam-grid" style="margin-top:12px;">
-                    <div class="yam-kv">
-                        <span class="yam-label">Kode Aset</span>
-                        <div class="yam-value" id="d_kode_aset">-</div>
+                    <div class="border p-4 rounded-md bg-gray-50">
+                        <label class="block text-sm font-bold mb-3">Suku Cadang</label>
+                        <div id="sparepart-container" class="space-y-2 mb-3"></div>
+                        <button type="button" id="add-sparepart" class="text-xs text-blue-600 font-bold">+ Tambah Item</button>
                     </div>
-                    <div class="yam-kv">
-                        <span class="yam-label">Lokasi Aset</span>
-                        <div class="yam-value" id="d_lokasi_aset">-</div>
-                    </div>
-                </div>
-
-                <div class="yam-grid yam-grid-1" style="margin-top:12px;">
-                    <div class="yam-kv">
-                        <span class="yam-label">Waktu Tindakan</span>
-                        <div class="yam-value" id="d_created_at">-</div>
-                    </div>
-                </div>
-
-                <div class="yam-grid yam-grid-1" style="margin-top:12px;">
-                    <div class="yam-kv">
-                        <span class="yam-label">Hasil Pengecekan</span>
-                        <div class="yam-value" id="d_hasil_cek">-</div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Upload Foto Bukti</label>
+                        <input type="file" name="foto_bukti_selesai" class="w-full border rounded-md px-3 py-2 text-sm">
                     </div>
                 </div>
-
-                <div class="yam-grid yam-grid-1" style="margin-top:12px;">
-                    <div class="yam-kv">
-                        <span class="yam-label">Suku Cadang</span>
-                        <div class="yam-value" id="d_suku_cadang">-</div>
-                    </div>
-                </div>
-
-                <div class="yam-grid yam-grid-1" style="margin-top:12px;">
-                    <div class="yam-kv">
-                        <span class="yam-label">Foto Bukti Selesai</span>
-                        <div class="yam-value" id="d_foto_bukti_selesai">
-                            <span class="text-gray-400">Tidak ada foto</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="yam-modal-footer">
-                <button type="button" class="yam-btn yam-btn-secondary" data-close-modal="modal-detail">Tutup</button>
-            </div>
-        </div>
-    </div>
-
-    {{-- MODAL CREATE --}}
-    <div class="yam-modal-backdrop" id="modal-create">
-        <div class="yam-modal">
-            <div class="yam-modal-header">
-                <div style="font-weight:600;">Tambah Log Tindakan</div>
-                <button type="button" class="btn-icon" data-close-modal="modal-create">
-                    <i class="material-symbols-outlined">close</i>
-                </button>
-            </div>
-
-            <form id="form-create">
-                <div class="yam-modal-body">
-                    <div class="yam-grid">
-                        <div>
-                            <label class="yam-label">No. Tiket</label>
-                            <input name="no_tiket" class="yam-input" required>
-                        </div>
-                        <div>
-                            <label class="yam-label">Nama Teknisi</label>
-                            <input name="nama_teknisi" class="yam-input" required>
-                        </div>
-                    </div>
-
-                    <div class="yam-grid" style="margin-top:12px;">
-                        <div>
-                            <label class="yam-label">Kode Aset</label>
-                            <input name="kode_aset" class="yam-input" required>
-                        </div>
-                        <div>
-                            <label class="yam-label">Lokasi Aset</label>
-                            <input name="lokasi_aset" class="yam-input" required>
-                        </div>
-                    </div>
-
-                    <div style="margin-top:12px;">
-                        <label class="yam-label">Hasil Pengecekan</label>
-                        <textarea name="hasil_cek" class="yam-input" rows="4" required></textarea>
-                    </div>
-                </div>
-
-                <div class="yam-modal-footer">
-                    <button type="button" class="yam-btn yam-btn-secondary" data-close-modal="modal-create">Batal</button>
-                    <button type="submit" class="yam-btn yam-btn-primary">Simpan (UI)</button>
+                <div class="flex justify-end gap-3 mt-8">
+                    <button type="button" class="btn-close-modal px-6 py-2 rounded-md bg-gray-100">Batal</button>
+                    <button type="submit" class="px-6 py-2 rounded-md bg-primary-500 text-white shadow-md">Simpan</button>
                 </div>
             </form>
         </div>
     </div>
-
-    {{-- MODAL EDIT --}}
-    <div class="yam-modal-backdrop" id="modal-edit">
-        <div class="yam-modal">
-            <div class="yam-modal-header">
-                <div style="font-weight:600;">Edit Log Tindakan</div>
-                <button type="button" class="btn-icon" data-close-modal="modal-edit">
-                    <i class="material-symbols-outlined">close</i>
-                </button>
-            </div>
-
-            <form id="form-edit">
-                <input type="hidden" id="e_row_id">
-
-                <div class="yam-modal-body">
-                    <div class="yam-grid">
-                        <div>
-                            <label class="yam-label">No. Tiket</label>
-                            <input id="e_no_tiket" class="yam-input" required>
-                        </div>
-                        <div>
-                            <label class="yam-label">Nama Teknisi</label>
-                            <input id="e_nama_teknisi" class="yam-input" required>
-                        </div>
-                    </div>
-
-                    <div class="yam-grid" style="margin-top:12px;">
-                        <div>
-                            <label class="yam-label">Kode Aset</label>
-                            <input id="e_kode_aset" class="yam-input" required>
-                        </div>
-                        <div>
-                            <label class="yam-label">Lokasi Aset</label>
-                            <input id="e_lokasi_aset" class="yam-input" required>
-                        </div>
-                    </div>
-
-                    <div style="margin-top:12px;">
-                        <label class="yam-label">Hasil Pengecekan</label>
-                        <textarea id="e_hasil_cek" class="yam-input" rows="4" required></textarea>
-                    </div>
-                </div>
-
-                <div class="yam-modal-footer">
-                    <button type="button" class="yam-btn yam-btn-secondary" data-close-modal="modal-edit">Batal</button>
-                    <button type="submit" class="yam-btn yam-btn-primary">Update (UI)</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="yam-toast" id="yam-toast">OK</div>
 @endsection
 
 @push('scripts')
-    <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
-    <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
+<script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
+<script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        $('#data-table').DataTable({ responsive: true });
+        const modal = document.getElementById('modalTindakan');
+        let scIndex = 0;
 
-    <script>
-        // DataTables aman
-        let dt = null;
-        if (window.jQuery && jQuery.fn && typeof jQuery.fn.DataTable === 'function') {
-            dt = $('#data-table').DataTable({
-                responsive: true,
-                pageLength: 25,
-                order: [[4, 'desc']]
-            });
-        }
-
-        function openModal(id){ const el=document.getElementById(id); if(el) el.style.display='flex'; }
-        function closeModal(id){ const el=document.getElementById(id); if(el) el.style.display='none'; }
-        function toast(msg){
-            const t=document.getElementById('yam-toast');
-            t.textContent=msg; t.style.display='block';
-            clearTimeout(window.__toastTimer);
-            window.__toastTimer=setTimeout(()=>t.style.display='none', 1600);
-        }
-        function nowStr(){
-            const d=new Date();
-            const pad=n=>(n<10?'0'+n:''+n);
-            const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-            return `${pad(d.getDate())} ${months[d.getMonth()]} ${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        }
-        function escapeHtml(s){
-            return (s ?? '').toString()
-                .replaceAll('&','&amp;')
-                .replaceAll('<','&lt;')
-                .replaceAll('>','&gt;')
-                .replaceAll('"','&quot;')
-                .replaceAll("'",'&#039;');
-        }
-        function limitText(s, max=60){
-            s = (s ?? '').toString();
-            return s.length > max ? (s.slice(0,max)+'...') : s;
-        }
-        function buildLokasiCell(kode, lokasi){
-            return `
-                <div>
-                    <strong>${escapeHtml(kode)}</strong><br>
-                    <small class="text-gray-500">${escapeHtml(lokasi)}</small>
-                </div>
-            `;
-        }
-        function buildAksiCell(){
-            return `
-                <div class="flex items-center gap-[10px] justify-center">
-                    <button type="button" class="btn-icon btn-open-detail text-primary-500" title="Detail">
-                        <i class="material-symbols-outlined">visibility</i>
-                    </button>
-                    <button type="button" class="btn-icon btn-open-edit text-warning-500" title="Edit">
-                        <i class="material-symbols-outlined">edit</i>
-                    </button>
-                    <button type="button" class="btn-icon btn-delete-row text-danger-500" title="Delete">
-                        <i class="material-symbols-outlined">delete</i>
-                    </button>
-                </div>
-            `;
+        function addRow(nama = '', jumlah = '') {
+            let html = `
+                <div class="flex gap-2 items-center sparepart-row">
+                    <input type="text" name="suku_cadang[${scIndex}][nama]" value="${nama}" placeholder="Barang" class="flex-1 border rounded px-3 py-1.5 text-sm">
+                    <input type="number" name="suku_cadang[${scIndex}][jumlah]" value="${jumlah}" placeholder="Jml" class="w-24 border rounded px-3 py-1.5 text-sm">
+                    <button type="button" class="remove-row text-red-500"><i class="material-symbols-outlined">delete</i></button>
+                </div>`;
+            $('#sparepart-container').append(html);
+            scIndex++;
         }
 
-        // Open create
-        document.getElementById('btn-open-create')?.addEventListener('click', () => {
-            document.getElementById('form-create')?.reset();
-            openModal('modal-create');
+        $('#add-sparepart').click(() => addRow());
+        $(document).on('click', '.remove-row', function() { $(this).closest('.sparepart-row').remove(); });
+
+        $('#btn-open-create').click(function() {
+            $('#modalTitle').text('Input Tindakan Baru');
+            $('#formMethod').val('POST');
+            $('#formTindakan').attr('action', "{{ route('tindakan-teknisi.store') }}");
+            $('#formTindakan')[0].reset();
+            modal.classList.add('active');
+            addRow(); 
         });
 
-        // Close modal by button
-        document.addEventListener('click', function(e){
-            const closeBtn = e.target.closest('[data-close-modal]');
-            if(closeBtn) closeModal(closeBtn.getAttribute('data-close-modal'));
+        $(document).on('click', '.btn-edit', function() {
+            const tr = $(this).closest('tr').data();
+            $('#modalTitle').text('Edit Log Tindakan');
+            $('#formMethod').val('PUT');
+            $('#formTindakan').attr('action', `/tindakan-teknisi/${tr.id}`);
+            $('#in_tiket_id').val(tr.tiket);
+            $('#in_hasil_cek').val(tr.hasil);
+            modal.classList.add('active');
+            if (tr.suku) { tr.suku.forEach(item => addRow(item.nama, item.jumlah)); } 
+            else { addRow(); }
         });
 
-        // Close modal by backdrop
-        ['modal-detail','modal-create','modal-edit'].forEach(id=>{
-            document.getElementById(id)?.addEventListener('click', (e)=>{
-                if(e.target.id === id) closeModal(id);
-            });
-        });
-
-        // Row actions (detail/edit/delete) - SEMUA DI HALAMAN INI, TIDAK PINDAH ROUTE
-        document.addEventListener('click', function(e){
-            const tr = e.target.closest('#data-table tbody tr');
-            if(!tr) return;
-
-            if(e.target.closest('.btn-open-detail')){
-                document.getElementById('d_no_tiket').textContent = tr.dataset.no_tiket || '-';
-                document.getElementById('d_nama_teknisi').textContent = tr.dataset.nama_teknisi || '-';
-                document.getElementById('d_kode_aset').textContent = tr.dataset.kode_aset || '-';
-                document.getElementById('d_lokasi_aset').textContent = tr.dataset.lokasi_aset || '-';
-                document.getElementById('d_created_at').textContent = tr.dataset.created_at || '-';
-                document.getElementById('d_hasil_cek').textContent = tr.dataset.hasil_cek || '-';
-                document.getElementById('d_suku_cadang').textContent = tr.dataset.suku_cadang || '-';
-                
-                // Handle foto bukti
-                const fotoContainer = document.getElementById('d_foto_bukti_selesai');
-                const fotoUrl = tr.dataset.foto_bukti_selesai;
-                if (fotoUrl) {
-                    fotoContainer.innerHTML = `<img src="/storage/${fotoUrl}" alt="Foto Bukti" class="w-full max-w-md rounded cursor-pointer hover:opacity-80" onclick="window.open(this.src, '_blank')">`;
-                } else {
-                    fotoContainer.innerHTML = '<span class="text-gray-400">Tidak ada foto</span>';
-                }
-                
-                openModal('modal-detail');
-                return;
-            }
-
-            if(e.target.closest('.btn-open-edit')){
-                document.getElementById('e_row_id').value = tr.dataset.id || '';
-                document.getElementById('e_no_tiket').value = tr.dataset.no_tiket || '';
-                document.getElementById('e_nama_teknisi').value = tr.dataset.nama_teknisi || '';
-                document.getElementById('e_kode_aset').value = tr.dataset.kode_aset || '';
-                document.getElementById('e_lokasi_aset').value = tr.dataset.lokasi_aset || '';
-                document.getElementById('e_hasil_cek').value = tr.dataset.hasil_cek || '';
-                openModal('modal-edit');
-                return;
-            }
-
-            if(e.target.closest('.btn-delete-row')){
-                if(!confirm('Yakin hapus data ini? (UI saja)')) return;
-                if(dt) dt.row(tr).remove().draw(false);
-                else tr.remove();
-                toast('Data terhapus (UI).');
-                return;
-            }
-        });
-
-        // CREATE submit (UI)
-        document.getElementById('form-create')?.addEventListener('submit', function(ev){
-            ev.preventDefault();
-
-            const fd = new FormData(this);
-            const no_tiket = (fd.get('no_tiket')||'').trim();
-            const nama_teknisi = (fd.get('nama_teknisi')||'').trim();
-            const kode_aset = (fd.get('kode_aset')||'').trim();
-            const lokasi_aset = (fd.get('lokasi_aset')||'').trim();
-            const hasil_cek = (fd.get('hasil_cek')||'').trim();
-
-            if(!no_tiket || !nama_teknisi || !kode_aset || !lokasi_aset || !hasil_cek){
-                toast('Lengkapi semua field.');
-                return;
-            }
-
-            const id = 'ui-' + Math.random().toString(36).slice(2,9);
-            const createdAt = nowStr();
-
-            if(dt){
-                const node = dt.row.add([
-                    `<strong class="text-primary-500">${escapeHtml(no_tiket)}</strong>`,
-                    buildLokasiCell(kode_aset, lokasi_aset),
-                    `<div class="max-w-xs">${escapeHtml(limitText(hasil_cek, 60))}</div>`,
-                    `<div class="max-w-xs text-sm">-</div>`, // Suku Cadang
-                    `<span class="text-gray-400 text-sm">Tidak ada foto</span>`, // Foto Bukti
-                    `${escapeHtml(nama_teknisi)}`,
-                    `${escapeHtml(createdAt)}`,
-                    buildAksiCell()
-                ]).draw(false).node();
-
-                node.dataset.id = id;
-                node.dataset.no_tiket = no_tiket;
-                node.dataset.kode_aset = kode_aset;
-                node.dataset.lokasi_aset = lokasi_aset;
-                node.dataset.hasil_cek = hasil_cek;
-                node.dataset.suku_cadang = '-';
-                node.dataset.foto_bukti_selesai = '';
-                node.dataset.nama_teknisi = nama_teknisi;
-                node.dataset.created_at = createdAt;
-            }else{
-                const rowHtml = `
-                    <tr data-id="${escapeHtml(id)}"
-                        data-no_tiket="${escapeHtml(no_tiket)}"
-                        data-kode_aset="${escapeHtml(kode_aset)}"
-                        data-lokasi_aset="${escapeHtml(lokasi_aset)}"
-                        data-hasil_cek="${escapeHtml(hasil_cek)}"
-                        data-suku_cadang="-"
-                        data-foto_bukti_selesai=""
-                        data-nama_teknisi="${escapeHtml(nama_teknisi)}"
-                        data-created_at="${escapeHtml(createdAt)}">
-                        <td class="text-center"><strong class="text-primary-500">${escapeHtml(no_tiket)}</strong></td>
-                        <td class="text-left">${buildLokasiCell(kode_aset, lokasi_aset)}</td>
-                        <td class="text-left"><div class="max-w-xs">${escapeHtml(limitText(hasil_cek, 60))}</div></td>
-                        <td class="text-left"><div class="max-w-xs text-sm">-</div></td>
-                        <td class="text-center"><span class="text-gray-400 text-sm">Tidak ada foto</span></td>
-                        <td class="text-left">${escapeHtml(nama_teknisi)}</td>
-                        <td class="text-center">${escapeHtml(createdAt)}</td>
-                        <td class="text-center">${buildAksiCell()}</td>
-                    </tr>
-                `;
-                document.getElementById('table-body').insertAdjacentHTML('afterbegin', rowHtml);
-            }
-
-            closeModal('modal-create');
-            toast('Data ditambahkan (UI).');
-        });
-
-        // EDIT submit (UI)
-        document.getElementById('form-edit')?.addEventListener('submit', function(ev){
-            ev.preventDefault();
-
-            const id = document.getElementById('e_row_id').value;
-            const no_tiket = document.getElementById('e_no_tiket').value.trim();
-            const nama_teknisi = document.getElementById('e_nama_teknisi').value.trim();
-            const kode_aset = document.getElementById('e_kode_aset').value.trim();
-            const lokasi_aset = document.getElementById('e_lokasi_aset').value.trim();
-            const hasil_cek = document.getElementById('e_hasil_cek').value.trim();
-
-            if(!id){ toast('Row tidak ditemukan.'); return; }
-
-            let tr = null;
-            document.querySelectorAll('#data-table tbody tr').forEach(r=>{
-                if(r.dataset.id === id) tr = r;
-            });
-            if(!tr){ toast('Row tidak ditemukan.'); return; }
-
-            tr.dataset.no_tiket = no_tiket;
-            tr.dataset.nama_teknisi = nama_teknisi;
-            tr.dataset.kode_aset = kode_aset;
-            tr.dataset.lokasi_aset = lokasi_aset;
-            tr.dataset.hasil_cek = hasil_cek;
-
-            if(dt){
-                const rowIdx = dt.row(tr).index();
-                dt.cell(rowIdx, 0).data(`<strong class="text-primary-500">${escapeHtml(no_tiket)}</strong>`);
-                dt.cell(rowIdx, 1).data(buildLokasiCell(kode_aset, lokasi_aset));
-                dt.cell(rowIdx, 2).data(`<div class="max-w-xs">${escapeHtml(limitText(hasil_cek, 60))}</div>`);
-                // Kolom 3 (Suku Cadang) dan 4 (Foto) tidak diupdate karena tidak ada di form edit
-                dt.cell(rowIdx, 5).data(`${escapeHtml(nama_teknisi)}`);
-                dt.draw(false);
-            }else{
-                tr.children[0].innerHTML = `<strong class="text-primary-500">${escapeHtml(no_tiket)}</strong>`;
-                tr.children[1].innerHTML = buildLokasiCell(kode_aset, lokasi_aset);
-                tr.children[2].innerHTML = `<div class="max-w-xs">${escapeHtml(limitText(hasil_cek, 60))}</div>`;
-                // tr.children[3] = Suku Cadang (tidak diupdate)
-                // tr.children[4] = Foto Bukti (tidak diupdate)
-                tr.children[5].textContent = nama_teknisi;
-            }
-
-            closeModal('modal-edit');
-            toast('Data diupdate (UI).');
-        });
-    </script>
+        $('.btn-close-modal').click(() => { modal.classList.remove('active'); $('#sparepart-container').empty(); scIndex = 0; });
+    });
+</script>
 @endpush

@@ -2,132 +2,99 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Models\TimLapangan;
+use App\Models\User; // Pastikan model User diimport
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class TimLapanganController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar tim lapangan.
      */
     public function index()
     {
-        // $this->setRule('tim-lapangan.read');
-
-        // TODO: Replace with actual database query
-        // $timLapangan = TimLapangan::with(['leader', 'anggota'])->get();
+        // Ambil data tim beserta data leadernya (eager loading)
+        $timLapangan = TimLapangan::with('leader')->latest()->get();
         
-        // Mockup data
-        $timLapangan = [
-            [
-                'id' => 1,
-                'nama_tim' => 'Tim Teknisi 1',
-                'kategori' => 'Teknisi',
-                'leader_id' => 2,
-                'leader_name' => 'Budi Santoso',
-                'jumlah_personel' => 5,
-                'created_at' => '2024-01-15 08:00:00'
-            ],
-            [
-                'id' => 2,
-                'nama_tim' => 'Tim Teknisi 2',
-                'kategori' => 'Teknisi',
-                'leader_id' => 3,
-                'leader_name' => 'Siti Aminah',
-                'jumlah_personel' => 4,
-                'created_at' => '2024-01-15 08:00:00'
-            ],
-            [
-                'id' => 3,
-                'nama_tim' => 'Tim Survey 1',
-                'kategori' => 'Surveyor',
-                'leader_id' => 4,
-                'leader_name' => 'Ahmad Fauzi',
-                'jumlah_personel' => 3,
-                'created_at' => '2024-01-16 08:00:00'
-            ],
-            [
-                'id' => 4,
-                'nama_tim' => 'Tim Survey 2',
-                'kategori' => 'Surveyor',
-                'leader_id' => 5,
-                'leader_name' => 'Dewi Sartika',
-                'jumlah_personel' => 3,
-                'created_at' => '2024-01-16 08:00:00'
-            ],
-            [
-                'id' => 5,
-                'nama_tim' => 'Tim Survey 3',
-                'kategori' => 'Surveyor',
-                'leader_id' => 6,
-                'leader_name' => 'Hendra Wijaya',
-                'jumlah_personel' => 3,
-                'created_at' => '2024-01-16 08:00:00'
-            ],
-        ];
+        // Ambil data user untuk dropdown "Ketua Tim" di Modal Tambah/Edit
+        // Sesuaikan filter jika hanya user tertentu yang boleh jadi ketua
+        $users = User::orderBy('name', 'asc')->get();
 
-        return view('tim-lapangan.index', compact('timLapangan'));
+        return view('tim-lapangan.index', compact('timLapangan', 'users'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data tim baru.
      */
     public function store(Request $request)
     {
-        // $this->setRule('tim-lapangan.create');
+        $request->validate([
+            'nama_tim'        => 'required|string|max:50',
+            'kategori'        => 'required|in:Teknisi,Surveyor',
+            'leader_id'       => 'nullable|exists:users,id',
+            'jumlah_personel' => 'required|integer|min:1',
+        ]);
 
-        // TODO: Implement database insertion
-        // TimLapangan::create($request->validated());
+        try {
+            TimLapangan::create($request->all());
 
-        return redirect()->back()->with('success', 'Tim lapangan berhasil ditambahkan');
+            return redirect()->route('tim-lapangan.index')
+                ->with('success', 'Tim lapangan berhasil ditambahkan');
+        } catch (Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Mengambil data single untuk Modal Edit (AJAX).
      */
     public function edit($id)
     {
-        // $this->setRule('tim-lapangan.update');
-
-        // TODO: Replace with actual database query
-        // return TimLapangan::findOrFail($id);
-
-        // Mockup data
-        $tim = [
-            'id' => $id,
-            'nama_tim' => 'Tim Teknisi 1',
-            'kategori' => 'Teknisi',
-            'leader_id' => 2,
-            'jumlah_personel' => 5
-        ];
-
+        $tim = TimLapangan::findOrFail($id);
         return response()->json($tim);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Mengupdate data tim.
      */
     public function update(Request $request, $id)
     {
-        // $this->setRule('tim-lapangan.update');
+        $request->validate([
+            'nama_tim'        => 'required|string|max:50',
+            'kategori'        => 'required|in:Teknisi,Surveyor',
+            'leader_id'       => 'nullable|exists:users,id',
+            'jumlah_personel' => 'required|integer|min:1',
+        ]);
 
-        // TODO: Implement database update
-        // $tim = TimLapangan::findOrFail($id);
-        // $tim->update($request->validated());
+        try {
+            $tim = TimLapangan::findOrFail($id);
+            $tim->update($request->all());
 
-        return redirect()->back()->with('success', 'Tim lapangan berhasil diperbarui');
+            return redirect()->route('tim-lapangan.index')
+                ->with('success', 'Tim lapangan berhasil diperbarui');
+        } catch (Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal update data: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus data tim.
      */
     public function destroy($id)
     {
-        // $this->setRule('tim-lapangan.delete');
+        try {
+            $tim = TimLapangan::findOrFail($id);
+            $tim->delete();
 
-        // TODO: Implement database deletion
-        // TimLapangan::findOrFail($id)->delete();
-
-        return redirect()->back()->with('success', 'Tim lapangan berhasil dihapus');
+            return redirect()->route('tim-lapangan.index')
+                ->with('success', 'Tim lapangan berhasil dihapus');
+        } catch (Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
     }
 }

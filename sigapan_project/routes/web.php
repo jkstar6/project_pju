@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\Settings\RolesController;
 use App\Http\Controllers\Admin\Settings\NavigationsController;
 use App\Http\Controllers\Admin\Settings\PreferencesController;
 
+
 /* =======================
 |  PUBLIC / LANDING
 ======================= */
@@ -97,6 +98,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('tim-lapangan')->name('tim-lapangan.')->group(function () {
         Route::get('/', [TimLapanganController::class, 'index'])->name('index');
         Route::post('/', [TimLapanganController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [TimLapanganController::class, 'edit'])->name('edit');
         Route::put('/{id}', [TimLapanganController::class, 'update'])->name('update');
         Route::delete('/{id}', [TimLapanganController::class, 'destroy'])->name('destroy');
     });

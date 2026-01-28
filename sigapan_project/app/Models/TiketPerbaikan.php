@@ -31,5 +31,11 @@ class TiketPerbaikan extends Model
         return $this->belongsTo(PengaduanMasyarakat::class, 'pengaduan_id');
     }
 
+
+    // Relasi ke Aset PJU (Ini yang menyebabkan error jika tidak ada)
+    public function aset()
+    {
+        return $this->belongsTo(AsetPju::class, 'aset_pju_id');
+    }
     // Relasi ke TimLapangan, AsetPju, dll DIHAPUS DULU agar tidak error.
 }

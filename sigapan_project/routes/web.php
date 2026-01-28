@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\Settings\RolesController;
 use App\Http\Controllers\Admin\Settings\NavigationsController;
 use App\Http\Controllers\Admin\Settings\PreferencesController;
 
+
 /* =======================
 |  PUBLIC / LANDING
 ======================= */

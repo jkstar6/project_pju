@@ -291,7 +291,6 @@
                 modal.classList.add('active');
                 initMap(tr.latitude, tr.longitude);
             });
-
             $('.btn-close-modal').click(() => modal.classList.remove('active'));
         });
     </script>

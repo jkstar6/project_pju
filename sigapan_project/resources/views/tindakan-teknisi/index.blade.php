@@ -155,6 +155,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-1">Upload Foto Bukti</label>
+                        <p class=" text-sm ">Ukuran Maksimal 2 MB</p> 
                         <input type="file" name="foto_bukti_selesai" class="w-full border rounded-md px-3 py-2 text-sm">
                     </div>
                 </div>

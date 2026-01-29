@@ -322,6 +322,7 @@
 
             <div class="field" style="margin-bottom:0;">
               <div class="label">Lampiran Foto Bukti</div>
+              <p class=" text-sm opacity-45">Ukuran Maksimal 2 MB</p> 
               <div class="upload-row">
                 <label for="foto" class="btn-file">Pilih File</label>
                 <span id="file-name" class="file-hint">Tidak ada file yang dipilih</span>

@@ -86,7 +86,7 @@ class AsetPjuController extends Controller
             'kode_tiang'   => 'required|unique:aset_pju,kode_tiang,' . $aset->id,
             'jenis_lampu'  => 'nullable|string',
             'watt'         => 'nullable|numeric',
-            'status_aset'  => 'nullable|string',
+            'status_aset' => 'required|in:Usulan,Pengerjaan,Terelialisasi,Pindah,Mati',
             'kecamatan'    => 'nullable|string',
             'desa'         => 'nullable|string',
             'latitude'     => 'required|numeric',
@@ -118,7 +118,7 @@ class AsetPjuController extends Controller
             'kode_tiang'   => $request->kode_tiang,
             'jenis_lampu'  => $request->jenis_lampu,
             'watt'         => $request->watt,
-            'status_aset'  => $request->status_aset ?? $aset->status_aset,
+            'status_aset' => $request->status_aset,
 
             // Lokasi aset dari klik/adjust di map
             'latitude'     => $request->latitude,

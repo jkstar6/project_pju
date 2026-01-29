@@ -69,6 +69,7 @@
                                         @if ($item->status_aset == 'Usulan') bg-yellow-100 text-yellow-700
                                         @elseif($item->status_aset == 'Pengerjaan') bg-blue-100 text-blue-700
                                         @elseif($item->status_aset == 'Terelialisasi') bg-green-100 text-green-700
+                                        @elseif($item->status_aset == 'Pindah') bg-purple-100 text-purple-700
                                         @elseif($item->status_aset == 'Mati') bg-red-100 text-red-700
                                         @endif">
                                         {{ $item->status_aset }}
@@ -133,6 +134,7 @@
                                 <option>Usulan</option>
                                 <option>Pengerjaan</option>
                                 <option>Terelialisasi</option>
+                                <option>Pindah</option>
                                 <option>Mati</option>
                             </select>
                         </div>
@@ -245,6 +247,7 @@
                                 <option>Usulan</option>
                                 <option>Pengerjaan</option>
                                 <option>Terelialisasi</option>
+                                <option>Pindah</option>
                                 <option>Mati</option>
                             </select>
                         </div>

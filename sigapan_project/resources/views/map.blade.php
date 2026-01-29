@@ -314,6 +314,7 @@
 
 @section('content')
     <main class="bg-neutral-200 py-6">
+        <main class="bg-neutral-200 py-6">
         <div class="container mx-auto px-4 mb-4 search-container">
             <div class="max-w-2xl mx-auto flex shadow-sm bg-white rounded-lg overflow-hidden border">
                 <input id="addressSearch" type="text" placeholder="Masukkan nama jalan atau tempat..." class="flex-1 px-4 py-3 outline-none text-sm">
@@ -332,25 +333,25 @@
                         <div class="legend-color" style="background: #10b981;"></div>
                         <span>Aktif</span>
                     </div>
-                    <div class="legend-item" data-status="Mati">
-                        <input type="checkbox" class="legend-checkbox" checked data-filter="Mati">
+                    <div class="legend-item" data-status="Pindah">
+                        <input type="checkbox" class="legend-checkbox" checked data-filter="Pindah">
                         <div class="legend-color" style="background: #ef4444;"></div>
-                        <span>Mati</span>
-                    </div>
-                    <div class="legend-item" data-status="Rusak">
-                        <input type="checkbox" class="legend-checkbox" checked data-filter="Rusak">
-                        <div class="legend-color" style="background: #f97316;"></div>
-                        <span>Rusak</span>
+                        <span>Pindah</span>
                     </div>
                     <div class="legend-item" data-status="Pengerjaan">
                         <input type="checkbox" class="legend-checkbox" checked data-filter="Pengerjaan">
-                        <div class="legend-color" style="background: #eab308;"></div>
+                        <div class="legend-color" style="background: #3b82f6;"></div>
                         <span>Pengerjaan</span>
                     </div>
-                    <div class="legend-item" data-status="Tidak Ada">
-                        <input type="checkbox" class="legend-checkbox" checked data-filter="Tidak Ada">
-                        <div class="legend-color" style="background: #6b7280;"></div>
-                        <span>Tidak Ada</span>
+                    <div class="legend-item" data-status="Usulan">
+                        <input type="checkbox" class="legend-checkbox" checked data-filter="Usulan">
+                        <div class="legend-color" style="background: #facc15;"></div>
+                        <span>Usulan</span>
+                    </div>
+                    <div class="legend-item" data-status="Mati">
+                        <input type="checkbox" class="legend-checkbox" checked data-filter="Mati">
+                        <div class="legend-color" style="background: #111827;"></div>
+                        <span>Mati</span>
                     </div>
 
                     <div class="filter-section">

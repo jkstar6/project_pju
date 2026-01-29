@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AsetPju;
 use App\Models\PanelKwh;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AsetPjuController extends Controller
 {
@@ -12,7 +13,6 @@ class AsetPjuController extends Controller
     {
         $asetPju = AsetPju::orderBy('created_at', 'desc')->get();
 
-        // Kirim panel untuk dropdown
         $panelKwh = PanelKwh::select('id','no_pelanggan_pln','daya_va','latitude','longitude','lokasi_panel')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -23,9 +23,7 @@ class AsetPjuController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            // ⚠️ pastikan nama tabel benar: panel_kwh (sesuai route/controller panel kamu)
-            'panel_kwh_id' => 'required|exists:panel_kwh,id',
-
+            'panel_kwh_id' => ['required', Rule::exists((new PanelKwh)->getTable(), 'id')],
             'jalan_id'     => 'nullable',
             'kode_tiang'   => 'required|unique:aset_pju,kode_tiang',
             'jenis_lampu'  => 'nullable|string',
@@ -33,16 +31,14 @@ class AsetPjuController extends Controller
             'status_aset'  => 'nullable|string',
             'kecamatan'    => 'nullable|string',
             'desa'         => 'nullable|string',
-
-            // ✅ lokasi aset dari map (klik/adjust)
             'latitude'     => 'required|numeric',
             'longitude'    => 'required|numeric',
         ]);
 
         $panel = PanelKwh::findOrFail($request->panel_kwh_id);
 
-        // ✅ OPTIONAL: validasi jarak maksimal dari panel (misal 500 meter)
-        $maxDistance = 500; // meter (ubah sesuai kebutuhan)
+        // Validasi jarak maksimal 500m
+        $maxDistance = 500;
         $distance = $this->distanceMeters(
             (float) $panel->latitude,
             (float) $panel->longitude,
@@ -53,7 +49,9 @@ class AsetPjuController extends Controller
         if ($distance > $maxDistance) {
             return redirect()
                 ->route('aset-pju.index')
-                ->withErrors(['latitude' => "Jarak aset terlalu jauh dari panel (maks {$maxDistance} m). Sekarang: " . round($distance) . " m"])
+                ->withErrors([
+                    'latitude' => "Jarak aset terlalu jauh dari panel (maks {$maxDistance} m). Sekarang: " . round($distance) . " m"
+                ])
                 ->withInput();
         }
 
@@ -66,7 +64,7 @@ class AsetPjuController extends Controller
             'status_aset'  => $request->status_aset ?? 'Usulan',
             'warna_map'    => 'Kuning',
 
-            // ✅ lokasi aset hasil klik/adjust (bukan ikut panel)
+            // Lokasi aset dari klik/adjust di map
             'latitude'     => $request->latitude,
             'longitude'    => $request->longitude,
 
@@ -84,23 +82,21 @@ class AsetPjuController extends Controller
         $aset = AsetPju::findOrFail($id);
 
         $request->validate([
-            'panel_kwh_id' => 'required|exists:panel_kwh,id',
+            'panel_kwh_id' => ['required', Rule::exists((new PanelKwh)->getTable(), 'id')],
             'kode_tiang'   => 'required|unique:aset_pju,kode_tiang,' . $aset->id,
             'jenis_lampu'  => 'nullable|string',
             'watt'         => 'nullable|numeric',
             'status_aset'  => 'nullable|string',
             'kecamatan'    => 'nullable|string',
             'desa'         => 'nullable|string',
-
-            // ✅ lokasi aset dari map (klik/adjust)
             'latitude'     => 'required|numeric',
             'longitude'    => 'required|numeric',
         ]);
 
         $panel = PanelKwh::findOrFail($request->panel_kwh_id);
 
-        // ✅ OPTIONAL: validasi jarak maksimal
-        $maxDistance = 500; // meter
+        // Validasi jarak maksimal 500m
+        $maxDistance = 500;
         $distance = $this->distanceMeters(
             (float) $panel->latitude,
             (float) $panel->longitude,
@@ -111,7 +107,9 @@ class AsetPjuController extends Controller
         if ($distance > $maxDistance) {
             return redirect()
                 ->route('aset-pju.index')
-                ->withErrors(['latitude' => "Jarak aset terlalu jauh dari panel (maks {$maxDistance} m). Sekarang: " . round($distance) . " m"])
+                ->withErrors([
+                    'latitude' => "Jarak aset terlalu jauh dari panel (maks {$maxDistance} m). Sekarang: " . round($distance) . " m"
+                ])
                 ->withInput();
         }
 
@@ -122,7 +120,7 @@ class AsetPjuController extends Controller
             'watt'         => $request->watt,
             'status_aset'  => $request->status_aset ?? $aset->status_aset,
 
-            // ✅ lokasi aset hasil klik/adjust
+            // Lokasi aset dari klik/adjust di map
             'latitude'     => $request->latitude,
             'longitude'    => $request->longitude,
 
@@ -137,8 +135,7 @@ class AsetPjuController extends Controller
 
     public function destroy($id)
     {
-        $aset = AsetPju::findOrFail($id);
-        $aset->delete();
+        AsetPju::findOrFail($id)->delete();
 
         return redirect()
             ->route('aset-pju.index')

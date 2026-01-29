@@ -21,6 +21,13 @@
         }
 
         #modalTambahAset { z-index: 9999; }
+
+        /* error UI */
+        .input-error {
+            border-color: #ef4444 !important;
+            background: #fef2f2 !important;
+        }
+        .text-error { color: #ef4444 !important; }
     </style>
 @endpush
 
@@ -164,11 +171,11 @@
                                 @endforeach
                             </select>
                             <p class="text-xs text-gray-500 mt-1">
-                                Pilih panel dulu, lalu klik peta untuk menentukan lokasi aset. Sistem akan menghitung jarak panel → aset.
+                                Pilih panel dulu, lalu klik peta untuk menentukan lokasi aset. Sistem menghitung jarak panel → aset (maks 500m).
                             </p>
                         </div>
 
-                        {{-- JARAK PANEL -> ASET (TAMBAH) --}}
+                        {{-- JARAK --}}
                         <div class="col-span-2">
                             <label class="text-sm font-medium">Jarak Panel ke Aset (meter)</label>
                             <div class="flex items-center gap-3 mt-1">
@@ -177,9 +184,7 @@
                                 <input id="jarak-slider" type="range" min="0" max="500" value="0" class="flex-1">
                                 <span id="jarak-label" class="text-sm text-gray-600">0 m</span>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Klik peta untuk menentukan arah titik aset, lalu atur jaraknya untuk menggeser posisi aset.
-                            </p>
+                            <p id="jarak-warning" class="text-xs mt-2 hidden"></p>
                         </div>
 
                         <div class="col-span-2">
@@ -203,7 +208,8 @@
                         <button type="button" onclick="closeTambahAset()" class="border px-4 py-2 rounded hover:bg-gray-100">
                             Batal
                         </button>
-                        <button type="submit" class="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600">
+                        <button type="submit"
+                            class="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600">
                             Simpan Aset
                         </button>
                     </div>
@@ -275,12 +281,9 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Klik peta untuk ubah lokasi aset, atau geser jarak untuk adjust posisi aset dari panel.
-                            </p>
                         </div>
 
-                        {{-- JARAK PANEL -> ASET (EDIT) --}}
+                        {{-- JARAK (EDIT) --}}
                         <div class="col-span-2">
                             <label class="text-sm font-medium">Jarak Panel ke Aset (meter)</label>
                             <div class="flex items-center gap-3 mt-1">
@@ -289,6 +292,7 @@
                                 <input id="edit-jarak-slider" type="range" min="0" max="500" value="0" class="flex-1">
                                 <span id="edit-jarak-label" class="text-sm text-gray-600">0 m</span>
                             </div>
+                            <p id="edit-jarak-warning" class="text-xs mt-2 hidden"></p>
                         </div>
 
                         <div class="col-span-2">
@@ -312,13 +316,15 @@
                         <button type="button" onclick="closeEditAset()" class="border px-4 py-2 rounded hover:bg-gray-100">
                             Batal
                         </button>
-                        <button type="submit" class="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600">
+                        <button type="submit"
+                            class="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600">
                             Update Aset
                         </button>
                     </div>
                 </form>
             </div>
         </div>
+
     </div>
 @endsection
 
@@ -328,6 +334,8 @@
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
 
     <script>
+        const MAX_DISTANCE = 500;
+
         // Leaflet icon fix
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
@@ -347,8 +355,116 @@
             });
         });
 
+        // ===== UI CONFIG =====
+        const UI_TAMBAH = {
+            meterId: 'jarak-meter',
+            sliderId: 'jarak-slider',
+            labelId: 'jarak-label',
+            warnId: 'jarak-warning',
+            submitSelector: '#modalTambahAset button[type="submit"]'
+        };
+
+        const UI_EDIT = {
+            meterId: 'edit-jarak-meter',
+            sliderId: 'edit-jarak-slider',
+            labelId: 'edit-jarak-label',
+            warnId: 'edit-jarak-warning',
+            submitSelector: '#modalEditAset button[type="submit"]'
+        };
+
+        function setWarning(ui, message) {
+            const el = document.getElementById(ui.warnId);
+            const meter = document.getElementById(ui.meterId);
+            const slider = document.getElementById(ui.sliderId);
+            const submit = document.querySelector(ui.submitSelector);
+
+            if (!el || !meter || !slider || !submit) return;
+
+            if (message) {
+                el.classList.remove('hidden');
+                el.classList.add('text-error');
+                el.textContent = message;
+
+                meter.classList.add('input-error');
+                slider.classList.add('input-error');
+                submit.disabled = true;
+                submit.classList.add('opacity-50','cursor-not-allowed');
+            } else {
+                el.classList.add('hidden');
+                el.textContent = '';
+
+                meter.classList.remove('input-error');
+                slider.classList.remove('input-error');
+                submit.disabled = false;
+                submit.classList.remove('opacity-50','cursor-not-allowed');
+            }
+        }
+
+        function disableSubmit(ui, message) {
+            const submit = document.querySelector(ui.submitSelector);
+            if (submit) {
+                submit.disabled = true;
+                submit.classList.add('opacity-50','cursor-not-allowed');
+            }
+            if (message) setWarning(ui, message);
+        }
+
+        function clampDistance(m) {
+            const v = Math.max(0, Number(m || 0));
+            return Math.min(v, MAX_DISTANCE);
+        }
+
+        function updateDistanceUI(ui, meters) {
+            const meter = document.getElementById(ui.meterId);
+            const slider = document.getElementById(ui.sliderId);
+            const label = document.getElementById(ui.labelId);
+
+            if (meter) meter.value = Math.round(meters);
+            if (slider) {
+                slider.max = String(MAX_DISTANCE);
+                slider.value = String(Math.min(Math.round(meters), MAX_DISTANCE));
+            }
+            if (label) label.textContent = `${Math.round(meters)} m`;
+
+            if (meters > MAX_DISTANCE) {
+                setWarning(ui, `Jarak melebihi batas ${MAX_DISTANCE} meter. Pilih titik lebih dekat atau atur jarak ≤ ${MAX_DISTANCE}m.`);
+            } else {
+                setWarning(ui, '');
+            }
+        }
+
+        function initDistanceControls(meterId, sliderId, labelId, onChange, uiConfig) {
+            const meter = document.getElementById(meterId);
+            const slider = document.getElementById(sliderId);
+            const label = document.getElementById(labelId);
+            if (!meter || !slider) return;
+
+            slider.max = String(MAX_DISTANCE);
+
+            const apply = (val) => {
+                const vRaw = Number(val || 0);
+                const v = clampDistance(vRaw);
+
+                meter.value = v;
+                slider.value = v;
+                if (label) label.textContent = `${Math.round(v)} m`;
+
+                if (vRaw > MAX_DISTANCE) {
+                    setWarning(uiConfig, `Maksimal jarak ${MAX_DISTANCE} meter. Nilai disesuaikan menjadi ${MAX_DISTANCE}m.`);
+                } else {
+                    // warning jarak real di-handle updateDistanceUI
+                    setWarning(uiConfig, '');
+                }
+
+                onChange(v);
+            };
+
+            meter.addEventListener('input', () => apply(meter.value));
+            slider.addEventListener('input', () => apply(slider.value));
+        }
+
         // ======================
-        // MAP TAMBAH (PANEL + ASET + JARAK + ADJUST)
+        // MAP TAMBAH
         // ======================
         let asetMap = null;
         let panelMarker = null;
@@ -363,6 +479,8 @@
             document.getElementById('modalTambahAset').classList.remove('hidden');
             setTimeout(() => {
                 initMapAset();
+                // disable sampai user klik peta
+                disableSubmit(UI_TAMBAH, 'Silakan klik peta untuk menentukan lokasi aset.');
                 const sel = document.getElementById('aset-panel-id');
                 if (sel) sel.dispatchEvent(new Event('change'));
             }, 400);
@@ -378,6 +496,7 @@
                 asetMarker = null;
                 linePA = null;
             }
+
             selectedPanelLatLng = null;
             assetLatLng = null;
             lastBearingDeg = null;
@@ -385,7 +504,8 @@
             const sel = document.getElementById('aset-panel-id');
             if (sel) sel.value = '';
             setLatLng('', '');
-            setDistanceUI(0);
+            updateDistanceUI(UI_TAMBAH, 0);
+            setWarning(UI_TAMBAH, '');
         }
 
         function initMapAset() {
@@ -400,7 +520,6 @@
 
             asetMap.invalidateSize();
 
-            // Klik peta = set lokasi aset
             asetMap.on('click', function(e) {
                 if (!selectedPanelLatLng) {
                     alert('Pilih Panel KWh terlebih dahulu.');
@@ -409,39 +528,15 @@
                 setAssetPoint(e.latlng, true);
             });
 
-            initDistanceControls('jarak-meter', 'jarak-slider', 'jarak-label', (m) => applyDistanceAdjustment(m));
-        }
-
-        function initDistanceControls(meterId, sliderId, labelId, onChange) {
-            const meter = document.getElementById(meterId);
-            const slider = document.getElementById(sliderId);
-            const label = document.getElementById(labelId);
-            if (!meter || !slider) return;
-
-            const apply = (val) => {
-                const v = Math.max(0, Number(val || 0));
-                meter.value = v;
-                slider.value = Math.min(v, Number(slider.max || 500));
-                if (label) label.textContent = `${Math.round(v)} m`;
-                onChange(v);
-            };
-
-            meter.addEventListener('input', () => apply(meter.value));
-            slider.addEventListener('input', () => apply(slider.value));
+            initDistanceControls('jarak-meter','jarak-slider','jarak-label',
+                (m) => applyDistanceAdjustment(m),
+                UI_TAMBAH
+            );
         }
 
         function setLatLng(lat, lng) {
             document.getElementById('aset-lat').value = (lat === '' ? '' : Number(lat).toFixed(8));
             document.getElementById('aset-lng').value = (lng === '' ? '' : Number(lng).toFixed(8));
-        }
-
-        function setDistanceUI(m) {
-            const meter = document.getElementById('jarak-meter');
-            const slider = document.getElementById('jarak-slider');
-            const label = document.getElementById('jarak-label');
-            if (meter) meter.value = m;
-            if (slider) slider.value = Math.min(m, Number(slider.max || 500));
-            if (label) label.textContent = `${Math.round(m)} m`;
         }
 
         function applySelectedPanelToTambah() {
@@ -469,8 +564,12 @@
             if (linePA) { asetMap.removeLayer(linePA); linePA = null; }
             assetLatLng = null;
             lastBearingDeg = null;
+
             setLatLng('', '');
-            setDistanceUI(0);
+            updateDistanceUI(UI_TAMBAH, 0);
+
+            // disable submit sampai user klik map
+            disableSubmit(UI_TAMBAH, 'Silakan klik peta untuk menentukan lokasi aset.');
         }
 
         document.addEventListener('change', function(e) {
@@ -497,7 +596,7 @@
 
             const dist = selectedPanelLatLng ? selectedPanelLatLng.distanceTo(assetLatLng) : 0;
             setLatLng(assetLatLng.lat, assetLatLng.lng);
-            setDistanceUI(Math.round(dist));
+            updateDistanceUI(UI_TAMBAH, dist);
         }
 
         function drawLineTambah() {
@@ -509,13 +608,16 @@
 
         function applyDistanceAdjustment(meter) {
             if (!selectedPanelLatLng) return;
-            if (lastBearingDeg === null) return; // belum ada arah
+            if (lastBearingDeg === null) {
+                disableSubmit(UI_TAMBAH, 'Klik peta untuk menentukan arah titik aset terlebih dahulu.');
+                return;
+            }
             const dest = destinationPoint(selectedPanelLatLng, lastBearingDeg, Number(meter || 0));
             setAssetPoint(dest, false);
         }
 
         // ======================
-        // MAP EDIT (PANEL + ASET + JARAK + ADJUST)
+        // MAP EDIT
         // ======================
         let editMap = null;
         let editPanelMarker = null;
@@ -537,11 +639,13 @@
             document.getElementById('edit-desa').value = data.desa ?? '';
 
             document.getElementById('edit-panel-id').value = data.panel_kwh_id ?? '';
-
             document.getElementById('formEditAset').action = `{{ url('/aset-pju') }}/${data.id}`;
 
             setTimeout(() => {
                 initMapEdit();
+                // disable sampai valid
+                disableSubmit(UI_EDIT, 'Silakan klik peta untuk menentukan lokasi aset (atau pastikan jarak ≤ 500m).');
+
                 const sel = document.getElementById('edit-panel-id');
                 if (sel) sel.dispatchEvent(new Event('change'));
 
@@ -564,6 +668,8 @@
             editPanelLatLng = null;
             editAssetLatLng = null;
             editBearingDeg = null;
+
+            setWarning(UI_EDIT, '');
         }
 
         function initMapEdit() {
@@ -586,21 +692,15 @@
                 setEditAssetPoint(e.latlng, true);
             });
 
-            initDistanceControls('edit-jarak-meter', 'edit-jarak-slider', 'edit-jarak-label', (m) => applyEditDistance(m));
+            initDistanceControls('edit-jarak-meter','edit-jarak-slider','edit-jarak-label',
+                (m) => applyEditDistance(m),
+                UI_EDIT
+            );
         }
 
         function setEditLatLng(lat, lng) {
             document.getElementById('edit-lat').value = (lat === '' ? '' : Number(lat).toFixed(8));
             document.getElementById('edit-lng').value = (lng === '' ? '' : Number(lng).toFixed(8));
-        }
-
-        function setEditDistanceUI(m) {
-            const meter = document.getElementById('edit-jarak-meter');
-            const slider = document.getElementById('edit-jarak-slider');
-            const label = document.getElementById('edit-jarak-label');
-            if (meter) meter.value = m;
-            if (slider) slider.value = Math.min(m, Number(slider.max || 500));
-            if (label) label.textContent = `${Math.round(m)} m`;
         }
 
         function applySelectedPanelToEdit() {
@@ -622,12 +722,16 @@
 
             editPanelMarker.bindPopup(`<b>${label}</b>`);
 
-            if (editAssetLatLng) {
+            // reset garis jika belum ada aset
+            if (!editAssetLatLng) {
+                editMap.setView(editPanelLatLng, 16);
+                disableSubmit(UI_EDIT, 'Silakan klik peta untuk menentukan lokasi aset.');
+            } else {
                 editBearingDeg = bearingDeg(editPanelLatLng, editAssetLatLng);
                 drawEditLine();
-                setEditDistanceUI(Math.round(editPanelLatLng.distanceTo(editAssetLatLng)));
-            } else {
-                editMap.setView(editPanelLatLng, 16);
+
+                const dist = editPanelLatLng.distanceTo(editAssetLatLng);
+                updateDistanceUI(UI_EDIT, dist);
             }
         }
 
@@ -654,7 +758,8 @@
             drawEditLine();
 
             if (editPanelLatLng) {
-                setEditDistanceUI(Math.round(editPanelLatLng.distanceTo(editAssetLatLng)));
+                const dist = editPanelLatLng.distanceTo(editAssetLatLng);
+                updateDistanceUI(UI_EDIT, dist);
             }
 
             setEditLatLng(editAssetLatLng.lat, editAssetLatLng.lng);
@@ -669,7 +774,10 @@
 
         function applyEditDistance(meter) {
             if (!editPanelLatLng) return;
-            if (editBearingDeg === null) return;
+            if (editBearingDeg === null) {
+                disableSubmit(UI_EDIT, 'Klik peta untuk menentukan arah titik aset terlebih dahulu.');
+                return;
+            }
             const dest = destinationPoint(editPanelLatLng, editBearingDeg, Number(meter || 0));
             setEditAssetPoint(dest, false);
         }

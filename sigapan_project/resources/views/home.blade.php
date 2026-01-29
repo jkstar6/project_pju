@@ -36,25 +36,19 @@
               </div>
               <div class="flex flex-col items-center gap-4 mt-6 sm:mt-8 lg:mt-10">
                 <div class="animate-y">
-                  <button class="btn btn-primary btn-md capitalize">
+                  <button class="btn btn-primary btn-md capitalize" onclick="location.href='./map'">
                     <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
-                      <a href="./map">
-                        Lihat Peta
-                      </a>
+                      Lihat Peta
                     </span>
                   </button>
-                  <button class="btn btn-primary btn-md capitalize">
-                    <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
-                      <a href="./aduan">
+                  <button class="btn btn-primary btn-md capitalize" onclick="location.href='./aduan'">
+                    <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1" >
                         Kirim Aduan
-                      </a>
                     </span>
                   </button>
-                  <button class="btn btn-primary btn-md capitalize">
+                  <button class="btn btn-primary btn-md capitalize" onclick="location.href='./daftar-aduan'">
                     <span class="flex items-center gap-2 ltr:-ml-1 rtl:-mr-1">
-                      <a href="./daftar-aduan">
                         Daftar Aduan
-                      </a>
                     </span>
                   </button>
                 </div>

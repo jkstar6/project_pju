@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'map')
+@section('title', 'Peta Distribusi Lampu PJU Kabupaten Bantul')
 
 @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />

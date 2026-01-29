@@ -45,7 +45,7 @@ return new class extends Migration
             $table->date('tgl_koneksi')->nullable();
             $table->decimal('panjang_kabel_est', 6, 2)->nullable();
             $table->text('keterangan_jalur')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
         });
 
         // 3. Tabel Progres Pengerjaan

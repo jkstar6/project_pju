@@ -163,11 +163,27 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-gray-500 mt-1">Lokasi aset otomatis mengikuti panel yang dipilih.</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Pilih panel dulu, lalu klik peta untuk menentukan lokasi aset. Sistem akan menghitung jarak panel → aset.
+                            </p>
+                        </div>
+
+                        {{-- JARAK PANEL -> ASET (TAMBAH) --}}
+                        <div class="col-span-2">
+                            <label class="text-sm font-medium">Jarak Panel ke Aset (meter)</label>
+                            <div class="flex items-center gap-3 mt-1">
+                                <input id="jarak-meter" type="number" min="0" step="1"
+                                       class="w-32 border rounded px-3 py-2 bg-gray-50 text-sm" value="0">
+                                <input id="jarak-slider" type="range" min="0" max="500" value="0" class="flex-1">
+                                <span id="jarak-label" class="text-sm text-gray-600">0 m</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Klik peta untuk menentukan arah titik aset, lalu atur jaraknya untuk menggeser posisi aset.
+                            </p>
                         </div>
 
                         <div class="col-span-2">
-                            <label class="text-sm font-medium block mb-2">Lokasi (Terkunci berdasarkan Panel)</label>
+                            <label class="text-sm font-medium block mb-2">Lokasi (Panel & Aset)</label>
                             <div id="map-aset"></div>
 
                             <div class="grid grid-cols-2 gap-3 mt-3">
@@ -259,11 +275,24 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-gray-500 mt-1">Lokasi aset otomatis mengikuti panel yang dipilih.</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Klik peta untuk ubah lokasi aset, atau geser jarak untuk adjust posisi aset dari panel.
+                            </p>
+                        </div>
+
+                        {{-- JARAK PANEL -> ASET (EDIT) --}}
+                        <div class="col-span-2">
+                            <label class="text-sm font-medium">Jarak Panel ke Aset (meter)</label>
+                            <div class="flex items-center gap-3 mt-1">
+                                <input id="edit-jarak-meter" type="number" min="0" step="1"
+                                       class="w-32 border rounded px-3 py-2 bg-gray-50 text-sm" value="0">
+                                <input id="edit-jarak-slider" type="range" min="0" max="500" value="0" class="flex-1">
+                                <span id="edit-jarak-label" class="text-sm text-gray-600">0 m</span>
+                            </div>
                         </div>
 
                         <div class="col-span-2">
-                            <label class="text-sm font-medium block mb-2">Lokasi (Terkunci berdasarkan Panel)</label>
+                            <label class="text-sm font-medium block mb-2">Lokasi (Panel & Aset)</label>
                             <div id="map-edit-aset"></div>
 
                             <div class="grid grid-cols-2 gap-3 mt-3">
@@ -299,6 +328,7 @@
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
 
     <script>
+        // Leaflet icon fix
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -318,31 +348,44 @@
         });
 
         // ======================
-        // MAP TAMBAH (TERKUNCI PANEL)
+        // MAP TAMBAH (PANEL + ASET + JARAK + ADJUST)
         // ======================
         let asetMap = null;
         let panelMarker = null;
+        let asetMarker = null;
+        let linePA = null;
+
+        let selectedPanelLatLng = null;
+        let assetLatLng = null;
+        let lastBearingDeg = null;
 
         function openTambahAset() {
             document.getElementById('modalTambahAset').classList.remove('hidden');
-            setTimeout(() => { initMapAset(); }, 400);
+            setTimeout(() => {
+                initMapAset();
+                const sel = document.getElementById('aset-panel-id');
+                if (sel) sel.dispatchEvent(new Event('change'));
+            }, 400);
         }
 
         function closeTambahAset() {
             document.getElementById('modalTambahAset').classList.add('hidden');
 
-            // reset map instance
             if (asetMap) {
                 asetMap.remove();
                 asetMap = null;
                 panelMarker = null;
+                asetMarker = null;
+                linePA = null;
             }
+            selectedPanelLatLng = null;
+            assetLatLng = null;
+            lastBearingDeg = null;
 
-            // reset dropdown & coords (opsional)
             const sel = document.getElementById('aset-panel-id');
             if (sel) sel.value = '';
-            document.getElementById('aset-lat').value = '';
-            document.getElementById('aset-lng').value = '';
+            setLatLng('', '');
+            setDistanceUI(0);
         }
 
         function initMapAset() {
@@ -356,12 +399,49 @@
             }).addTo(asetMap);
 
             asetMap.invalidateSize();
-            // TIDAK ADA click event -> terkunci
+
+            // Klik peta = set lokasi aset
+            asetMap.on('click', function(e) {
+                if (!selectedPanelLatLng) {
+                    alert('Pilih Panel KWh terlebih dahulu.');
+                    return;
+                }
+                setAssetPoint(e.latlng, true);
+            });
+
+            initDistanceControls('jarak-meter', 'jarak-slider', 'jarak-label', (m) => applyDistanceAdjustment(m));
+        }
+
+        function initDistanceControls(meterId, sliderId, labelId, onChange) {
+            const meter = document.getElementById(meterId);
+            const slider = document.getElementById(sliderId);
+            const label = document.getElementById(labelId);
+            if (!meter || !slider) return;
+
+            const apply = (val) => {
+                const v = Math.max(0, Number(val || 0));
+                meter.value = v;
+                slider.value = Math.min(v, Number(slider.max || 500));
+                if (label) label.textContent = `${Math.round(v)} m`;
+                onChange(v);
+            };
+
+            meter.addEventListener('input', () => apply(meter.value));
+            slider.addEventListener('input', () => apply(slider.value));
         }
 
         function setLatLng(lat, lng) {
             document.getElementById('aset-lat').value = (lat === '' ? '' : Number(lat).toFixed(8));
             document.getElementById('aset-lng').value = (lng === '' ? '' : Number(lng).toFixed(8));
+        }
+
+        function setDistanceUI(m) {
+            const meter = document.getElementById('jarak-meter');
+            const slider = document.getElementById('jarak-slider');
+            const label = document.getElementById('jarak-label');
+            if (meter) meter.value = m;
+            if (slider) slider.value = Math.min(m, Number(slider.max || 500));
+            if (label) label.textContent = `${Math.round(m)} m`;
         }
 
         function applySelectedPanelToTambah() {
@@ -376,28 +456,75 @@
             if (!asetMap) initMapAset();
             if (isNaN(lat) || isNaN(lng)) return;
 
-            setLatLng(lat, lng);
-            asetMap.setView([lat, lng], 16);
+            selectedPanelLatLng = L.latLng(lat, lng);
 
-            if (!panelMarker) {
-                panelMarker = L.marker([lat, lng], { draggable: false }).addTo(asetMap);
-            } else {
-                panelMarker.setLatLng([lat, lng]);
-            }
+            if (!panelMarker) panelMarker = L.marker(selectedPanelLatLng).addTo(asetMap);
+            else panelMarker.setLatLng(selectedPanelLatLng);
+
             panelMarker.bindPopup(`<b>${label}</b>`).openPopup();
+            asetMap.setView(selectedPanelLatLng, 16);
+
+            // reset aset & garis
+            if (asetMarker) { asetMap.removeLayer(asetMarker); asetMarker = null; }
+            if (linePA) { asetMap.removeLayer(linePA); linePA = null; }
+            assetLatLng = null;
+            lastBearingDeg = null;
+            setLatLng('', '');
+            setDistanceUI(0);
         }
 
         document.addEventListener('change', function(e) {
-            if (e.target && e.target.id === 'aset-panel-id') {
-                applySelectedPanelToTambah();
-            }
+            if (e.target && e.target.id === 'aset-panel-id') applySelectedPanelToTambah();
         });
 
+        function setAssetPoint(latlng, fromClick = false) {
+            assetLatLng = latlng;
+
+            if (!asetMarker) {
+                asetMarker = L.marker(latlng, { draggable: true }).addTo(asetMap);
+                asetMarker.on('dragend', function() {
+                    setAssetPoint(asetMarker.getLatLng(), true);
+                });
+            } else {
+                asetMarker.setLatLng(latlng);
+            }
+
+            if (fromClick && selectedPanelLatLng) {
+                lastBearingDeg = bearingDeg(selectedPanelLatLng, assetLatLng);
+            }
+
+            drawLineTambah();
+
+            const dist = selectedPanelLatLng ? selectedPanelLatLng.distanceTo(assetLatLng) : 0;
+            setLatLng(assetLatLng.lat, assetLatLng.lng);
+            setDistanceUI(Math.round(dist));
+        }
+
+        function drawLineTambah() {
+            if (!selectedPanelLatLng || !assetLatLng) return;
+            const pts = [selectedPanelLatLng, assetLatLng];
+            if (!linePA) linePA = L.polyline(pts, { weight: 4 }).addTo(asetMap);
+            else linePA.setLatLngs(pts);
+        }
+
+        function applyDistanceAdjustment(meter) {
+            if (!selectedPanelLatLng) return;
+            if (lastBearingDeg === null) return; // belum ada arah
+            const dest = destinationPoint(selectedPanelLatLng, lastBearingDeg, Number(meter || 0));
+            setAssetPoint(dest, false);
+        }
+
         // ======================
-        // MAP EDIT (TERKUNCI PANEL)
+        // MAP EDIT (PANEL + ASET + JARAK + ADJUST)
         // ======================
         let editMap = null;
         let editPanelMarker = null;
+        let editAsetMarker = null;
+        let editLine = null;
+
+        let editPanelLatLng = null;
+        let editAssetLatLng = null;
+        let editBearingDeg = null;
 
         function openEditAset(data) {
             document.getElementById('modalEditAset').classList.remove('hidden');
@@ -409,17 +536,18 @@
             document.getElementById('edit-kecamatan').value = data.kecamatan ?? '';
             document.getElementById('edit-desa').value = data.desa ?? '';
 
-            // set dropdown panel (butuh field panel_kwh_id ada di data)
-            if (data.panel_kwh_id) {
-                document.getElementById('edit-panel-id').value = data.panel_kwh_id;
-            } else {
-                document.getElementById('edit-panel-id').value = '';
-            }
+            document.getElementById('edit-panel-id').value = data.panel_kwh_id ?? '';
 
             document.getElementById('formEditAset').action = `{{ url('/aset-pju') }}/${data.id}`;
 
             setTimeout(() => {
-                applySelectedPanelToEdit();
+                initMapEdit();
+                const sel = document.getElementById('edit-panel-id');
+                if (sel) sel.dispatchEvent(new Event('change'));
+
+                if (data.latitude && data.longitude) {
+                    setEditAssetPoint(L.latLng(parseFloat(data.latitude), parseFloat(data.longitude)), true);
+                }
             }, 400);
         }
 
@@ -430,22 +558,18 @@
                 editMap.remove();
                 editMap = null;
                 editPanelMarker = null;
+                editAsetMarker = null;
+                editLine = null;
             }
+            editPanelLatLng = null;
+            editAssetLatLng = null;
+            editBearingDeg = null;
         }
 
-        function setEditLatLng(lat, lng) {
-            document.getElementById('edit-lat').value = (lat === '' ? '' : Number(lat).toFixed(8));
-            document.getElementById('edit-lng').value = (lng === '' ? '' : Number(lng).toFixed(8));
-        }
+        function initMapEdit() {
+            if (editMap) return;
 
-        function initMapEdit(lat, lng, label = 'Panel') {
-            if (editMap) {
-                editMap.remove();
-                editMap = null;
-                editPanelMarker = null;
-            }
-
-            editMap = L.map('map-edit-aset').setView([lat, lng], 16);
+            editMap = L.map('map-edit-aset').setView([-7.8867194, 110.3277543], 14);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
@@ -454,9 +578,29 @@
 
             editMap.invalidateSize();
 
-            editPanelMarker = L.marker([lat, lng], { draggable: false }).addTo(editMap);
-            editPanelMarker.bindPopup(`<b>${label}</b>`).openPopup();
-            // tidak ada click / drag -> terkunci
+            editMap.on('click', function(e) {
+                if (!editPanelLatLng) {
+                    alert('Pilih Panel KWh terlebih dahulu.');
+                    return;
+                }
+                setEditAssetPoint(e.latlng, true);
+            });
+
+            initDistanceControls('edit-jarak-meter', 'edit-jarak-slider', 'edit-jarak-label', (m) => applyEditDistance(m));
+        }
+
+        function setEditLatLng(lat, lng) {
+            document.getElementById('edit-lat').value = (lat === '' ? '' : Number(lat).toFixed(8));
+            document.getElementById('edit-lng').value = (lng === '' ? '' : Number(lng).toFixed(8));
+        }
+
+        function setEditDistanceUI(m) {
+            const meter = document.getElementById('edit-jarak-meter');
+            const slider = document.getElementById('edit-jarak-slider');
+            const label = document.getElementById('edit-jarak-label');
+            if (meter) meter.value = m;
+            if (slider) slider.value = Math.min(m, Number(slider.max || 500));
+            if (label) label.textContent = `${Math.round(m)} m`;
         }
 
         function applySelectedPanelToEdit() {
@@ -468,16 +612,102 @@
             const lng = parseFloat(opt?.dataset?.lng);
             const label = opt?.dataset?.label || 'Panel';
 
+            if (!editMap) initMapEdit();
             if (isNaN(lat) || isNaN(lng)) return;
 
-            setEditLatLng(lat, lng);
-            initMapEdit(lat, lng, label);
+            editPanelLatLng = L.latLng(lat, lng);
+
+            if (!editPanelMarker) editPanelMarker = L.marker(editPanelLatLng).addTo(editMap);
+            else editPanelMarker.setLatLng(editPanelLatLng);
+
+            editPanelMarker.bindPopup(`<b>${label}</b>`);
+
+            if (editAssetLatLng) {
+                editBearingDeg = bearingDeg(editPanelLatLng, editAssetLatLng);
+                drawEditLine();
+                setEditDistanceUI(Math.round(editPanelLatLng.distanceTo(editAssetLatLng)));
+            } else {
+                editMap.setView(editPanelLatLng, 16);
+            }
         }
 
         document.addEventListener('change', function(e) {
-            if (e.target && e.target.id === 'edit-panel-id') {
-                applySelectedPanelToEdit();
-            }
+            if (e.target && e.target.id === 'edit-panel-id') applySelectedPanelToEdit();
         });
+
+        function setEditAssetPoint(latlng, fromClick = false) {
+            editAssetLatLng = latlng;
+
+            if (!editAsetMarker) {
+                editAsetMarker = L.marker(latlng, { draggable: true }).addTo(editMap);
+                editAsetMarker.on('dragend', function() {
+                    setEditAssetPoint(editAsetMarker.getLatLng(), true);
+                });
+            } else {
+                editAsetMarker.setLatLng(latlng);
+            }
+
+            if (fromClick && editPanelLatLng) {
+                editBearingDeg = bearingDeg(editPanelLatLng, editAssetLatLng);
+            }
+
+            drawEditLine();
+
+            if (editPanelLatLng) {
+                setEditDistanceUI(Math.round(editPanelLatLng.distanceTo(editAssetLatLng)));
+            }
+
+            setEditLatLng(editAssetLatLng.lat, editAssetLatLng.lng);
+        }
+
+        function drawEditLine() {
+            if (!editPanelLatLng || !editAssetLatLng) return;
+            const pts = [editPanelLatLng, editAssetLatLng];
+            if (!editLine) editLine = L.polyline(pts, { weight: 4 }).addTo(editMap);
+            else editLine.setLatLngs(pts);
+        }
+
+        function applyEditDistance(meter) {
+            if (!editPanelLatLng) return;
+            if (editBearingDeg === null) return;
+            const dest = destinationPoint(editPanelLatLng, editBearingDeg, Number(meter || 0));
+            setEditAssetPoint(dest, false);
+        }
+
+        // ======================
+        // GEO HELPERS
+        // ======================
+        function toRad(d) { return d * Math.PI / 180; }
+        function toDeg(r) { return r * 180 / Math.PI; }
+
+        function bearingDeg(a, b) {
+            const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
+            const dLon = toRad(b.lng - a.lng);
+
+            const y = Math.sin(dLon) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+            const brng = Math.atan2(y, x);
+            return (toDeg(brng) + 360) % 360;
+        }
+
+        function destinationPoint(start, bearing, distanceMeters) {
+            const R = 6371000;
+            const brng = toRad(bearing);
+            const lat1 = toRad(start.lat);
+            const lon1 = toRad(start.lng);
+            const dr = distanceMeters / R;
+
+            const lat2 = Math.asin(
+                Math.sin(lat1) * Math.cos(dr) +
+                Math.cos(lat1) * Math.sin(dr) * Math.cos(brng)
+            );
+
+            const lon2 = lon1 + Math.atan2(
+                Math.sin(brng) * Math.sin(dr) * Math.cos(lat1),
+                Math.cos(dr) - Math.sin(lat1) * Math.sin(lat2)
+            );
+
+            return L.latLng(toDeg(lat2), toDeg(lon2));
+        }
     </script>
 @endpush

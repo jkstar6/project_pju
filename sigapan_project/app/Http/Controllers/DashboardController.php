@@ -2,65 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+
+// ⬇️ import model yang dipakai
+use App\Models\AsetPju;
+use App\Models\PanelKwh;
+use App\Models\LogSurvey;
+use App\Models\MasterJalan;
+use App\Models\TimLapangan;
 use Illuminate\Http\Request;
+use App\Models\KoneksiPjuKwh;
+use App\Models\TiketPerbaikan;
+use App\Models\TindakanTeknisi;
+use App\Models\ProgresPengerjaan;
+use App\Models\PengaduanMasyarakat;
 
 class DashboardController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display dashboard
      */
     public function index()
     {
-        // $this->setRule('dashboard.read');
-        //
-        return view('dashboard.index');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return view('dashboard.index', [
+            'aduanCount'          => PengaduanMasyarakat::count(),
+            'tiketPerbaikanCount' => TiketPerbaikan::count(),
+            'logSurveyCount'      => LogSurvey::count(),
+            'progresCount'        => ProgresPengerjaan::count(),
+            'timLapanganCount'    => TimLapangan::count(),
+            'userCount'           => User::count(),
+            'tindakanCount'       => TindakanTeknisi::count(),
+            'asetPjuCount'        => AsetPju::count(),
+            'masterJalanCount'    => MasterJalan::count(),
+            'panelKwhCount'       => PanelKwh::count(),
+            'koneksiCount'        => KoneksiPjuKwh::count(),
+        ]);
     }
 }

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Peta Distribusi Lampu PJU Kabupaten Bantul')
+@section('title', 'Peta Distribusi Lampu PJU & Panel KWH')
 
 @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -230,40 +230,40 @@
 
         .map-link {
             display: block;
-            width: 100%;
-            text-align: center;
-            padding: 12px;
+            margin-top: 12px;
             background: #14b8a6;
             color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
             text-decoration: none;
-            border-radius: 8px;
             font-weight: 600;
-            margin-top: 16px;
+            font-size: 13px;
         }
 
         .map-link:hover {
-            background: #0f9488;
+            background: #0d9488;
         }
 
         .detail-tab {
             padding: 8px 16px;
-            border: none;
             background: transparent;
+            border: none;
             cursor: pointer;
             font-weight: 600;
-            font-size: 14px;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
+            font-size: 13px;
             color: #6b7280;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
         }
 
         .detail-tab.active {
-            border-bottom-color: #14b8a6;
             color: #14b8a6;
+            border-bottom-color: #14b8a6;
         }
 
         .detail-tab:hover {
-            color: #14b8a6;
+            color: #0d9488;
         }
 
         .detail-tab-content {
@@ -332,25 +332,25 @@
                         <div class="legend-color" style="background: #10b981;"></div>
                         <span>Aktif</span>
                     </div>
-                    <div class="legend-item" data-status="Pindah">
-                        <input type="checkbox" class="legend-checkbox" checked data-filter="Pindah">
+                    <div class="legend-item" data-status="Mati">
+                        <input type="checkbox" class="legend-checkbox" checked data-filter="Mati">
                         <div class="legend-color" style="background: #ef4444;"></div>
-                        <span>Pindah</span>
+                        <span>Mati</span>
+                    </div>
+                    <div class="legend-item" data-status="Rusak">
+                        <input type="checkbox" class="legend-checkbox" checked data-filter="Rusak">
+                        <div class="legend-color" style="background: #f97316;"></div>
+                        <span>Rusak</span>
                     </div>
                     <div class="legend-item" data-status="Pengerjaan">
                         <input type="checkbox" class="legend-checkbox" checked data-filter="Pengerjaan">
-                        <div class="legend-color" style="background: #3b82f6;"></div>
+                        <div class="legend-color" style="background: #eab308;"></div>
                         <span>Pengerjaan</span>
                     </div>
-                    <div class="legend-item" data-status="Usulan">
-                        <input type="checkbox" class="legend-checkbox" checked data-filter="Usulan">
-                        <div class="legend-color" style="background: #facc15;"></div>
-                        <span>Usulan</span>
-                    </div>
-                    <div class="legend-item" data-status="Mati">
-                        <input type="checkbox" class="legend-checkbox" checked data-filter="Mati">
-                        <div class="legend-color" style="background: #111827;"></div>
-                        <span>Mati</span>
+                    <div class="legend-item" data-status="Tidak Ada">
+                        <input type="checkbox" class="legend-checkbox" checked data-filter="Tidak Ada">
+                        <div class="legend-color" style="background: #6b7280;"></div>
+                        <span>Tidak Ada</span>
                     </div>
 
                     <div class="filter-section">
@@ -368,17 +368,15 @@
                     </div>
                 </div>
 
-                <div id="map" class="border shadow-md"></div>
-                
-                <button id="toggleCluster" class="toggle-cluster active">Clustering ON</button>
-                <button id="toggleCables" class="toggle-cables">Show Cables</button>
-                
-                <button id="gpsBtn" class="gps-button" title="Lokasi Terkini">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M13 2v3M13 19v3M5 12H2m17 0h3"></path>
-                    </svg>
-                </button>
+                <div id="map">
+                    <div class="toggle-cluster" id="toggleCluster">Clustering ON</div>
+                    <div class="toggle-cables" id="toggleCables">Show Cables</div>
+                    <button class="gps-button" id="gpsBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2v3M12 19v3M5 12H2m17 0h3"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </main>
@@ -405,390 +403,411 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script>
-        // Data Panel KWH
-        const panelKWH = [
-            { id: 1, no_pelanggan_pln: "PLN-001-2024", lokasi_panel: "Jl. Kaliurang KM 5", latitude: -7.89600, longitude: 110.33800, daya_va: 10000 },
-            { id: 2, no_pelanggan_pln: "PLN-002-2024", lokasi_panel: "Jl. Gejayan", latitude: -7.89700, longitude: 110.33850, daya_va: 8000 },
-            { id: 3, no_pelanggan_pln: "PLN-003-2024", lokasi_panel: "Jl. Seturan", latitude: -7.89550, longitude: 110.33750, daya_va: 12000 },
-            { id: 4, no_pelanggan_pln: "PLN-004-2024", lokasi_panel: "Jl. Ring Road Utara", latitude: -7.89650, longitude: 110.33900, daya_va: 15000 }
-        ];
+        document.addEventListener('DOMContentLoaded', function() {
+            // Data from backend
+            const panelKWH = @json($panelKwh);
+            const streetLights = @json($streetLights);
+            const koneksiPJUKWH = @json($koneksiPjuKwh);
 
-        // Data Lampu PJU
-        const streetLights = [
-            { id: 1, panel_kwh_id: 1, kode_tiang: "PJU-001", jenis_lampu: "LED", watt: 60, status_aset: "Aktif", warna_map: "Hijau", latitude: -7.89610, longitude: 110.33843, kecamatan: "Umbulharjo", desa: "Muja Muju" },
-            { id: 2, panel_kwh_id: 1, kode_tiang: "PJU-002", jenis_lampu: "Halogen", watt: 100, status_aset: "Pindah", warna_map: "Merah", latitude: -7.89582, longitude: 110.33801, kecamatan: "Umbulharjo", desa: "Muja Muju" },
-            { id: 3, panel_kwh_id: 2, kode_tiang: "PJU-003", jenis_lampu: "Solar", watt: 80, status_aset: "Pengerjaan", warna_map: "Biru", latitude: -7.89645, longitude: 110.33902, kecamatan: "Kotagede", desa: "Rejowinangun" },
-            { id: 4, panel_kwh_id: 2, kode_tiang: "PJU-004", jenis_lampu: "LED", watt: 70, status_aset: "Aktif", warna_map: "Hijau", latitude: -7.89701, longitude: 110.33789, kecamatan: "Kotagede", desa: "Rejowinangun" },
-            { id: 5, panel_kwh_id: 3, kode_tiang: "PJU-005", jenis_lampu: "LED", watt: 50, status_aset: "Usulan", warna_map: "Kuning", latitude: -7.89554, longitude: 110.33745, kecamatan: "Banguntapan", desa: "Jambidan" },
-            { id: 6, panel_kwh_id: 3, kode_tiang: "PJU-006", jenis_lampu: "Solar", watt: 90, status_aset: "Mati", warna_map: "Hitam", latitude: -7.89672, longitude: 110.33888, kecamatan: "Banguntapan", desa: "Jambidan" },
-            { id: 7, panel_kwh_id: 4, kode_tiang: "PJU-007", jenis_lampu: "Halogen", watt: 120, status_aset: "Pindah", warna_map: "Merah", latitude: -7.89591, longitude: 110.33931, kecamatan: "Depok", desa: "Caturtunggal" },
-            { id: 8, panel_kwh_id: 4, kode_tiang: "PJU-008", jenis_lampu: "LED", watt: 60, status_aset: "Aktif", warna_map: "Hijau", latitude: -7.89633, longitude: 110.33771, kecamatan: "Depok", desa: "Caturtunggal" },
-            { id: 9, panel_kwh_id: 1, kode_tiang: "PJU-009", jenis_lampu: "LED", watt: 65, status_aset: "Aktif", warna_map: "Hijau", latitude: -7.89742, longitude: 110.33812, kecamatan: "Sewon", desa: "Bangunharjo" },
-            { id: 10, panel_kwh_id: 2, kode_tiang: "PJU-010", jenis_lampu: "Solar", watt: 100, status_aset: "Usulan", warna_map: "Kuning", latitude: -7.89788, longitude: 110.33856, kecamatan: "Sewon", desa: "Bangunharjo" },
-            { id: 11, panel_kwh_id: 3, kode_tiang: "PJU-011", jenis_lampu: "LED", watt: 75, status_aset: "Pengerjaan", warna_map: "Biru", latitude: -7.89821, longitude: 110.33902, kecamatan: "Kasihan", desa: "Tirtonirmolo" },
-            { id: 12, panel_kwh_id: 3, kode_tiang: "PJU-012", jenis_lampu: "Halogen", watt: 150, status_aset: "Mati", warna_map: "Hitam", latitude: -7.89864, longitude: 110.33941, kecamatan: "Kasihan", desa: "Tirtonirmolo" },
-            { id: 13, panel_kwh_id: 4, kode_tiang: "PJU-013", jenis_lampu: "LED", watt: 80, status_aset: "Pindah", warna_map: "Merah", latitude: -7.89905, longitude: 110.33798, kecamatan: "Gamping", desa: "Ambarketawang" },
-            { id: 14, panel_kwh_id: 4, kode_tiang: "PJU-014", jenis_lampu: "Solar", watt: 90, status_aset: "Aktif", warna_map: "Hijau", latitude: -7.89944, longitude: 110.33847, kecamatan: "Gamping", desa: "Ambarketawang" },
-            { id: 15, panel_kwh_id: 2, kode_tiang: "PJU-015", jenis_lampu: "LED", watt: 60, status_aset: "Usulan", warna_map: "Kuning", latitude: -7.89981, longitude: 110.33903, kecamatan: "Mlati", desa: "Sinduadi" },
-            { id: 16, panel_kwh_id: 1, kode_tiang: "PJU-016", jenis_lampu: "Halogen", watt: 130, status_aset: "Mati", warna_map: "Hitam", latitude: -7.90022, longitude: 110.33962, kecamatan: "Mlati", desa: "Sinduadi" }
-        ];
+            // Validate data
+            console.log('Panel KWH:', panelKWH.length);
+            console.log('Street Lights:', streetLights.length);
+            console.log('Connections:', koneksiPJUKWH.length);
+            
+            // Debug: Log unique status values
+            const uniqueStatuses = [...new Set(streetLights.map(l => l.status_aset))];
+            console.log('Unique Status Values:', uniqueStatuses);
 
-        // Data Koneksi
-        const koneksiPJUKWH = [
-            { id: 1, aset_pju_id: 1, panel_kwh_id: 1, nomor_mcb_panel: "MCB-1", fasa: "R", status_koneksi: "Aktif", tgl_koneksi: "2024-01-15", panjang_kabel_est: 45.5, keterangan_jalur: "Via Jl. Utama" },
-            { id: 2, aset_pju_id: 2, panel_kwh_id: 1, nomor_mcb_panel: "MCB-2", fasa: "S", status_koneksi: "Aktif", tgl_koneksi: "2024-01-16", panjang_kabel_est: 48.2, keterangan_jalur: "Via Jl. Utama" },
-            { id: 3, aset_pju_id: 3, panel_kwh_id: 2, nomor_mcb_panel: "MCB-1", fasa: "T", status_koneksi: "Aktif", tgl_koneksi: "2024-01-17", panjang_kabel_est: 50.0, keterangan_jalur: "Via Jl. Sekunder" },
-            { id: 4, aset_pju_id: 4, panel_kwh_id: 2, nomor_mcb_panel: "MCB-2", fasa: "R", status_koneksi: "Aktif", tgl_koneksi: "2024-01-18", panjang_kabel_est: 42.7, keterangan_jalur: "Via Jl. Sekunder" },
-            { id: 5, aset_pju_id: 5, panel_kwh_id: 3, nomor_mcb_panel: "MCB-1", fasa: "S", status_koneksi: "Aktif", tgl_koneksi: "2024-01-19", panjang_kabel_est: 55.3, keterangan_jalur: "Via Jl. Lingkungan" },
-            { id: 6, aset_pju_id: 6, panel_kwh_id: 3, nomor_mcb_panel: "MCB-2", fasa: "T", status_koneksi: "Aktif", tgl_koneksi: "2024-01-20", panjang_kabel_est: 47.8, keterangan_jalur: "Via Jl. Lingkungan" },
-            { id: 7, aset_pju_id: 7, panel_kwh_id: 4, nomor_mcb_panel: "MCB-1", fasa: "R", status_koneksi: "Aktif", tgl_koneksi: "2024-01-21", panjang_kabel_est: 60.1, keterangan_jalur: "Via Jl. Protokol" },
-            { id: 8, aset_pju_id: 8, panel_kwh_id: 4, nomor_mcb_panel: "MCB-2", fasa: "S", status_koneksi: "Aktif", tgl_koneksi: "2024-01-22", panjang_kabel_est: 58.6, keterangan_jalur: "Via Jl. Protokol" },
-            { id: 9, aset_pju_id: 9, panel_kwh_id: 1, nomor_mcb_panel: "MCB-3", fasa: "T", status_koneksi: "Aktif", tgl_koneksi: "2024-01-23", panjang_kabel_est: 49.9, keterangan_jalur: "Via Jl. Utama" },
-            { id: 10, aset_pju_id: 10, panel_kwh_id: 2, nomor_mcb_panel: "MCB-3", fasa: "R", status_koneksi: "Aktif", tgl_koneksi: "2024-01-24", panjang_kabel_est: 52.4, keterangan_jalur: "Via Jl. Sekunder" },
-            { id: 11, aset_pju_id: 11, panel_kwh_id: 3, nomor_mcb_panel: "MCB-3", fasa: "S", status_koneksi: "Aktif", tgl_koneksi: "2024-01-25", panjang_kabel_est: 46.0, keterangan_jalur: "Via Jl. Lingkungan" },
-            { id: 12, aset_pju_id: 12, panel_kwh_id: 3, nomor_mcb_panel: "MCB-4", fasa: "T", status_koneksi: "Aktif", tgl_koneksi: "2024-01-26", panjang_kabel_est: 53.7, keterangan_jalur: "Via Jl. Lingkungan" },
-            { id: 13, aset_pju_id: 13, panel_kwh_id: 4, nomor_mcb_panel: "MCB-3", fasa: "R", status_koneksi: "Aktif", tgl_koneksi: "2024-01-27", panjang_kabel_est: 59.2, keterangan_jalur: "Via Jl. Protokol" },
-            { id: 14, aset_pju_id: 14, panel_kwh_id: 4, nomor_mcb_panel: "MCB-4", fasa: "S", status_koneksi: "Aktif", tgl_koneksi: "2024-01-28", panjang_kabel_est: 61.8, keterangan_jalur: "Via Jl. Protokol" },
-            { id: 15, aset_pju_id: 15, panel_kwh_id: 2, nomor_mcb_panel: "MCB-4", fasa: "T", status_koneksi: "Aktif", tgl_koneksi: "2024-01-29", panjang_kabel_est: 54.6, keterangan_jalur: "Via Jl. Sekunder" },
-            { id: 16, aset_pju_id: 16, panel_kwh_id: 1, nomor_mcb_panel: "MCB-4", fasa: "R", status_koneksi: "Aktif", tgl_koneksi: "2024-01-30", panjang_kabel_est: 47.3, keterangan_jalur: "Via Jl. Utama" }
-        ];
-
-        document.addEventListener('DOMContentLoaded', () => {
-    // Initialize map
-    const map = L.map('map').setView([-7.89610, 110.33843], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    // DOM elements
-    const lampPanel = document.getElementById('lampPanel');
-    const overlay = document.getElementById('panelOverlay');
-    const searchInput = document.getElementById('addressSearch');
-    const searchBtn = document.getElementById('searchBtn');
-    const searchLoading = document.getElementById('searchLoading');
-    const toggleCablesBtn = document.getElementById('toggleCables');
-    const toggleClusterBtn = document.getElementById('toggleCluster');
-    
-    // State variables
-    let searchMarker;
-    let cablesVisible = false;
-    let clusteringEnabled = true;
-
-    // Layer groups
-    const markerClusters = L.markerClusterGroup({
-        maxClusterRadius: 50,
-        spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false,
-        zoomToBoundsOnClick: true
-    });
-
-    const nonClusteredLayer = L.layerGroup();
-    const panelLayer = L.layerGroup();
-    const cableLayer = L.layerGroup();
-
-    // Track active filters
-    const activeFilters = new Set(['Aktif', 'Pindah', 'Pengerjaan', 'Usulan', 'Mati', 'Panel']);
-
-    // Helper functions
-    function getColor(warna) {
-        const colors = {
-            'Hijau': '#10b981',
-            'Merah': '#ef4444',
-            'Biru': '#3b82f6',
-            'Hitam': '#111827',
-            'Kuning': '#facc15'
-        };
-        return colors[warna] || '#facc15';
-    }
-
-    function getFasaColor(fasa) {
-        const colors = { 'R': '#ef4444', 'S': '#facc15', 'T': '#3b82f6' };
-        return colors[fasa] || '#6b7280';
-    }
-
-    // Search functionality
-    async function handleSearch() {
-        const query = searchInput.value.trim();
-        if (!query) return;
-
-        searchLoading.classList.remove('hidden');
-        
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
-            const data = await response.json();
-
-            if (data && data.length > 0) {
-                const lat = parseFloat(data[0].lat);
-                const lon = parseFloat(data[0].lon);
-                
-                map.flyTo([lat, lon], 17);
-                
-                if (searchMarker) map.removeLayer(searchMarker);
-                searchMarker = L.marker([lat, lon]).addTo(map)
-                    .bindPopup(`<b>Lokasi Ditemukan</b><br>${data[0].display_name}`)
-                    .openPopup();
-            } else {
-                alert("Lokasi tidak ditemukan. Coba masukkan nama jalan yang lebih spesifik.");
-            }
-        } catch (error) {
-            console.error("Search error:", error);
-            alert("Terjadi kesalahan saat mencari lokasi.");
-        } finally {
-            searchLoading.classList.add('hidden');
-        }
-    }
-
-    searchBtn.onclick = handleSearch;
-    searchInput.onkeypress = (e) => { if (e.key === 'Enter') handleSearch(); };
-
-    // Detail panel function
-    function openDetail(light) {
-        const connection = koneksiPJUKWH.find(k => k.aset_pju_id === light.id);
-        const panel = connection ? panelKWH.find(p => p.id === connection.panel_kwh_id) : null;
-
-        const pjuContent = `
-            <div class="badge">${light.kode_tiang}</div>
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">Status</span>
-                    <span>${light.status_aset}</span>
-                </div>
-            </div>
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">Jenis Lampu</span>
-                    <span>${light.jenis_lampu}</span>
-                </div>
-            </div>
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">Daya</span>
-                    <span>${light.watt} Watt</span>
-                </div>
-            </div>
-            <div style="font-size: 12px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px;">
-                <strong>Wilayah</strong><br>
-                ${light.kecamatan}, ${light.desa}
-            </div>
-            <a href="https://www.google.com/maps/search/?api=1&query=${light.latitude},${light.longitude}"
-               target="_blank" class="map-link">Buka di Google Maps</a>
-        `;
-
-        const kwhContent = panel ? `
-            <div class="badge" style="background: #fef3c7; color: #92400e;">${panel.no_pelanggan_pln}</div>
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">Lokasi Panel</span>
-                    <span>${panel.lokasi_panel}</span>
-                </div>
-            </div>
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">Daya VA</span>
-                    <span>${panel.daya_va} VA</span>
-                </div>
-            </div>
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">Koordinat</span>
-                    <span style="font-size: 11px;">${panel.latitude.toFixed(5)}, ${panel.longitude.toFixed(5)}</span>
-                </div>
-            </div>
-            <a href="https://www.google.com/maps/search/?api=1&query=${panel.latitude},${panel.longitude}"
-               target="_blank" class="map-link" style="background: #f59e0b;">Lihat Panel di Maps</a>
-        ` : `<p class="text-gray-400 text-sm">Tidak ada panel KWH yang terhubung.</p>`;
-
-        const cableContent = connection ? `
-            <div class="info-card" style="background: #dbeafe;">
-                <div class="info-row">
-                    <span class="info-label">Status Koneksi</span>
-                    <span style="color: #0369a1; font-weight: 700;">${connection.status_koneksi}</span>
-                </div>
-            </div>
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">Nomor MCB Panel</span>
-                    <span style="font-family: monospace; font-weight: 600;">${connection.nomor_mcb_panel}</span>
-                </div>
-            </div>
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">Fasa</span>
-                    <span style="color: ${getFasaColor(connection.fasa)}; font-weight: 700; font-size: 18px;">${connection.fasa}</span>
-                </div>
-            </div>
-            ${connection.tgl_koneksi ? `
-                <div class="info-card">
-                    <div class="info-row">
-                        <span class="info-label">Tanggal Koneksi</span>
-                        <span>${new Date(connection.tgl_koneksi).toLocaleDateString('id-ID')}</span>
-                    </div>
-                </div>
-            ` : ''}
-            ${connection.panjang_kabel_est ? `
-                <div class="info-card">
-                    <div class="info-row">
-                        <span class="info-label">Panjang Kabel</span>
-                        <span>${connection.panjang_kabel_est} meter</span>
-                    </div>
-                </div>
-            ` : ''}
-            ${connection.keterangan_jalur ? `
-                <div class="info-card">
-                    <div class="info-row">
-                        <span class="info-label">Keterangan Jalur</span>
-                    </div>
-                    <div style="font-size: 12px; margin-top: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #14b8a6;">
-                        ${connection.keterangan_jalur}
-                    </div>
-                </div>
-            ` : ''}
-        ` : `<p class="text-gray-400 text-sm">Tidak ada koneksi kabel terdaftar.</p>`;
-
-        document.getElementById('tab-pju').innerHTML = pjuContent;
-        document.getElementById('tab-kwh').innerHTML = kwhContent;
-        document.getElementById('tab-cables').innerHTML = cableContent;
-
-        lampPanel.classList.add('active');
-        overlay.style.display = 'block';
-
-        // Reset to PJU tab
-        document.querySelectorAll('.detail-tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelector('[data-tab="pju"]').classList.add('active');
-        document.querySelectorAll('.detail-tab-content').forEach(content => content.style.display = 'none');
-        document.getElementById('tab-pju').style.display = 'block';
-    }
-
-    // Tab switching
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('detail-tab')) {
-            const tabName = e.target.dataset.tab;
-            document.querySelectorAll('.detail-tab-content').forEach(content => content.style.display = 'none');
-            document.querySelectorAll('.detail-tab').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).style.display = 'block';
-            e.target.classList.add('active');
-        }
-    });
-
-    // Close panel
-    document.getElementById('closePanel').onclick = () => {
-        lampPanel.classList.remove('active');
-        overlay.style.display = 'none';
-    };
-    
-    overlay.onclick = () => {
-        lampPanel.classList.remove('active');
-        overlay.style.display = 'none';
-    };
-
-    // GPS button
-    document.getElementById('gpsBtn').onclick = () => {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            map.flyTo([pos.coords.latitude, pos.coords.longitude], 18);
-        }, () => alert("Izin lokasi ditolak atau tidak tersedia."));
-    };
-
-    // Draw cables function
-    function drawCables() {
-        cableLayer.clearLayers();
-
-        if (!cablesVisible) {
-            map.removeLayer(cableLayer);
-            return;
-        }
-
-        koneksiPJUKWH.forEach(connection => {
-            const light = streetLights.find(l => l.id === connection.aset_pju_id);
-            const panel = panelKWH.find(p => p.id === connection.panel_kwh_id);
-
-            if (light && panel && connection.status_koneksi === 'Aktif' && 
-                activeFilters.has(light.status_aset) && activeFilters.has('Panel')) {
-                const line = L.polyline(
-                    [[panel.latitude, panel.longitude], [light.latitude, light.longitude]],
-                    { 
-                        color: getFasaColor(connection.fasa), 
-                        weight: 3, 
-                        opacity: 0.7,
-                        dashArray: '5, 10'
-                    }
-                );
-
-                line.bindTooltip(`${connection.nomor_mcb_panel} - Fasa ${connection.fasa}`, {
-                    permanent: false,
-                    direction: 'center',
-                    className: 'cable-tooltip'
-                });
-
-                cableLayer.addLayer(line);
-            }
-        });
-
-        if (cablesVisible) {
-            cableLayer.addTo(map);
-        }
-    }
-
-    // Toggle cables
-    toggleCablesBtn.onclick = () => {
-        cablesVisible = !cablesVisible;
-        toggleCablesBtn.classList.toggle('active');
-        toggleCablesBtn.textContent = cablesVisible ? 'Hide Cables' : 'Show Cables';
-        drawCables();
-    };
-
-    // Toggle clustering
-    toggleClusterBtn.onclick = () => {
-        clusteringEnabled = !clusteringEnabled;
-        toggleClusterBtn.classList.toggle('active');
-        toggleClusterBtn.textContent = clusteringEnabled ? 'Clustering ON' : 'Clustering OFF';
-        updateLayers();
-    };
-
-    // Update map layers - FIXED VERSION
-    function updateLayers() {
-        // Clear all layers first
-        markerClusters.clearLayers();
-        nonClusteredLayer.clearLayers();
-        panelLayer.clearLayers();
-        
-        // Remove all layers from map
-        map.removeLayer(markerClusters);
-        map.removeLayer(nonClusteredLayer);
-        map.removeLayer(panelLayer);
-
-        // Add panel markers (always non-clustered)
-        if (activeFilters.has('Panel')) {
-            panelKWH.forEach(panel => {
-                const panelIcon = L.divIcon({
-                    className: 'custom-panel-icon',
-                    html: `<div style="background: #f59e0b; color: black; width: 32px; height: 32px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">KWH</div>`,
-                    iconSize: [32, 32]
-                });
-
-                L.marker([panel.latitude, panel.longitude], { icon: panelIcon })
-                    .addTo(panelLayer)
-                    .bindPopup(`
-                        <div style="font-size: 13px;">
-                            <strong style="color: #f59e0b;">Panel KWH</strong><br>
-                            <strong>No. PLN:</strong> ${panel.no_pelanggan_pln}<br>
-                            <strong>Lokasi:</strong> ${panel.lokasi_panel}<br>
-                            <strong>Daya:</strong> ${panel.daya_va} VA
-                        </div>
-                    `);
+            // Initialize map
+            const map = L.map('map', {
+                center: [-7.8753849, 110.3289243],
+                zoom: 13,
+                zoomControl: true,
+                scrollWheelZoom: true
             });
-            panelLayer.addTo(map);
-        }
 
-        // Add streetlight markers with glow effects
-        const glowLayers = L.layerGroup();
-        
-        streetLights.forEach(light => {
-            if (activeFilters.has(light.status_aset)) {
-                const color = getColor(light.warna_map);
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Layer groups
+            const markerClusters = L.markerClusterGroup({
+                maxClusterRadius: 50,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true
+            });
+            const nonClusteredLayer = L.layerGroup();
+            const panelLayer = L.layerGroup();
+            const cableLayer = L.layerGroup();
+            const glowLayer = L.layerGroup();
+
+            // State variables
+            let activeFilters = new Set(['Aktif', 'Mati', 'Rusak', 'Pengerjaan', 'Tidak Ada', 'Panel']);
+            let cablesVisible = false;
+            let clusteringEnabled = true;
+            let searchMarker;
+
+            // UI Elements
+            const lampPanel = document.getElementById('lampPanel');
+            const overlay = document.getElementById('panelOverlay');
+            const searchInput = document.getElementById('addressSearch');
+            const searchBtn = document.getElementById('searchBtn');
+            const searchLoading = document.getElementById('searchLoading');
+            const toggleCablesBtn = document.getElementById('toggleCables');
+            const toggleClusterBtn = document.getElementById('toggleCluster');
+
+            // Helper functions - FIXED: Better color handling
+            function getColor(warna) {
+                if (!warna) return '#6b7280';
                 
-                // Create glow effect for certain statuses
-                if (['Aktif', 'Mati', 'Pengerjaan'].includes(light.status_aset)) {
-                    const glow = L.circleMarker([light.latitude, light.longitude], {
+                const colorMap = {
+                    'green': '#10b981',
+                    'red': '#ef4444',
+                    'orange': '#f97316',
+                    'yellow': '#eab308',
+                    'gray': '#6b7280',
+                    'Aktif': '#10b981',
+                    'Mati': '#ef4444',
+                    'Rusak': '#f97316',
+                    'Pengerjaan': '#eab308',
+                    'Tidak Ada': '#6b7280'
+                };
+                
+                const color = colorMap[String(warna).toLowerCase().trim()] || colorMap[String(warna).trim()];
+                return color || '#6b7280';
+            }
+
+            function getFasaColor(fasa) {
+                const fasaMap = {
+                    'R': '#ef4444',
+                    'S': '#eab308',
+                    'T': '#3b82f6'
+                };
+                return fasaMap[String(fasa).trim()] || '#6b7280';
+            }
+
+            // FIXED: Proper coordinate validation
+            function isValidCoordinate(lat, lng) {
+                const latNum = parseFloat(lat);
+                const lngNum = parseFloat(lng);
+                
+                return !isNaN(latNum) && 
+                       !isNaN(lngNum) && 
+                       isFinite(latNum) && 
+                       isFinite(lngNum) &&
+                       latNum >= -90 && latNum <= 90 &&
+                       lngNum >= -180 && lngNum <= 180;
+            }
+
+            // Search functionality
+            async function handleSearch() {
+                const query = searchInput.value.trim();
+                if (!query) return;
+
+                searchLoading.classList.remove('hidden');
+                
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+                    const data = await response.json();
+
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat);
+                        const lon = parseFloat(data[0].lon);
+                        
+                        map.flyTo([lat, lon], 17);
+                        
+                        if (searchMarker) map.removeLayer(searchMarker);
+                        searchMarker = L.marker([lat, lon]).addTo(map)
+                            .bindPopup(`<b>Lokasi Ditemukan</b><br>${data[0].display_name}`)
+                            .openPopup();
+                    } else {
+                        alert("Lokasi tidak ditemukan. Coba masukkan nama jalan yang lebih spesifik.");
+                    }
+                } catch (error) {
+                    console.error("Search error:", error);
+                    alert("Terjadi kesalahan saat mencari lokasi.");
+                } finally {
+                    searchLoading.classList.add('hidden');
+                }
+            }
+
+            searchBtn.onclick = handleSearch;
+            searchInput.onkeypress = (e) => { if (e.key === 'Enter') handleSearch(); };
+
+            function openDetail(light) {
+                const connection = koneksiPJUKWH.find(k => k.aset_pju_id === light.id);
+                const panel = connection ? panelKWH.find(p => p.id === connection.panel_kwh_id) : null;
+
+                const pjuContent = `
+                    <div class="badge">${light.kode_tiang || 'N/A'}</div>
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Status</span>
+                            <span>${light.status_aset || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Jenis Lampu</span>
+                            <span>${light.jenis_lampu || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Daya</span>
+                            <span>${light.watt || 0} Watt</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                        <strong>Wilayah</strong><br>
+                        ${light.kecamatan || 'N/A'}, ${light.desa || 'N/A'}
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query=${light.latitude},${light.longitude}"
+                       target="_blank" class="map-link">Buka di Google Maps</a>
+                `;
+
+                const kwhContent = panel ? `
+                    <div class="badge" style="background: #fef3c7; color: #92400e;">${panel.no_pelanggan_pln}</div>
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Lokasi</span>
+                            <span>${panel.lokasi_panel || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Daya</span>
+                            <span>${panel.daya_va || 0} VA</span>
+                        </div>
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query=${panel.latitude},${panel.longitude}"
+                       target="_blank" class="map-link">Buka di Google Maps</a>
+                ` : `<div class="p-4 text-center text-gray-500">Panel KWH tidak terhubung</div>`;
+
+                const cablesContent = connection ? `
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Status Koneksi</span>
+                            <span>${connection.status_koneksi || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Nomor MCB</span>
+                            <span>${connection.nomor_mcb_panel || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Fasa</span>
+                            <span>${connection.fasa || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Panjang Kabel (Est)</span>
+                            <span>${connection.panjang_kabel_est || 0} m</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Tanggal Koneksi</span>
+                            <span>${connection.tgl_koneksi || 'N/A'}</span>
+                        </div>
+                    </div>
+                    ${connection.keterangan_jalur ? `
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Keterangan</span>
+                            <span>${connection.keterangan_jalur}</span>
+                        </div>
+                    </div>
+                    ` : ''}
+                ` : `<div class="p-4 text-center text-gray-500">Tidak ada koneksi kabel</div>`;
+
+                document.getElementById('tab-pju').innerHTML = pjuContent;
+                document.getElementById('tab-kwh').innerHTML = kwhContent;
+                document.getElementById('tab-cables').innerHTML = cablesContent;
+
+                lampPanel.classList.add('active');
+                overlay.style.display = 'block';
+            }
+
+            // Tab switching
+            document.querySelectorAll('.detail-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    document.querySelectorAll('.detail-tab-content').forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    document.getElementById(`tab-${tab.dataset.tab}`).style.display = 'block';
+                });
+            });
+
+            // Close panel
+            document.getElementById('closePanel').onclick = () => {
+                lampPanel.classList.remove('active');
+                overlay.style.display = 'none';
+            };
+
+            overlay.onclick = () => {
+                lampPanel.classList.remove('active');
+                overlay.style.display = 'none';
+            };
+
+            // GPS button
+            document.getElementById('gpsBtn').onclick = () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            map.flyTo([lat, lng], 16);
+                            
+                            if (searchMarker) map.removeLayer(searchMarker);
+                            searchMarker = L.marker([lat, lng]).addTo(map)
+                                .bindPopup('<b>Lokasi Anda</b>')
+                                .openPopup();
+                        },
+                        () => {
+                            alert('Tidak bisa mendapatkan lokasi Anda.');
+                        }
+                    );
+                } else {
+                    alert('Geolocation tidak didukung oleh browser Anda.');
+                }
+            };
+
+            // FIXED: Draw cables with proper coordinate validation
+            function drawCables() {
+                cableLayer.clearLayers();
+
+                koneksiPJUKWH.forEach(connection => {
+                    const light = streetLights.find(l => l.id === connection.aset_pju_id);
+                    const panel = panelKWH.find(p => p.id === connection.panel_kwh_id);
+
+                    if (light && panel && connection.status_koneksi === 'Aktif') {
+                        if (isValidCoordinate(panel.latitude, panel.longitude) && 
+                            isValidCoordinate(light.latitude, light.longitude)) {
+                            
+                            const panelLat = parseFloat(panel.latitude);
+                            const panelLng = parseFloat(panel.longitude);
+                            const lightLat = parseFloat(light.latitude);
+                            const lightLng = parseFloat(light.longitude);
+                            
+                            const line = L.polyline(
+                                [[panelLat, panelLng], [lightLat, lightLng]],
+                                { 
+                                    color: getFasaColor(connection.fasa), 
+                                    weight: 3, 
+                                    opacity: 0.7,
+                                    dashArray: '5, 10'
+                                }
+                            );
+
+                            line.bindTooltip(`${connection.nomor_mcb_panel || 'N/A'} - Fasa ${connection.fasa || 'N/A'}`, {
+                                permanent: false,
+                                direction: 'center',
+                                className: 'cable-tooltip'
+                            });
+
+                            cableLayer.addLayer(line);
+                        }
+                    }
+                });
+
+                if (cablesVisible && cableLayer.getLayers().length > 0) {
+                    cableLayer.addTo(map);
+                }
+            }
+
+            // Toggle cables
+            toggleCablesBtn.onclick = () => {
+                cablesVisible = !cablesVisible;
+                toggleCablesBtn.classList.toggle('active');
+                toggleCablesBtn.textContent = cablesVisible ? 'Hide Cables' : 'Show Cables';
+                drawCables();
+            };
+
+            // Toggle clustering
+            toggleClusterBtn.onclick = () => {
+                clusteringEnabled = !clusteringEnabled;
+                toggleClusterBtn.classList.toggle('active');
+                toggleClusterBtn.textContent = clusteringEnabled ? 'Clustering ON' : 'Clustering OFF';
+                updateLayers();
+            };
+
+            // FIXED: Complete rewrite of updateLayers function
+            function updateLayers() {
+                // Clear all layers
+                markerClusters.clearLayers();
+                nonClusteredLayer.clearLayers();
+                panelLayer.clearLayers();
+                glowLayer.clearLayers();
+
+                // Remove layers from map
+                if (map.hasLayer(markerClusters)) map.removeLayer(markerClusters);
+                if (map.hasLayer(nonClusteredLayer)) map.removeLayer(nonClusteredLayer);
+                if (map.hasLayer(panelLayer)) map.removeLayer(panelLayer);
+                if (map.hasLayer(glowLayer)) map.removeLayer(glowLayer);
+                if (map.hasLayer(cableLayer)) map.removeLayer(cableLayer);
+
+                // Add panel markers (always non-clustered)
+                if (activeFilters.has('Panel')) {
+                    panelKWH.forEach(panel => {
+                        if (isValidCoordinate(panel.latitude, panel.longitude)) {
+                            const lat = parseFloat(panel.latitude);
+                            const lng = parseFloat(panel.longitude);
+                            
+                            const panelIcon = L.divIcon({
+                                className: 'custom-panel-icon',
+                                html: `<div style="background: #f59e0b; color: black; width: 32px; height: 32px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">KWH</div>`,
+                                iconSize: [32, 32]
+                            });
+
+                            L.marker([lat, lng], { icon: panelIcon })
+                                .addTo(panelLayer)
+                                .bindPopup(`
+                                    <div style="font-size: 13px;">
+                                        <strong style="color: #f59e0b;">Panel KWH</strong><br>
+                                        <strong>No. PLN:</strong> ${panel.no_pelanggan_pln || 'N/A'}<br>
+                                        <strong>Lokasi:</strong> ${panel.lokasi_panel || 'N/A'}<br>
+                                        <strong>Daya:</strong> ${panel.daya_va || 0} VA
+                                    </div>
+                                `);
+                        }
+                    });
+                    panelLayer.addTo(map);
+                }
+
+                // Add streetlight markers
+                const validLights = [];
+                
+                streetLights.forEach(light => {
+                    // Check if coordinates are valid
+                
+
+                    // Check if status is in active filters
+         
+
+                    validLights.push(light);
+                });
+
+
+                // Create markers for each valid light
+                validLights.forEach(light => {
+                    const lat = parseFloat(light.latitude);
+                    const lng = parseFloat(light.longitude);
+                    const color = getColor(light.warna_map || light.status_aset);
+
+                    // Create glow effect
+                    const glow = L.circleMarker([lat, lng], {
                         radius: 25,
                         fillColor: color,
                         color: color,
@@ -797,94 +816,120 @@
                         fillOpacity: 0.2,
                         interactive: false
                     });
-                    
+
+                    glowLayer.addLayer(glow);
+
+                    // Create main marker
+                    const marker = L.circleMarker([lat, lng], {
+                        radius: 10,
+                        fillColor: color,
+                        color: "#fff",
+                        weight: 2,
+                        fillOpacity: 1
+                    })
+                    .bindTooltip(light.kode_tiang || 'N/A', { direction: 'top', offset: [0, -10] })
+                    .on('click', () => openDetail(light));
+
+                    // Add to appropriate layer based on clustering state
                     if (clusteringEnabled) {
-                        // In clustering mode, add glow to separate layer (not clustered)
-                        glowLayers.addLayer(glow);
+                        markerClusters.addLayer(marker);
                     } else {
-                        // In non-clustering mode, add glow to main layer
-                        nonClusteredLayer.addLayer(glow);
+                        nonClusteredLayer.addLayer(marker);
+                    }
+                });
+
+                // Add glow layer
+                if (glowLayer.getLayers().length > 0) {
+                    glowLayer.addTo(map);
+                }
+
+                // Add appropriate marker layer
+                if (clusteringEnabled) {
+                    if (markerClusters.getLayers().length > 0) {
+                        markerClusters.addTo(map);
+                    }
+                } else {
+                    if (nonClusteredLayer.getLayers().length > 0) {
+                        nonClusteredLayer.addTo(map);
                     }
                 }
-                
-                // Create main marker
-                const marker = L.circleMarker([light.latitude, light.longitude], {
-                    radius: 10,
-                    fillColor: color,
-                    color: "#fff",
-                    weight: 2,
-                    fillOpacity: 1
-                })
-                .bindTooltip(light.kode_tiang, { direction: 'top', offset: [0, -10] })
-                .on('click', () => openDetail(light));
 
-                // Add to appropriate layer based on clustering state
-                if (clusteringEnabled) {
-                    markerClusters.addLayer(marker);
-                } else {
-                    nonClusteredLayer.addLayer(marker);
-                }
+                // Redraw cables
+                drawCables();
+
+                // Update legend visual state
+                document.querySelectorAll('.legend-item').forEach(item => {
+                    const status = item.dataset.status;
+                    const checkbox = item.querySelector('.legend-checkbox');
+                    
+                    if (status && checkbox) {
+                        if (activeFilters.has(status)) {
+                            item.classList.remove('disabled');
+                            checkbox.checked = true;
+                        } else {
+                            item.classList.add('disabled');
+                            checkbox.checked = false;
+                        }
+                    }
+                });
             }
-        });
 
-        // Add glow layer if clustering is enabled
-        if (clusteringEnabled && glowLayers.getLayers().length > 0) {
-            glowLayers.addTo(map);
-        }
+            // Filter functionality
+            document.querySelectorAll('.legend-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const filter = e.target.dataset.filter;
+                    if (e.target.checked) {
+                        activeFilters.add(filter);
+                    } else {
+                        activeFilters.delete(filter);
+                    }
+                    updateLayers();
+                });
+            });
 
-        // Add the appropriate marker layer to map
-        if (clusteringEnabled) {
-            map.addLayer(markerClusters);
-        } else {
-            map.addLayer(nonClusteredLayer);
-        }
-        
-        // Redraw cables
-        drawCables();
+            // Select/Deselect all buttons
+            document.getElementById('selectAll').onclick = () => {
+                document.querySelectorAll('.legend-checkbox').forEach(cb => {
+                    cb.checked = true;
+                    activeFilters.add(cb.dataset.filter);
+                });
+                updateLayers();
+            };
 
-        // Update legend items visual state
-        document.querySelectorAll('.legend-item').forEach(item => {
-            const status = item.dataset.status;
-            if (status && activeFilters.has(status)) {
-                item.classList.remove('disabled');
-            } else if (status) {
-                item.classList.add('disabled');
-            }
-        });
-    }
+            document.getElementById('deselectAll').onclick = () => {
+                document.querySelectorAll('.legend-checkbox').forEach(cb => {
+                    cb.checked = false;
+                    activeFilters.delete(cb.dataset.filter);
+                });
+                updateLayers();
+            };
 
-    // Filter functionality
-    document.querySelectorAll('.legend-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            const filter = e.target.dataset.filter;
-            if (e.target.checked) {
-                activeFilters.add(filter);
-            } else {
-                activeFilters.delete(filter);
-            }
+            // Initialize map with all layers
             updateLayers();
-        });
-    });
+            
+            // Fit bounds to show all markers
+            const bounds = [];
+            streetLights.forEach(light => {
+                if (isValidCoordinate(light.latitude, light.longitude)) {
+                    bounds.push([parseFloat(light.latitude), parseFloat(light.longitude)]);
+                }
+            });
+            panelKWH.forEach(panel => {
+                if (isValidCoordinate(panel.latitude, panel.longitude)) {
+                    bounds.push([parseFloat(panel.latitude), parseFloat(panel.longitude)]);
+                }
+            });
+            
+            if (bounds.length > 1) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
 
-    // Select/Deselect all buttons
-    document.getElementById('selectAll').onclick = () => {
-        document.querySelectorAll('.legend-checkbox').forEach(cb => {
-            cb.checked = true;
-            activeFilters.add(cb.dataset.filter);
+            // Log final stats
+            console.log('Map initialized with:');
+            console.log('- Street lights displayed:', validLights.length);
+            console.log('- Panels displayed:', panelKWH.length);
+            console.log('- Cables visible:', cablesVisible);
+            console.log('- Clustering enabled:', clusteringEnabled);
         });
-        updateLayers();
-    };
-
-    document.getElementById('deselectAll').onclick = () => {
-        document.querySelectorAll('.legend-checkbox').forEach(cb => {
-            cb.checked = false;
-            activeFilters.delete(cb.dataset.filter);
-        });
-        updateLayers();
-    };
-
-    // Initialize map with all layers
-    updateLayers();
-});
     </script>
 @endpush

@@ -18,7 +18,7 @@ use App\Http\Controllers\TimLapanganController;
 use App\Http\Controllers\TiketPerbaikanController;
 use App\Http\Controllers\TindakanTeknisiController;
 use App\Http\Controllers\ProgresPengerjaanController;
-
+use App\Http\Controllers\MapController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\Settings\UsersController;
 use App\Http\Controllers\Admin\Settings\RolesController;
@@ -31,7 +31,7 @@ use App\Http\Controllers\Admin\Settings\PreferencesController;
 ======================= */
 Route::get('/', fn () => view('home'));
 
-Route::get('/map', fn () => view('map'));
+Route::get('/map', [MapController::class, 'index'])->name('map.index');
 
 Route::get('/aduan', fn () => view('aduan'))->name('aduan.create');
 Route::post('/aduan', [AduanController::class, 'store'])->name('aduan.store');

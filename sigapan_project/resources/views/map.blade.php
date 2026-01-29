@@ -445,7 +445,7 @@
             const glowLayer = L.layerGroup();
 
             // State variables
-            let activeFilters = new Set(['Aktif', 'Mati', 'Rusak', 'Pengerjaan', 'Tidak Ada', 'Panel']);
+            let activeFilters = new Set(['Terelialisasi', 'Aktif', 'Pindah', 'Pengerjaan', 'Usulan', 'Mati', 'Panel']);
             let cablesVisible = false;
             let clusteringEnabled = true;
             let searchMarker;
@@ -466,14 +466,20 @@
                 const colorMap = {
                     'green': '#10b981',
                     'red': '#ef4444',
-                    'orange': '#f97316',
-                    'yellow': '#eab308',
-                    'gray': '#6b7280',
+                    'blue': '#3b82f6',
+                    'black': '#111827',
+                    'yellow': '#facc15',
+                    'Hijau': '#10b981',
+                    'Merah': '#ef4444',
+                    'Biru': '#3b82f6',
+                    'Hitam': '#111827',
+                    'Kuning': '#facc15',
                     'Aktif': '#10b981',
-                    'Mati': '#ef4444',
-                    'Rusak': '#f97316',
-                    'Pengerjaan': '#eab308',
-                    'Tidak Ada': '#6b7280'
+                    'Terelialisasi': '#10b981',
+                    'Pindah': '#ef4444',
+                    'Pengerjaan': '#3b82f6',
+                    'Mati': '#111827',
+                    'Usulan': '#facc15'
                 };
                 
                 const color = colorMap[String(warna).toLowerCase().trim()] || colorMap[String(warna).trim()];
@@ -804,7 +810,7 @@
                 validLights.forEach(light => {
                     const lat = parseFloat(light.latitude);
                     const lng = parseFloat(light.longitude);
-                    const color = getColor(light.warna_map || light.status_aset);
+                    const color = getColor(light.status_aset);
 
                     // Create glow effect
                     const glow = L.circleMarker([lat, lng], {

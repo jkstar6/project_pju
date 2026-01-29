@@ -32,7 +32,7 @@
                                 Silahkan masuk dengan akun yang telah anda buat.
                             </p>
                         </div>
-                        <div class="flex items-center justify-between mb-[20px] md:mb-[23px] gap-[12px]">
+                        <!-- <div class="flex items-center justify-between mb-[20px] md:mb-[23px] gap-[12px]">
                             <div class="grow">
                                 <button type="button" class="block text-center w-full rounded-md transition-all py-[8px] md:py-[10.5px] px-[15px] md:px-[25px] text-black dark:text-white border border-[#D6DAE1] bg-white dark:bg-[#0a0e19] dark:border-[#172036] shadow-sm hover:border-primary-500">
                                     <img src="{{ URL::asset('/assets/admin/images/icons/google.svg') }}" class="inline-block" alt="google">
@@ -48,7 +48,7 @@
                                     <img src="{{ URL::asset('/assets/admin/images/icons/apple.svg') }}" class="inline-block" alt="google">
                                 </button>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="">
                             @if (session('status'))
                             <div
@@ -88,9 +88,9 @@
                                     <i class="ri-eye-off-line"></i>
                                 </button>
                             </div>
-                        <a href="/forgot-password" class="inline-block text-primary-500 transition-all font-semibold hover:underline">
+                        <!-- <a href="/forgot-password" class="inline-block text-primary-500 transition-all font-semibold hover:underline">
                             Forgot Password?
-                        </a>
+                        </a> -->
                         <button type="submit" class="md:text-md block w-full text-center transition-all rounded-md font-medium mt-[20px] md:mt-[25px] py-[12px] px-[25px] text-white bg-primary-500 hover:bg-primary-400">
                             <span class="flex items-center justify-center gap-[5px]">
                                 <i class="material-symbols-outlined">
@@ -100,9 +100,9 @@
                             </span>
                         </button>
                         </form>
-                        <p class="mt-[15px] md:mt-[20px]">
+                        <!-- <p class="mt-[15px] md:mt-[20px]">
                             Don’t have an account. <a href="{{ route('register') }}" class="text-primary-500 transition-all font-semibold hover:underline">Sign Up</a>
-                        </p>
+                        </p> -->
                     </div>
                 </div>
             </div>

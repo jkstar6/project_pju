@@ -6,29 +6,26 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\TiketPerbaikan;        
-use App\Models\PengaduanMasyarakat;   
+use App\Models\PengaduanMasyarakat; 
+use App\Models\TimLapangan; 
+use App\Models\AsetPju;
 
 class TiketPerbaikanController extends Controller
 {
-    /**
-     * HALAMAN UTAMA (LIST TIKET)
-     */
     public function index()
     {
-        $tiketPerbaikan = TiketPerbaikan::with(['pengaduan'])
-            // ✅ PERBAIKAN SORTING:
-            // 1. Prioritaskan status: Yang bukan 'Selesai' (0) di atas, 'Selesai' (1) di bawah.
+        $tiketPerbaikan = TiketPerbaikan::with(['pengaduan', 'tim_lapangan'])
             ->orderByRaw("CASE WHEN status_tindakan = 'Selesai' THEN 1 ELSE 0 END ASC")
-            // 2. Setelah dikelompokkan status, urutkan berdasarkan yang terbaru dibuat
             ->latest() 
             ->get();
 
-        return view('tiket-perbaikan.index', compact('tiketPerbaikan'));
+        // Ambil data untuk modal
+        $tims = TimLapangan::all();
+        $asets = AsetPju::all();
+
+        return view('tiket-perbaikan.index', compact('tiketPerbaikan', 'tims', 'asets'));
     }
 
-    /**
-     * API: AMBIL DAFTAR ADUAN VERIFIED (UNTUK MODAL CREATE)
-     */
     public function getVerifiedAduan()
     {
         $aduan = PengaduanMasyarakat::where('status_verifikasi', 'Diterima')
@@ -39,17 +36,18 @@ class TiketPerbaikanController extends Controller
         return response()->json($aduan);
     }
 
-    /**
-     * STORE: MEMBUAT TIKET BARU
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'pengaduan_id' => 'required|exists:pengaduan_masyarakat,id',
+            'pengaduan_id'    => 'required|exists:pengaduan_masyarakat,id',
+            'tim_lapangan_id' => 'required|exists:tim_lapangan,id',
+            'aset_pju_id'     => 'required|exists:aset_pju,id',
         ]);
 
         $tiket = TiketPerbaikan::create([
             'pengaduan_id'    => $request->pengaduan_id,
+            'tim_lapangan_id' => $request->tim_lapangan_id,
+            'aset_pju_id'     => $request->aset_pju_id,
             'tgl_jadwal'      => Carbon::now()->toDateString(),
             'prioritas'       => 'Biasa',
             'status_tindakan' => 'Menunggu',
@@ -63,12 +61,15 @@ class TiketPerbaikanController extends Controller
         ]);
     }
 
+    // ... method show, update, destroy tetap sama ...
+
     /**
      * SHOW: DETAIL TIKET
      */
     public function show($id)
     {
-        $tiket = TiketPerbaikan::with(['pengaduan'])
+        // Load semua relasi yang diperlukan untuk halaman detail
+        $tiket = TiketPerbaikan::with(['pengaduan', 'tim_lapangan', 'log_tindakan'])
             ->findOrFail($id);
         
         return view('tiket-perbaikan.show', compact('tiket'));
@@ -88,7 +89,8 @@ class TiketPerbaikanController extends Controller
             'perlu_surat_pln' => 'required',
         ]);
 
-        $perluSurat = filter_var($validated['perlu_surat_pln'], FILTER_VALIDATE_BOOLEAN);
+        // Pastikan format boolean benar
+        $perluSurat = filter_var($validated['perlu_surat_pln'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
 
         $tiket->update([
             'tgl_jadwal'      => $validated['tgl_jadwal'],
@@ -103,6 +105,9 @@ class TiketPerbaikanController extends Controller
         ]);
     }
 
+    /**
+     * DESTROY: HAPUS TIKET
+     */
     public function destroy($id)
     {
         $tiket = TiketPerbaikan::findOrFail($id);

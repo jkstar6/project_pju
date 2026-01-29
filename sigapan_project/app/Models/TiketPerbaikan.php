@@ -11,11 +11,10 @@ class TiketPerbaikan extends Model
 
     protected $table = 'tiket_perbaikan';
 
-    // Kita tetap masukkan foreign key di sini agar Create/Update di Controller berjalan lancar
     protected $fillable = [
         'pengaduan_id',
-        'aset_pju_id',      // Tetap ada di database meski modelnya belum ada
-        'tim_lapangan_id',  // Tetap ada di database meski modelnya belum ada
+        'aset_pju_id',
+        'tim_lapangan_id',
         'tgl_jadwal',
         'prioritas',
         'status_tindakan',
@@ -23,19 +22,41 @@ class TiketPerbaikan extends Model
     ];
 
     /**
-     * RELASI UTAMA
-     * Hanya relasi ini yang kita aktifkan karena Model PengaduanMasyarakat sudah ada.
+     * Relasi ke Pengaduan Masyarakat
      */
     public function pengaduan()
     {
         return $this->belongsTo(PengaduanMasyarakat::class, 'pengaduan_id');
     }
 
+    /**
+     * Relasi ke Tim Lapangan (Penyebab Error)
+     */
+    public function tim_lapangan()
+    {
+        return $this->belongsTo(TimLapangan::class, 'tim_lapangan_id');
+    }
 
-    // Relasi ke Aset PJU (Ini yang menyebabkan error jika tidak ada)
-    public function aset()
+    /**
+     * Relasi ke Aset PJU
+     */
+    public function aset_pju()
     {
         return $this->belongsTo(AsetPju::class, 'aset_pju_id');
     }
-    // Relasi ke TimLapangan, AsetPju, dll DIHAPUS DULU agar tidak error.
+
+    // Tambahkan di dalam class TiketPerbaikan di app/Models/TiketPerbaikan.php
+    public function log_tindakan()
+    {
+        // Sesuaikan nama model LogTindakan Anda jika berbeda
+        return $this->hasMany(TindakanTeknisi::class, 'tiket_perbaikan_id');
+    }   
+
+    // app/Models/TiketPerbaikan.php
+
+    public function aset()
+    {
+        // Pastikan foreign key di tabel tiket_perbaikan adalah 'aset_pju_id'
+        return $this->belongsTo(AsetPju::class, 'aset_pju_id');
+    }
 }

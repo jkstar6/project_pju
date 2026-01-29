@@ -17,7 +17,7 @@
         .btn-icon { cursor: pointer; }
         .material-symbols-outlined { font-size:18px !important; }
 
-        /* Modal */
+        /* Modal Overlay */
         .modal-overlay { display: none; }
         .modal-overlay.active { display: flex; }
 
@@ -40,6 +40,7 @@
         #mapCreate, #mapEdit {
             height: 280px;
             border-radius: 10px;
+            z-index: 1; /* Pastikan map tidak menutupi elemen lain */
         }
     </style>
 @endpush
@@ -138,8 +139,9 @@
     </div>
 
     {{-- MODAL CREATE --}}
+    {{-- PERBAIKAN: Menambahkan max-h-[90vh] dan overflow-y-auto pada child div agar bisa scroll --}}
     <div id="modalCreate" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
-        <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
+        <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
                 <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Tambah Jalan Baru</h5>
                 <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
@@ -220,8 +222,9 @@
     </div>
 
     {{-- MODAL EDIT --}}
+    {{-- PERBAIKAN: Menambahkan max-h-[90vh] dan overflow-y-auto --}}
     <div id="modalEdit" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
-        <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
+        <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
                 <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Edit Data Jalan</h5>
                 <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">

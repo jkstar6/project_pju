@@ -10,9 +10,12 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
     <style>
-        #data-table td.text-center { vertical-align: middle; }
+        #data-table td.text-center {
+            vertical-align: middle;
+        }
 
-        #map-aset, #map-edit-aset {
+        #map-aset,
+        #map-edit-aset {
             height: 300px;
             width: 100%;
             border-radius: 12px;
@@ -20,14 +23,19 @@
             z-index: 10;
         }
 
-        #modalTambahAset { z-index: 9999; }
+        #modalTambahAset {
+            z-index: 9999;
+        }
 
         /* error UI */
         .input-error {
             border-color: #ef4444 !important;
             background: #fef2f2 !important;
         }
-        .text-error { color: #ef4444 !important; }
+
+        .text-error {
+            color: #ef4444 !important;
+        }
     </style>
 @endpush
 
@@ -55,6 +63,7 @@
                         <tr>
                             <th class="text-center">No</th>
                             <th class="text-left">Kode Tiang</th>
+                            <th class="text-left">Nama Jalan</th>
                             <th class="text-left">Jenis Lampu</th>
                             <th class="text-left">Watt</th>
                             <th class="text-center">Status</th>
@@ -68,33 +77,57 @@
                         @foreach ($asetPju as $index => $item)
                             <tr>
                                 <td class="text-center">{{ $index + 1 }}</td>
-                                <td class="text-left font-semibold">{{ $item->kode_tiang }}</td>
-                                <td class="text-left">{{ $item->jenis_lampu ?? '-' }}</td>
-                                <td class="text-left">{{ $item->watt ?? '-' }} W</td>
+
+                                <td class="text-left font-semibold">
+                                    {{ $item->kode_tiang }}
+                                </td>
+
+                                {{-- NAMA JALAN --}}
+                                <td class="text-left">
+                                    {{ $item->jalan->nama_jalan ?? '-' }}
+                                </td>
+
+                                <td class="text-left">
+                                    {{ $item->jenis_lampu ?? '-' }}
+                                </td>
+
+                                <td class="text-left">
+                                    {{ $item->watt ?? '-' }} W
+                                </td>
+
                                 <td class="text-center">
-                                    <span class="px-2 py-1 text-xs rounded
-                                        @if ($item->status_aset == 'Usulan') bg-yellow-100 text-yellow-700
-                                        @elseif($item->status_aset == 'Pengerjaan') bg-blue-100 text-blue-700
-                                        @elseif($item->status_aset == 'Terelialisasi') bg-green-100 text-green-700
-                                        @elseif($item->status_aset == 'Pindah') bg-purple-100 text-purple-700
-                                        @elseif($item->status_aset == 'Mati') bg-red-100 text-red-700
-                                        @endif">
+                                    <span
+                                        class="px-2 py-1 text-xs rounded
+                    @if ($item->status_aset == 'Usulan') bg-yellow-100 text-yellow-700
+                    @elseif($item->status_aset == 'Pengerjaan') bg-blue-100 text-blue-700
+                    @elseif($item->status_aset == 'Terelialisasi') bg-green-100 text-green-700
+                    @elseif($item->status_aset == 'Pindah') bg-purple-100 text-purple-700
+                    @elseif($item->status_aset == 'Mati') bg-red-100 text-red-700 @endif">
                                         {{ $item->status_aset }}
                                     </span>
                                 </td>
-                                <td class="text-left">{{ $item->kecamatan ?? '-' }}</td>
-                                <td class="text-left">{{ $item->desa ?? '-' }}</td>
+
+                                <td class="text-left">
+                                    {{ $item->kecamatan ?? '-' }}
+                                </td>
+
+                                <td class="text-left">
+                                    {{ $item->desa ?? '-' }}
+                                </td>
+
                                 <td class="text-center">
                                     @if ($item->latitude && $item->longitude)
                                         <a href="https://www.google.com/maps?q={{ $item->latitude }},{{ $item->longitude }}"
                                             target="_blank"
                                             class="text-blue-500 hover:underline flex items-center justify-center gap-1">
-                                            <i class="material-symbols-outlined text-sm">location_on</i> Maps
+                                            <i class="material-symbols-outlined text-sm">location_on</i>
+                                            Maps
                                         </a>
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
                                 </td>
+
                                 <td class="text-center">
                                     <div class="flex justify-center gap-2">
                                         <button onclick='openEditAset(@json($item))'
@@ -106,6 +139,7 @@
                             </tr>
                         @endforeach
                     </tbody>
+
                 </table>
             </div>
         </div>
@@ -156,24 +190,37 @@
                             <input name="desa" class="w-full border rounded px-3 py-2 mt-1">
                         </div>
 
+                        {{-- DROPDOWN MASTER JALAN --}}
+                        <div class="col-span-2">
+                            <label class="text-sm font-medium">Nama Jalan</label>
+                            <select name="jalan_id" class="w-full border rounded px-3 py-2 mt-1">
+                                <option value="">-- Pilih Jalan --</option>
+                                @foreach ($masterJalan as $jalan)
+                                    <option value="{{ $jalan->id }}">
+                                        {{ $jalan->nama_jalan }}
+                                        ({{ $jalan->kategori_jalan }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         {{-- DROPDOWN PANEL --}}
                         <div class="col-span-2">
                             <label class="text-sm font-medium">Pilih Panel kWh</label>
-                            <select id="aset-panel-id" name="panel_kwh_id" required class="w-full border rounded px-3 py-2 mt-1">
+                            <select id="aset-panel-id" name="panel_kwh_id" required
+                                class="w-full border rounded px-3 py-2 mt-1">
                                 <option value="">-- Pilih Panel --</option>
                                 @foreach ($panelKwh as $p)
-                                    <option
-                                        value="{{ $p->id }}"
-                                        data-lat="{{ $p->latitude }}"
-                                        data-lng="{{ $p->longitude }}"
-                                        data-label="{{ $p->no_pelanggan_pln }}"
-                                    >
-                                        {{ $p->no_pelanggan_pln }} ({{ number_format($p->daya_va) }} VA) - {{ $p->lokasi_panel }}
+                                    <option value="{{ $p->id }}" data-lat="{{ $p->latitude }}"
+                                        data-lng="{{ $p->longitude }}" data-label="{{ $p->no_pelanggan_pln }}">
+                                        {{ $p->no_pelanggan_pln }} ({{ number_format($p->daya_va) }} VA) -
+                                        {{ $p->lokasi_panel }}
                                     </option>
                                 @endforeach
                             </select>
                             <p class="text-xs text-gray-500 mt-1">
-                                Pilih panel dulu, lalu klik peta untuk menentukan lokasi aset. Sistem menghitung jarak panel → aset (maks 500m).
+                                Pilih panel dulu, lalu klik peta untuk menentukan lokasi aset. Sistem menghitung jarak panel
+                                → aset (maks 500m).
                             </p>
                         </div>
 
@@ -182,8 +229,9 @@
                             <label class="text-sm font-medium">Jarak Panel ke Aset (meter)</label>
                             <div class="flex items-center gap-3 mt-1">
                                 <input id="jarak-meter" type="number" min="0" step="1"
-                                       class="w-32 border rounded px-3 py-2 bg-gray-50 text-sm" value="0">
-                                <input id="jarak-slider" type="range" min="0" max="500" value="0" class="flex-1">
+                                    class="w-32 border rounded px-3 py-2 bg-gray-50 text-sm" value="0">
+                                <input id="jarak-slider" type="range" min="0" max="500" value="0"
+                                    class="flex-1">
                                 <span id="jarak-label" class="text-sm text-gray-600">0 m</span>
                             </div>
                             <p id="jarak-warning" class="text-xs mt-2 hidden"></p>
@@ -196,22 +244,24 @@
                             <div class="grid grid-cols-2 gap-3 mt-3">
                                 <div>
                                     <span class="text-[10px] uppercase text-gray-500">Latitude</span>
-                                    <input id="aset-lat" name="latitude" readonly class="w-full border px-3 py-2 bg-gray-50 text-sm">
+                                    <input id="aset-lat" name="latitude" readonly
+                                        class="w-full border px-3 py-2 bg-gray-50 text-sm">
                                 </div>
                                 <div>
                                     <span class="text-[10px] uppercase text-gray-500">Longitude</span>
-                                    <input id="aset-lng" name="longitude" readonly class="w-full border px-3 py-2 bg-gray-50 text-sm">
+                                    <input id="aset-lng" name="longitude" readonly
+                                        class="w-full border px-3 py-2 bg-gray-50 text-sm">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex justify-end gap-2 mt-6">
-                        <button type="button" onclick="closeTambahAset()" class="border px-4 py-2 rounded hover:bg-gray-100">
+                        <button type="button" onclick="closeTambahAset()"
+                            class="border px-4 py-2 rounded hover:bg-gray-100">
                             Batal
                         </button>
-                        <button type="submit"
-                            class="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600">
+                        <button type="submit" class="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600">
                             Simpan Aset
                         </button>
                     </div>
@@ -234,7 +284,8 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="col-span-1">
                             <label class="text-sm font-medium">Kode Tiang</label>
-                            <input name="kode_tiang" id="edit-kode" required class="w-full border rounded px-3 py-2 mt-1">
+                            <input name="kode_tiang" id="edit-kode" required
+                                class="w-full border rounded px-3 py-2 mt-1">
                         </div>
 
                         <div class="col-span-1">
@@ -244,7 +295,8 @@
 
                         <div class="col-span-1">
                             <label class="text-sm font-medium">Watt</label>
-                            <input name="watt" id="edit-watt" type="number" class="w-full border rounded px-3 py-2 mt-1">
+                            <input name="watt" id="edit-watt" type="number"
+                                class="w-full border rounded px-3 py-2 mt-1">
                         </div>
 
                         <div class="col-span-1">
@@ -271,16 +323,14 @@
                         {{-- DROPDOWN PANEL (EDIT) --}}
                         <div class="col-span-2">
                             <label class="text-sm font-medium">Pilih Panel kWh</label>
-                            <select id="edit-panel-id" name="panel_kwh_id" required class="w-full border rounded px-3 py-2 mt-1">
+                            <select id="edit-panel-id" name="panel_kwh_id" required
+                                class="w-full border rounded px-3 py-2 mt-1">
                                 <option value="">-- Pilih Panel --</option>
                                 @foreach ($panelKwh as $p)
-                                    <option
-                                        value="{{ $p->id }}"
-                                        data-lat="{{ $p->latitude }}"
-                                        data-lng="{{ $p->longitude }}"
-                                        data-label="{{ $p->no_pelanggan_pln }}"
-                                    >
-                                        {{ $p->no_pelanggan_pln }} ({{ number_format($p->daya_va) }} VA) - {{ $p->lokasi_panel }}
+                                    <option value="{{ $p->id }}" data-lat="{{ $p->latitude }}"
+                                        data-lng="{{ $p->longitude }}" data-label="{{ $p->no_pelanggan_pln }}">
+                                        {{ $p->no_pelanggan_pln }} ({{ number_format($p->daya_va) }} VA) -
+                                        {{ $p->lokasi_panel }}
                                     </option>
                                 @endforeach
                             </select>
@@ -291,8 +341,9 @@
                             <label class="text-sm font-medium">Jarak Panel ke Aset (meter)</label>
                             <div class="flex items-center gap-3 mt-1">
                                 <input id="edit-jarak-meter" type="number" min="0" step="1"
-                                       class="w-32 border rounded px-3 py-2 bg-gray-50 text-sm" value="0">
-                                <input id="edit-jarak-slider" type="range" min="0" max="500" value="0" class="flex-1">
+                                    class="w-32 border rounded px-3 py-2 bg-gray-50 text-sm" value="0">
+                                <input id="edit-jarak-slider" type="range" min="0" max="500"
+                                    value="0" class="flex-1">
                                 <span id="edit-jarak-label" class="text-sm text-gray-600">0 m</span>
                             </div>
                             <p id="edit-jarak-warning" class="text-xs mt-2 hidden"></p>
@@ -305,22 +356,24 @@
                             <div class="grid grid-cols-2 gap-3 mt-3">
                                 <div>
                                     <span class="text-[10px] uppercase text-gray-500">Latitude</span>
-                                    <input id="edit-lat" name="latitude" readonly class="w-full border px-3 py-2 bg-gray-50 text-sm">
+                                    <input id="edit-lat" name="latitude" readonly
+                                        class="w-full border px-3 py-2 bg-gray-50 text-sm">
                                 </div>
                                 <div>
                                     <span class="text-[10px] uppercase text-gray-500">Longitude</span>
-                                    <input id="edit-lng" name="longitude" readonly class="w-full border px-3 py-2 bg-gray-50 text-sm">
+                                    <input id="edit-lng" name="longitude" readonly
+                                        class="w-full border px-3 py-2 bg-gray-50 text-sm">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex justify-end gap-2 mt-6">
-                        <button type="button" onclick="closeEditAset()" class="border px-4 py-2 rounded hover:bg-gray-100">
+                        <button type="button" onclick="closeEditAset()"
+                            class="border px-4 py-2 rounded hover:bg-gray-100">
                             Batal
                         </button>
-                        <button type="submit"
-                            class="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600">
+                        <button type="submit" class="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600">
                             Update Aset
                         </button>
                     </div>
@@ -351,9 +404,14 @@
             $('#data-table').DataTable({
                 responsive: true,
                 pageLength: 25,
-                columnDefs: [
-                    { targets: [0, 4, 7, 8], className: 'text-center' },
-                    { targets: [1, 2, 3, 5, 6], className: 'text-left' }
+                columnDefs: [{
+                        targets: [0, 4, 7, 8],
+                        className: 'text-center'
+                    },
+                    {
+                        targets: [1, 2, 3, 5, 6],
+                        className: 'text-left'
+                    }
                 ]
             });
         });
@@ -391,7 +449,7 @@
                 meter.classList.add('input-error');
                 slider.classList.add('input-error');
                 submit.disabled = true;
-                submit.classList.add('opacity-50','cursor-not-allowed');
+                submit.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
                 el.classList.add('hidden');
                 el.textContent = '';
@@ -399,7 +457,7 @@
                 meter.classList.remove('input-error');
                 slider.classList.remove('input-error');
                 submit.disabled = false;
-                submit.classList.remove('opacity-50','cursor-not-allowed');
+                submit.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
 
@@ -407,7 +465,7 @@
             const submit = document.querySelector(ui.submitSelector);
             if (submit) {
                 submit.disabled = true;
-                submit.classList.add('opacity-50','cursor-not-allowed');
+                submit.classList.add('opacity-50', 'cursor-not-allowed');
             }
             if (message) setWarning(ui, message);
         }
@@ -430,7 +488,9 @@
             if (label) label.textContent = `${Math.round(meters)} m`;
 
             if (meters > MAX_DISTANCE) {
-                setWarning(ui, `Jarak melebihi batas ${MAX_DISTANCE} meter. Pilih titik lebih dekat atau atur jarak ≤ ${MAX_DISTANCE}m.`);
+                setWarning(ui,
+                    `Jarak melebihi batas ${MAX_DISTANCE} meter. Pilih titik lebih dekat atau atur jarak ≤ ${MAX_DISTANCE}m.`
+                    );
             } else {
                 setWarning(ui, '');
             }
@@ -453,7 +513,8 @@
                 if (label) label.textContent = `${Math.round(v)} m`;
 
                 if (vRaw > MAX_DISTANCE) {
-                    setWarning(uiConfig, `Maksimal jarak ${MAX_DISTANCE} meter. Nilai disesuaikan menjadi ${MAX_DISTANCE}m.`);
+                    setWarning(uiConfig,
+                        `Maksimal jarak ${MAX_DISTANCE} meter. Nilai disesuaikan menjadi ${MAX_DISTANCE}m.`);
                 } else {
                     // warning jarak real di-handle updateDistanceUI
                     setWarning(uiConfig, '');
@@ -531,7 +592,7 @@
                 setAssetPoint(e.latlng, true);
             });
 
-            initDistanceControls('jarak-meter','jarak-slider','jarak-label',
+            initDistanceControls('jarak-meter', 'jarak-slider', 'jarak-label',
                 (m) => applyDistanceAdjustment(m),
                 UI_TAMBAH
             );
@@ -563,8 +624,14 @@
             asetMap.setView(selectedPanelLatLng, 16);
 
             // reset aset & garis
-            if (asetMarker) { asetMap.removeLayer(asetMarker); asetMarker = null; }
-            if (linePA) { asetMap.removeLayer(linePA); linePA = null; }
+            if (asetMarker) {
+                asetMap.removeLayer(asetMarker);
+                asetMarker = null;
+            }
+            if (linePA) {
+                asetMap.removeLayer(linePA);
+                linePA = null;
+            }
             assetLatLng = null;
             lastBearingDeg = null;
 
@@ -583,7 +650,9 @@
             assetLatLng = latlng;
 
             if (!asetMarker) {
-                asetMarker = L.marker(latlng, { draggable: true }).addTo(asetMap);
+                asetMarker = L.marker(latlng, {
+                    draggable: true
+                }).addTo(asetMap);
                 asetMarker.on('dragend', function() {
                     setAssetPoint(asetMarker.getLatLng(), true);
                 });
@@ -605,7 +674,9 @@
         function drawLineTambah() {
             if (!selectedPanelLatLng || !assetLatLng) return;
             const pts = [selectedPanelLatLng, assetLatLng];
-            if (!linePA) linePA = L.polyline(pts, { weight: 4 }).addTo(asetMap);
+            if (!linePA) linePA = L.polyline(pts, {
+                weight: 4
+            }).addTo(asetMap);
             else linePA.setLatLngs(pts);
         }
 
@@ -647,7 +718,8 @@
             setTimeout(() => {
                 initMapEdit();
                 // disable sampai valid
-                disableSubmit(UI_EDIT, 'Silakan klik peta untuk menentukan lokasi aset (atau pastikan jarak ≤ 500m).');
+                disableSubmit(UI_EDIT,
+                    'Silakan klik peta untuk menentukan lokasi aset (atau pastikan jarak ≤ 500m).');
 
                 const sel = document.getElementById('edit-panel-id');
                 if (sel) sel.dispatchEvent(new Event('change'));
@@ -695,7 +767,7 @@
                 setEditAssetPoint(e.latlng, true);
             });
 
-            initDistanceControls('edit-jarak-meter','edit-jarak-slider','edit-jarak-label',
+            initDistanceControls('edit-jarak-meter', 'edit-jarak-slider', 'edit-jarak-label',
                 (m) => applyEditDistance(m),
                 UI_EDIT
             );
@@ -746,7 +818,9 @@
             editAssetLatLng = latlng;
 
             if (!editAsetMarker) {
-                editAsetMarker = L.marker(latlng, { draggable: true }).addTo(editMap);
+                editAsetMarker = L.marker(latlng, {
+                    draggable: true
+                }).addTo(editMap);
                 editAsetMarker.on('dragend', function() {
                     setEditAssetPoint(editAsetMarker.getLatLng(), true);
                 });
@@ -771,7 +845,9 @@
         function drawEditLine() {
             if (!editPanelLatLng || !editAssetLatLng) return;
             const pts = [editPanelLatLng, editAssetLatLng];
-            if (!editLine) editLine = L.polyline(pts, { weight: 4 }).addTo(editMap);
+            if (!editLine) editLine = L.polyline(pts, {
+                weight: 4
+            }).addTo(editMap);
             else editLine.setLatLngs(pts);
         }
 
@@ -788,11 +864,17 @@
         // ======================
         // GEO HELPERS
         // ======================
-        function toRad(d) { return d * Math.PI / 180; }
-        function toDeg(r) { return r * 180 / Math.PI; }
+        function toRad(d) {
+            return d * Math.PI / 180;
+        }
+
+        function toDeg(r) {
+            return r * 180 / Math.PI;
+        }
 
         function bearingDeg(a, b) {
-            const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
+            const lat1 = toRad(a.lat),
+                lat2 = toRad(b.lat);
             const dLon = toRad(b.lng - a.lng);
 
             const y = Math.sin(dLon) * Math.cos(lat2);

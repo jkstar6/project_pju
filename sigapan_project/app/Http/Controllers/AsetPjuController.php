@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AsetPju;
 use App\Models\PanelKwh;
+use App\Models\MasterJalan;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -11,20 +12,25 @@ class AsetPjuController extends Controller
 {
     public function index()
     {
-        $asetPju = AsetPju::orderBy('created_at', 'desc')->get();
+        $asetPju = AsetPju::with(['jalan', 'panelKwh'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $panelKwh = PanelKwh::select('id','no_pelanggan_pln','daya_va','latitude','longitude','lokasi_panel')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('aset-pju.index', compact('asetPju', 'panelKwh'));
+        $masterJalan = MasterJalan::orderBy('nama_jalan')->get();
+
+        return view('aset-pju.index', compact('asetPju', 'panelKwh', 'masterJalan'));
     }
+
 
     public function store(Request $request)
     {
         $request->validate([
             'panel_kwh_id' => ['required', Rule::exists((new PanelKwh)->getTable(), 'id')],
-            'jalan_id'     => 'nullable',
+            'jalan_id' => ['nullable', Rule::exists('master_jalan', 'id')],
             'kode_tiang'   => 'required|unique:aset_pju,kode_tiang',
             'jenis_lampu'  => 'nullable|string',
             'watt'         => 'nullable|numeric',
@@ -115,18 +121,17 @@ class AsetPjuController extends Controller
 
         $aset->update([
             'panel_kwh_id' => $panel->id,
+            'jalan_id'     => $request->jalan_id,
             'kode_tiang'   => $request->kode_tiang,
             'jenis_lampu'  => $request->jenis_lampu,
             'watt'         => $request->watt,
-            'status_aset' => $request->status_aset,
-
-            // Lokasi aset dari klik/adjust di map
+            'status_aset'  => $request->status_aset,
             'latitude'     => $request->latitude,
             'longitude'    => $request->longitude,
-
             'kecamatan'    => $request->kecamatan,
             'desa'         => $request->desa,
         ]);
+
 
         return redirect()
             ->route('aset-pju.index')

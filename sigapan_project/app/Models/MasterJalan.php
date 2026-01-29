@@ -26,4 +26,9 @@ class MasterJalan extends Model
         'lebar_jalan' => 'float',
         'panjang_jalan' => 'float',
     ];
+
+    public function asetPju()
+    {
+        return $this->hasMany(AsetPju::class, 'jalan_id');
+    }
 }

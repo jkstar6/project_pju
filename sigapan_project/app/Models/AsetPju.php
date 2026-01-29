@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\MasterJalan;
+use App\Models\PanelKwh;
 
 class AsetPju extends Model
 {
-    protected $table = 'aset_pju'; // ⬅️ WAJIB
+    protected $table = 'aset_pju';
 
     protected $fillable = [
         'panel_kwh_id',
@@ -21,4 +23,14 @@ class AsetPju extends Model
         'kecamatan',
         'desa',
     ];
+
+    public function jalan()
+    {
+        return $this->belongsTo(MasterJalan::class, 'jalan_id');
+    }
+
+    public function panelKwh()
+    {
+        return $this->belongsTo(PanelKwh::class, 'panel_kwh_id');
+    }
 }

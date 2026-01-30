@@ -193,83 +193,87 @@
     </div>
 
     {{-- MODAL FORM --}}
-    <div id="modalLog" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div style="font-weight:600;" id="modalTitle">Log Survey</div>
-                <button type="button" class="btn-icon btn-close-modal">
-                    <i class="material-symbols-outlined">close</i>
-                </button>
+    {{-- MODAL --}}
+<div id="modalLog" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <strong id="modalTitle">Log Survey</strong>
+            <button class="btn-close-modal">
+                <i class="material-symbols-outlined">close</i>
+            </button>
+        </div>
+
+        <form id="formLog" method="POST" action="{{ route('log-survey.store') }}">
+            @csrf
+            <input type="hidden" name="_method" id="formMethod" value="POST">
+            <input type="hidden" name="lat_input" id="lat_input">
+            <input type="hidden" name="long_input" id="long_input">
+
+            <div class="modal-body grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {{-- DROPDOWN ASET --}}
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Aset PJU</label>
+                    <select name="aset_pju_id" id="aset_pju_id_select" class="w-full border rounded-md px-3 py-2.5" required>
+                        <option value="">-- Pilih Aset PJU --</option>
+                        @foreach($asets as $aset)
+                            <option
+                                value="{{ $aset->id }}"
+                                data-lat="{{ $aset->latitude }}"
+                                data-long="{{ $aset->longitude }}"
+                            >
+                                {{ $aset->kode_tiang }}
+                                | {{ $aset->desa ?? '-' }}
+                                | {{ $aset->status_aset ?? '-' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Surveyor</label>
+                    <select name="user_id" class="w-full border rounded-md px-3 py-2.5" required>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Tanggal Survey</label>
+                    <input type="date" name="tgl_survey" class="w-full border rounded-md px-3 py-2.5" required>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Kondisi</label>
+                    <select name="kondisi" class="w-full border rounded-md px-3 py-2.5">
+                        <option value="Nyala">Nyala</option>
+                        <option value="Mati">Mati</option>
+                        <option value="Rusak Fisik">Rusak Fisik</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium mb-2 block">Keberadaan</label>
+                    <select name="keberadaan" class="w-full border rounded-md px-3 py-2.5">
+                        <option value="Ada">Ada</option>
+                        <option value="Hilang">Hilang</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="text-sm font-medium mb-2 block">Catatan Kerusakan</label>
+                    <textarea name="catatan_kerusakan" rows="3" class="w-full border rounded-md px-3 py-2.5"></textarea>
+                </div>
             </div>
 
-            <form id="formLog" method="POST" action="{{ route('log-survey.store') }}">
-                <div class="modal-body">
-                    @csrf
-                    <input type="hidden" name="_method" id="formMethod" value="POST">
-                    
-                    {{-- Hidden Inputs untuk Koordinat --}}
-                    <input type="hidden" name="lat_input" id="lat_input">
-                    <input type="hidden" name="long_input" id="long_input">
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Aset PJU (Kode Tiang)</label>
-                            <select name="aset_pju_id" id="aset_pju_id_select" class="w-full border border-gray-300 rounded-md px-3 py-2.5" required>
-                                <option value="">-- Pilih Kode Tiang --</option>
-                                @foreach($asets as $aset)
-                                    <option value="{{ $aset->id }}" data-lat="{{ $aset->latitude }}" data-long="{{ $aset->longitude }}">
-                                        {{ $aset->kode_tiang }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Surveyor</label>
-                            <select name="user_id" class="w-full border border-gray-300 rounded-md px-3 py-2.5" required>
-                                <option value="">-- Pilih Surveyor --</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Survey</label>
-                            <input type="date" name="tgl_survey" class="w-full border border-gray-300 rounded-md px-3 py-2.5" required>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Kondisi</label>
-                            <select name="kondisi" class="w-full border border-gray-300 rounded-md px-3 py-2.5">
-                                <option value="Nyala">Nyala</option>
-                                <option value="Mati">Mati</option>
-                                <option value="Rusak Fisik">Rusak Fisik</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Keberadaan</label>
-                            <select name="keberadaan" class="w-full border border-gray-300 rounded-md px-3 py-2.5">
-                                <option value="Ada">Ada</option>
-                                <option value="Hilang">Hilang</option>
-                            </select>
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Kerusakan</label>
-                            <textarea name="catatan_kerusakan" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2.5" placeholder="Tulis catatan jika ada kerusakan..."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn-close-modal px-5 py-2.5 bg-gray-100 text-gray-700 rounded-md border border-gray-200 hover:bg-gray-200 transition">Batal</button>
-                    <button type="submit" class="px-5 py-2.5 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition">Simpan Data</button>
-                </div>
-            </form>
-        </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-close-modal px-4 py-2 bg-gray-100 rounded-md">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-primary-500 text-white rounded-md">Simpan</button>
+            </div>
+        </form>
     </div>
+</div>
 @endsection
 
 @push('scripts')

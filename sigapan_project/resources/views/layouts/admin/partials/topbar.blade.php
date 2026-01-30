@@ -9,14 +9,33 @@
                     </i>
                 </button>
             </div>
-            <form class="relative w-[250px] lg:w-[260px]">
-                <input type="text" placeholder="Search here....." class="bg-gray-50 border border-gray-50 h-[44px] rounded-md w-full block text-black pt-[11px] pb-[12px] px-[13px] md:px-[16px] placeholder:text-gray-500 outline-0 dark:bg-[#15203c] dark:text-white dark:border-[#15203c] dark:placeholder:text-gray-400">
-                <button type="button" class="absolute text-primary-500 mt-[2px] ltr:right-[13px] ltr:md:right-[15px] rtl:left-[13px] rtl:md:left-[15px] top-1/2 -translate-y-1/2">
-                    <i class="material-symbols-outlined !text-[20px]">
-                        search
-                    </i>
-                </button>
-            </form>
+           {{-- ✅ GLOBAL SEARCH DASHBOARD --}}
+<form class="relative w-[250px] lg:w-[260px]" onsubmit="return false;">
+
+    <input id="globalSearch"
+           type="text"
+           placeholder="Search here....."
+           class="bg-gray-50 border border-gray-50 h-[44px]
+                  rounded-md w-full block text-black
+                  pt-[11px] pb-[12px] px-[13px] md:px-[16px]
+                  placeholder:text-gray-500 outline-0
+                  dark:bg-[#15203c] dark:text-white
+                  dark:border-[#15203c]
+                  dark:placeholder:text-gray-400">
+
+    <button type="submit"
+            class="absolute text-primary-500 mt-[2px]
+                   ltr:right-[13px] ltr:md:right-[15px]
+                   rtl:left-[13px] rtl:md:left-[15px]
+                   top-1/2 -translate-y-1/2">
+        <i class="material-symbols-outlined !text-[20px]">
+            search
+        </i>
+    </button>
+
+</form>
+{{-- ✅ END GLOBAL SEARCH --}}
+
             <div class="connected-apps-menu relative ltr:ml-[13px] ltr:md:ml-[18px] ltr:lg:ml-[25px] rtl:ml-[r3px] rtl:md:mr-[18px] rtl:lg:mr-[25px]">
                 <!-- <button type="button" class="transition-all relative top-[2px] hover:text-primary-500" id="dropdownToggleBtn">
                     <i class="material-symbols-outlined !text-[22px] md:!text-[24px]">

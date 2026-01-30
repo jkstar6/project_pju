@@ -66,6 +66,17 @@
             </div>
         @endif
 
+        {{-- VALIDATION ERRORS --}}
+        @if($errors->any())
+            <div class="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm border border-red-200">
+                <ul class="list-disc pl-5">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="trezo-card-content">
             <div class="table-responsive overflow-x-auto">
                 <table id="data-table" class="display stripe group" style="width:100%">
@@ -100,7 +111,7 @@
                             $pkLng = $pk->longitude ?? null;
 
                             // Label aman (kalau kolom nama/kode beda, minimal tampil ID)
-                            $apLabel = $ap->kode_aset ?? $ap->nama_aset ?? ('Aset #' . ($item->aset_pju_id ?? '-'));
+                            $apLabel = $ap->kode_tiang ?? $ap->nama_aset ?? ('Aset #' . ($item->aset_pju_id ?? '-'));
                             $pkLabel = $pk->no_pelanggan_pln ?? $pk->lokasi_panel ?? ('Panel #' . ($item->panel_kwh_id ?? '-'));
                         @endphp
 
@@ -199,36 +210,19 @@
                 </button>
             </div>
 
-            <div class="mb-3 p-3 rounded-md bg-slate-50 border text-sm text-slate-600">
-                Pilih <b>Aset PJU</b> dan <b>Panel KWh</b> → peta akan menampilkan marker + garis kabel.
-                <br>Estimasi panjang kabel akan diisi otomatis dari jarak garis (meter). Kamu tetap bisa edit manual jika perlu.
+            <div class="mb-3 p-3 rounded-md bg-blue-50 border border-blue-100 text-sm text-blue-700">
+                <i class="material-symbols-outlined align-middle !text-sm mr-1">info</i>
+                <b>Panduan:</b> Pilih <b>Panel KWh</b> terlebih dahulu. Daftar <b>Aset PJU</b> akan otomatis terfilter menyesuaikan aset yang terdaftar pada panel tersebut.
             </div>
 
             <form id="formKoneksi" action="{{ route('koneksi-jaringan.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
 
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Aset PJU</label>
-                    <select name="aset_pju_id" id="aset_pju_id" class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500" required>
-                        <option value="">-- Pilih Aset PJU --</option>
-                        @foreach($asetPju as $ap)
-                            @php
-                                $label = $ap->kode_aset ?? $ap->nama_aset ?? ('Aset #' . $ap->id);
-                                $lat = $ap->latitude ?? '';
-                                $lng = $ap->longitude ?? '';
-                            @endphp
-                            <option value="{{ $ap->id }}" data-lat="{{ $lat }}" data-lng="{{ $lng }}">
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="hint mt-1">* Pastikan Aset PJU punya latitude/longitude supaya garis bisa tergambar.</div>
-                </div>
-
-                <div>
+                {{-- PANEL KWH (Ditaruh diatas Aset PJU agar UX flow benar: Pilih Induk dulu, baru Anak) --}}
+                <div class="md:col-span-2">
                     <label class="block text-sm font-semibold mb-1">Panel KWh</label>
-                    <select name="panel_kwh_id" id="panel_kwh_id" class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500" required>
+                    <select name="panel_kwh_id" id="panel_kwh_id" class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500 bg-gray-50" required>
                         <option value="">-- Pilih Panel KWh --</option>
                         @foreach($panelKwh as $pk)
                             @php
@@ -237,11 +231,36 @@
                                 $lng = $pk->longitude ?? '';
                             @endphp
                             <option value="{{ $pk->id }}" data-lat="{{ $lat }}" data-lng="{{ $lng }}">
-                                {{ $label }}
+                                {{ $label }} ({{ $pk->lokasi_panel }})
                             </option>
                         @endforeach
                     </select>
-                    <div class="hint mt-1">* Pastikan Panel KWh punya latitude/longitude.</div>
+                    <div class="hint mt-1">* Panel wajib dipilih untuk memunculkan daftar aset.</div>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold mb-1">Aset PJU</label>
+                    {{-- ID aset_pju_id_temp ini hanya untuk script, name tetap aset_pju_id --}}
+                    <select name="aset_pju_id" id="aset_pju_id" class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500" required>
+                        <option value="">-- Pilih Panel KWh Terlebih Dahulu --</option>
+                        @foreach($asetPju as $ap)
+                            @php
+                                $label = $ap->kode_tiang ?? $ap->nama_aset ?? ('Aset #' . $ap->id);
+                                $lat = $ap->latitude ?? '';
+                                $lng = $ap->longitude ?? '';
+                                // PENTING: Foreign key Panel KWh di tabel Aset PJU
+                                $parentId = $ap->panel_kwh_id ?? ''; 
+                            @endphp
+                            {{-- Tambahkan data-panel-id untuk filtering --}}
+                            <option value="{{ $ap->id }}" 
+                                    data-lat="{{ $lat }}" 
+                                    data-lng="{{ $lng }}"
+                                    data-panel-id="{{ $parentId }}">
+                                {{ $label }} ({{ $ap->jenis_lampu }} - {{ $ap->watt }}W)
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="hint mt-1">* Hanya menampilkan aset yang terhubung dengan Panel diatas.</div>
                 </div>
 
                 <div>
@@ -334,7 +353,77 @@
                 ]
             });
 
-            // Modal
+            // ============================================
+            // LOGIC FILTER ASET BY PANEL
+            // ============================================
+            let allAsetOptions = [];
+
+            // 1. Simpan semua option aset pju ke array saat load
+            $('#aset_pju_id option').each(function() {
+                if($(this).val()) { // Skip placeholder
+                    allAsetOptions.push({
+                        val: $(this).val(),
+                        text: $(this).text(),
+                        lat: $(this).data('lat'),
+                        lng: $(this).data('lng'),
+                        panelId: $(this).data('panel-id') // ambil ID panel induk
+                    });
+                }
+            });
+
+            // 2. Fungsi Filter
+            function filterAsetPjuByPanel(selectedPanelId, selectedAseId = null) {
+                const $asetSelect = $('#aset_pju_id');
+                
+                // Kosongkan dropdown aset
+                $asetSelect.empty();
+                
+                // Tambah default option
+                if(!selectedPanelId) {
+                    $asetSelect.append('<option value="">-- Pilih Panel KWh Terlebih Dahulu --</option>');
+                    return; // Stop jika tidak ada panel dipilih
+                } else {
+                    $asetSelect.append('<option value="">-- Pilih Aset PJU --</option>');
+                }
+
+                let count = 0;
+                // Loop array memory dan append yang cocok
+                allAsetOptions.forEach(opt => {
+                    // Filter: Hanya tampilkan jika panelId nya cocok
+                    // Gunakan '==' karena data-attr string vs integer val
+                    if (opt.panelId == selectedPanelId) {
+                        const isSelected = (selectedAseId && opt.val == selectedAseId) ? 'selected' : '';
+                        $asetSelect.append(`
+                            <option value="${opt.val}" 
+                                    data-lat="${opt.lat}" 
+                                    data-lng="${opt.lng}" 
+                                    data-panel-id="${opt.panelId}"
+                                    ${isSelected}>
+                                ${opt.text}
+                            </option>
+                        `);
+                        count++;
+                    }
+                });
+
+                if(count === 0) {
+                     $asetSelect.append('<option value="" disabled>Tidak ada aset pada panel ini</option>');
+                }
+            }
+
+            // 3. Event Listener Panel Change
+            $('#panel_kwh_id').on('change', function() {
+                const panelId = $(this).val();
+                filterAsetPjuByPanel(panelId);
+                
+                // Trigger change aset agar map juga update/clear
+                $('#aset_pju_id').trigger('change');
+            });
+
+
+            // ============================================
+            // MODAL & MAP LOGIC
+            // ============================================
             const modal = document.getElementById('modalKoneksi');
             const openModal = () => modal.classList.add('active');
             const closeModal = () => modal.classList.remove('active');
@@ -386,7 +475,6 @@
                 const hintEl = document.getElementById('mapHint');
                 if (!asetPos || !panelPos) {
                     hintEl.textContent = 'Pilih Aset PJU & Panel KWh untuk menampilkan jalur.';
-                    map.setView(bantulCenter, 13);
                     return;
                 }
 
@@ -395,13 +483,13 @@
                 markerAset = L.marker(asetPos).addTo(map).bindPopup('Aset PJU').openPopup();
                 markerPanel = L.marker(panelPos).addTo(map).bindPopup('Panel KWh');
 
-                line = L.polyline([asetPos, panelPos]).addTo(map);
+                line = L.polyline([asetPos, panelPos], {color: 'blue', weight: 4}).addTo(map);
 
                 const dist = computeDistanceMeters(asetPos, panelPos);
                 $('#panjang_kabel_est').val(dist.toFixed(2));
 
                 const bounds = L.latLngBounds([asetPos, panelPos]);
-                map.fitBounds(bounds, { padding: [30, 30] });
+                map.fitBounds(bounds, { padding: [50, 50] });
             }
 
             // Open Create
@@ -410,6 +498,9 @@
                 $('#formMethod').val('POST');
                 $('#formKoneksi').attr('action', window.KONEKSI_ROUTE.store);
                 $('#formKoneksi')[0].reset();
+
+                // Reset Filter UI
+                filterAsetPjuByPanel(''); 
 
                 openModal();
                 initMapOnce();
@@ -420,6 +511,7 @@
             });
 
             // When select changes -> redraw line
+            // Gunakan event delegation atau direct karena element exist
             $('#aset_pju_id, #panel_kwh_id').on('change', function () {
                 if (!map) return;
                 drawConnection();
@@ -428,15 +520,21 @@
             // Open Edit
             $(document).on('click', '.btn-edit', function () {
                 const $tr = $(this).closest('tr');
-
                 const id = $tr.data('id');
+                const panelId = $tr.data('panel_kwh_id');
+                const asetId = $tr.data('aset_pju_id');
+
                 $('#modalTitle').text('Edit Koneksi');
                 $('#formMethod').val('PUT');
                 $('#formKoneksi').attr('action', `${window.KONEKSI_ROUTE.updateBase}/${id}`);
 
-                // set input values
-                $('#aset_pju_id').val($tr.data('aset_pju_id'));
-                $('#panel_kwh_id').val($tr.data('panel_kwh_id'));
+                // 1. Set Panel First
+                $('#panel_kwh_id').val(panelId);
+
+                // 2. Filter Aset dropdown based on panel ID, and select the correct aset
+                filterAsetPjuByPanel(panelId, asetId);
+
+                // 3. Set other values
                 $('#nomor_mcb_panel').val($tr.data('nomor_mcb_panel') ?? '');
                 $('#fasa').val($tr.data('fasa') ?? '');
                 $('#status_koneksi').val($tr.data('status_koneksi') ?? 'Aktif');
@@ -453,7 +551,6 @@
             });
 
             // Safety: redraw after modal shown
-            // (kalau ada glitch size)
             const observer = new MutationObserver(() => {
                 if (modal.classList.contains('active') && map) {
                     setTimeout(() => map.invalidateSize(), 250);

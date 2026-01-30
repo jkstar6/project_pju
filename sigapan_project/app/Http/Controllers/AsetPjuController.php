@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AsetPju;
 use App\Models\PanelKwh;
 use App\Models\MasterJalan;
+use App\Models\KoneksiPjuKwh; // Pastikan Model Koneksi di-import
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -25,12 +26,11 @@ class AsetPjuController extends Controller
         return view('aset-pju.index', compact('asetPju', 'panelKwh', 'masterJalan'));
     }
 
-
     public function store(Request $request)
     {
         $request->validate([
             'panel_kwh_id' => ['required', Rule::exists((new PanelKwh)->getTable(), 'id')],
-            'jalan_id' => ['nullable', Rule::exists('master_jalan', 'id')],
+            'jalan_id'     => ['nullable', Rule::exists('master_jalan', 'id')],
             'kode_tiang'   => 'required|unique:aset_pju,kode_tiang',
             'jenis_lampu'  => 'nullable|string',
             'watt'         => 'nullable|numeric',
@@ -43,7 +43,6 @@ class AsetPjuController extends Controller
 
         $panel = PanelKwh::findOrFail($request->panel_kwh_id);
 
-        // Validasi jarak maksimal 500m
         $maxDistance = 500;
         $distance = $this->distanceMeters(
             (float) $panel->latitude,
@@ -69,11 +68,8 @@ class AsetPjuController extends Controller
             'watt'         => $request->watt,
             'status_aset'  => $request->status_aset ?? 'Usulan',
             'warna_map'    => 'Kuning',
-
-            // Lokasi aset dari klik/adjust di map
             'latitude'     => $request->latitude,
             'longitude'    => $request->longitude,
-
             'kecamatan'    => $request->kecamatan,
             'desa'         => $request->desa,
         ]);
@@ -89,10 +85,11 @@ class AsetPjuController extends Controller
 
         $request->validate([
             'panel_kwh_id' => ['required', Rule::exists((new PanelKwh)->getTable(), 'id')],
+            'jalan_id'     => ['nullable', Rule::exists('master_jalan', 'id')],
             'kode_tiang'   => 'required|unique:aset_pju,kode_tiang,' . $aset->id,
             'jenis_lampu'  => 'nullable|string',
             'watt'         => 'nullable|numeric',
-            'status_aset' => 'required|in:Usulan,Pengerjaan,Terelialisasi,Pindah,Mati',
+            'status_aset'  => 'required|in:Usulan,Pengerjaan,Terelialisasi,Pindah,Mati',
             'kecamatan'    => 'nullable|string',
             'desa'         => 'nullable|string',
             'latitude'     => 'required|numeric',
@@ -101,7 +98,7 @@ class AsetPjuController extends Controller
 
         $panel = PanelKwh::findOrFail($request->panel_kwh_id);
 
-        // Validasi jarak maksimal 500m
+        // Validasi Jarak
         $maxDistance = 500;
         $distance = $this->distanceMeters(
             (float) $panel->latitude,
@@ -119,6 +116,18 @@ class AsetPjuController extends Controller
                 ->withInput();
         }
 
+        // [LOGIKA HAPUS OTOMATIS]
+        // Hapus koneksi jaringan jika:
+        // 1. Panel KWh berubah (beda induk)
+        // 2. ATAU Lokasi (Latitude/Longitude) berubah (jarak/jalur kabel tidak lagi valid)
+        if (
+            $aset->panel_kwh_id != $request->panel_kwh_id ||
+            $aset->latitude != $request->latitude ||
+            $aset->longitude != $request->longitude
+        ) {
+            KoneksiPjuKwh::where('aset_pju_id', $aset->id)->delete();
+        }
+
         $aset->update([
             'panel_kwh_id' => $panel->id,
             'jalan_id'     => $request->jalan_id,
@@ -132,37 +141,24 @@ class AsetPjuController extends Controller
             'desa'         => $request->desa,
         ]);
 
-
         return redirect()
             ->route('aset-pju.index')
-            ->with('success', 'Aset PJU berhasil diperbarui');
+            ->with('success', 'Aset PJU berhasil diperbarui (Koneksi jaringan disesuaikan jika lokasi/panel berubah)');
     }
 
     public function destroy($id)
     {
         AsetPju::findOrFail($id)->delete();
-
-        return redirect()
-            ->route('aset-pju.index')
-            ->with('success', 'Aset PJU berhasil dihapus');
+        return redirect()->route('aset-pju.index')->with('success', 'Aset PJU berhasil dihapus');
     }
 
-    /**
-     * Hitung jarak 2 koordinat (meter) - Haversine
-     */
     private function distanceMeters(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
-        $earthRadius = 6371000; // meter
-
+        $earthRadius = 6371000;
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
-
-        $a = sin($dLat / 2) * sin($dLat / 2)
-            + cos(deg2rad($lat1)) * cos(deg2rad($lat2))
-            * sin($dLon / 2) * sin($dLon / 2);
-
+        $a = sin($dLat / 2) * sin($dLat / 2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) * sin($dLon / 2);
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
         return $earthRadius * $c;
     }
 }

@@ -26,14 +26,14 @@
 
     <div class="main-content transition-all flex flex-col overflow-hidden min-h-screen" id="main-content">
         <!-- Start: Breadcrumb -->
-        <div class="mb-[25px] md:flex items-center justify-between">
+        {{-- <div class="mb-[25px] md:flex items-center justify-between">
             <h5 class="mb-0">
                 @yield('title')
             </h5>
             <ol class="breadcrumb mt-[12px] md:mt-0">
                 @yield('breadcrumb')
             </ol>
-        </div>
+        </div> --}}
         <!-- End : Breadcrumb -->
 
         {{-- Start : Main Content --}}

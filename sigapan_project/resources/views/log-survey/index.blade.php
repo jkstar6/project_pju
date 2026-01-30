@@ -5,11 +5,25 @@
 @push('styles')
     <link rel="stylesheet" href="{{ URL::asset('assets/admin/css/datatables-2.3.4/datatables.tailwindcss.css') }}">
     <style>
-        #data-table td.text-center { vertical-align: middle; }
-        #data-table td { padding: 12px 8px; }
-        #data-table th { padding: 12px 8px; }
-        .btn-icon { cursor: pointer; }
-        .material-symbols-outlined { font-size: 18px !important; }
+        #data-table td.text-center {
+            vertical-align: middle;
+        }
+
+        #data-table td {
+            padding: 12px 8px;
+        }
+
+        #data-table th {
+            padding: 12px 8px;
+        }
+
+        .btn-icon {
+            cursor: pointer;
+        }
+
+        .material-symbols-outlined {
+            font-size: 18px !important;
+        }
 
         /* Modal */
         .modal-overlay {
@@ -22,8 +36,11 @@
             z-index: 9999;
             padding: 16px;
         }
-        .modal-overlay.active { display: flex; }
-        
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
         .modal-content {
             width: 100%;
             max-width: 760px;
@@ -31,7 +48,7 @@
             border-radius: 12px;
             overflow: hidden;
         }
-        
+
         .modal-header {
             padding: 16px 20px;
             border-bottom: 1px solid #eee;
@@ -39,9 +56,11 @@
             justify-content: space-between;
             align-items: center;
         }
-        
-        .modal-body { padding: 20px; }
-        
+
+        .modal-body {
+            padding: 20px;
+        }
+
         .modal-footer {
             padding: 16px 20px;
             border-top: 1px solid #eee;
@@ -62,6 +81,7 @@
             font-weight: 500;
             transition: all 0.2s;
         }
+
         .btn-map:hover {
             background-color: #dbeafe;
             color: #1d4ed8;
@@ -75,14 +95,17 @@
             font-weight: 500;
             display: inline-block;
         }
+
         .badge-success {
             background-color: #dcfce7;
             color: #166534;
         }
+
         .badge-danger {
             background-color: #fee2e2;
             color: #991b1b;
         }
+
         .badge-warning {
             background-color: #fef3c7;
             color: #92400e;
@@ -97,9 +120,7 @@
                 <h5 class="mb-0">Data @yield('title') Harian</h5>
             </div>
             <div class="trezo-card-subtitle sm:flex sm:items-center">
-                <button
-                    type="button"
-                    id="btnOpenCreate"
+                <button type="button" id="btnOpenCreate"
                     class="trezo-card-dropdown-btn py-[5px] md:py-[6.5px] px-[12px] md:px-[19px] bg-primary-500 text-white transition-all hover:bg-primary-400 rounded-md border border-primary-500 hover:border-primary-400">
                     <i class="ri-menu-add-line"></i>
                     Tambah Log Survey
@@ -125,17 +146,11 @@
                     </thead>
                     <tbody>
                         @foreach ($logSurvey as $index => $log)
-                            <tr 
-                                data-id="{{ $log->id }}"
-                                data-aset_pju_id="{{ $log->aset_pju_id }}"
-                                data-user_id="{{ $log->user_id }}"
-                                data-tgl_survey="{{ $log->tgl_survey }}"
-                                data-kondisi="{{ $log->kondisi }}"
-                                data-keberadaan="{{ $log->keberadaan }}"
-                                data-catatan="{{ $log->catatan_kerusakan }}"
-                                data-lat="{{ $log->lat_input }}"
-                                data-long="{{ $log->long_input }}"
-                            >
+                            <tr data-id="{{ $log->id }}" data-aset_pju_id="{{ $log->aset_pju_id }}"
+                                data-user_id="{{ $log->user_id }}" data-tgl_survey="{{ $log->tgl_survey }}"
+                                data-kondisi="{{ $log->kondisi }}" data-keberadaan="{{ $log->keberadaan }}"
+                                data-catatan="{{ $log->catatan_kerusakan }}" data-lat="{{ $log->lat_input }}"
+                                data-long="{{ $log->long_input }}">
                                 <td class="text-center">{{ $index + 1 }}</td>
                                 <td class="text-left">
                                     <strong class="text-primary-500">{{ $log->aset->kode_tiang ?? '-' }}</strong>
@@ -143,10 +158,9 @@
                                 <td class="text-left">{{ $log->user->name ?? '-' }}</td>
                                 <td class="text-center">{{ date('d M Y', strtotime($log->tgl_survey)) }}</td>
                                 <td class="text-center">
-                                    @if($log->lat_input && $log->long_input)
-                                        <a href="https://www.google.com/maps?q={{ $log->lat_input }},{{ $log->long_input }}" 
-                                           target="_blank" 
-                                           class="btn-map">
+                                    @if ($log->lat_input && $log->long_input)
+                                        <a href="https://www.google.com/maps?q={{ $log->lat_input }},{{ $log->long_input }}"
+                                            target="_blank" class="btn-map">
                                             <i class="material-symbols-outlined !text-sm">location_on</i>
                                             Lihat Map
                                         </a>
@@ -155,7 +169,7 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    @if($log->kondisi == 'Nyala')
+                                    @if ($log->kondisi == 'Nyala')
                                         <span class="badge badge-success">{{ $log->kondisi }}</span>
                                     @elseif($log->kondisi == 'Mati')
                                         <span class="badge badge-danger">{{ $log->kondisi }}</span>
@@ -176,9 +190,11 @@
                                         <button type="button" class="btn-icon btn-edit text-warning-500" title="Edit">
                                             <i class="material-symbols-outlined">edit</i>
                                         </button>
-                                        <form action="{{ route('log-survey.destroy', $log->id) }}" method="post" class="inline">
+                                        <form action="{{ route('log-survey.destroy', $log->id) }}" method="post"
+                                            class="inline">
                                             @csrf @method('delete')
-                                            <button type="submit" onclick="return confirm('Hapus data survey ini?')" class="btn-icon text-danger-500" title="Delete">
+                                            <button type="submit" onclick="return confirm('Hapus data survey ini?')"
+                                                class="btn-icon text-danger-500" title="Delete">
                                                 <i class="material-symbols-outlined">delete</i>
                                             </button>
                                         </form>
@@ -194,86 +210,84 @@
 
     {{-- MODAL FORM --}}
     {{-- MODAL --}}
-<div id="modalLog" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <strong id="modalTitle">Log Survey</strong>
-            <button class="btn-close-modal">
-                <i class="material-symbols-outlined">close</i>
-            </button>
+    <div id="modalLog" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <strong id="modalTitle">Log Survey</strong>
+                <button class="btn-close-modal">
+                    <i class="material-symbols-outlined">close</i>
+                </button>
+            </div>
+
+            <form id="formLog" method="POST" action="{{ route('log-survey.store') }}">
+                @csrf
+                <input type="hidden" name="_method" id="formMethod" value="POST">
+                <input type="hidden" name="lat_input" id="lat_input">
+                <input type="hidden" name="long_input" id="long_input">
+
+                <div class="modal-body grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    {{-- DROPDOWN ASET --}}
+                    <div>
+                        <label class="text-sm font-medium mb-2 block">Aset PJU</label>
+                        <select name="aset_pju_id" id="aset_pju_id_select" class="w-full border rounded-md px-3 py-2.5"
+                            required>
+                            <option value="">-- Pilih Aset PJU --</option>
+                            @foreach ($asets as $aset)
+                                <option value="{{ $aset->id }}" data-lat="{{ $aset->latitude }}"
+                                    data-long="{{ $aset->longitude }}">
+                                    {{ $aset->kode_tiang }}
+                                    | {{ $aset->desa ?? '-' }}
+                                    | {{ $aset->status_aset ?? '-' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium mb-2 block">Surveyor</label>
+                        <select name="user_id" class="w-full border rounded-md px-3 py-2.5" required>
+                            @foreach ($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium mb-2 block">Tanggal Survey</label>
+                        <input type="date" name="tgl_survey" class="w-full border rounded-md px-3 py-2.5" required>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium mb-2 block">Kondisi</label>
+                        <select name="kondisi" class="w-full border rounded-md px-3 py-2.5">
+                            <option value="Nyala">Nyala</option>
+                            <option value="Mati">Mati</option>
+                            <option value="Rusak Fisik">Rusak Fisik</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium mb-2 block">Keberadaan</label>
+                        <select name="keberadaan" class="w-full border rounded-md px-3 py-2.5">
+                            <option value="Ada">Ada</option>
+                            <option value="Hilang">Hilang</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-medium mb-2 block">Catatan Kerusakan</label>
+                        <textarea name="catatan_kerusakan" rows="3" class="w-full border rounded-md px-3 py-2.5"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-close-modal px-4 py-2 bg-gray-100 rounded-md">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-primary-500 text-white rounded-md">Simpan</button>
+                </div>
+            </form>
         </div>
-
-        <form id="formLog" method="POST" action="{{ route('log-survey.store') }}">
-            @csrf
-            <input type="hidden" name="_method" id="formMethod" value="POST">
-            <input type="hidden" name="lat_input" id="lat_input">
-            <input type="hidden" name="long_input" id="long_input">
-
-            <div class="modal-body grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                {{-- DROPDOWN ASET --}}
-                <div>
-                    <label class="text-sm font-medium mb-2 block">Aset PJU</label>
-                    <select name="aset_pju_id" id="aset_pju_id_select" class="w-full border rounded-md px-3 py-2.5" required>
-                        <option value="">-- Pilih Aset PJU --</option>
-                        @foreach($asets as $aset)
-                            <option
-                                value="{{ $aset->id }}"
-                                data-lat="{{ $aset->latitude }}"
-                                data-long="{{ $aset->longitude }}"
-                            >
-                                {{ $aset->kode_tiang }}
-                                | {{ $aset->desa ?? '-' }}
-                                | {{ $aset->status_aset ?? '-' }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium mb-2 block">Surveyor</label>
-                    <select name="user_id" class="w-full border rounded-md px-3 py-2.5" required>
-                        @foreach($users as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium mb-2 block">Tanggal Survey</label>
-                    <input type="date" name="tgl_survey" class="w-full border rounded-md px-3 py-2.5" required>
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium mb-2 block">Kondisi</label>
-                    <select name="kondisi" class="w-full border rounded-md px-3 py-2.5">
-                        <option value="Nyala">Nyala</option>
-                        <option value="Mati">Mati</option>
-                        <option value="Rusak Fisik">Rusak Fisik</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium mb-2 block">Keberadaan</label>
-                    <select name="keberadaan" class="w-full border rounded-md px-3 py-2.5">
-                        <option value="Ada">Ada</option>
-                        <option value="Hilang">Hilang</option>
-                    </select>
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="text-sm font-medium mb-2 block">Catatan Kerusakan</label>
-                    <textarea name="catatan_kerusakan" rows="3" class="w-full border rounded-md px-3 py-2.5"></textarea>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn-close-modal px-4 py-2 bg-gray-100 rounded-md">Batal</button>
-                <button type="submit" class="px-4 py-2 bg-primary-500 text-white rounded-md">Simpan</button>
-            </div>
-        </form>
     </div>
-</div>
 @endsection
 
 @push('scripts')
@@ -283,7 +297,9 @@
         $(document).ready(function() {
             const dt = $('#data-table').DataTable({
                 responsive: true,
-                order: [[3, 'desc']] // Sort by date desc
+                order: [
+                    [3, 'desc']
+                ] // Sort by date desc
             });
 
             const modal = document.getElementById('modalLog');
@@ -291,7 +307,7 @@
 
             function toggleModal(show = true) {
                 modal.classList.toggle('active', show);
-                if(!show) form.reset();
+                if (!show) form.reset();
             }
 
             // Tambah
@@ -308,10 +324,10 @@
                 if (btnEdit) {
                     const tr = btnEdit.closest('tr');
                     const id = tr.dataset.id;
-                    
+
                     document.getElementById('modalTitle').innerText = 'Edit Log Survey';
                     document.getElementById('formMethod').value = 'PUT';
-                    form.action = `/log-survey/${id}`; 
+                    form.action = `/log-survey/${id}`;
 
                     form.aset_pju_id.value = tr.dataset.aset_pju_id;
                     form.user_id.value = tr.dataset.user_id;

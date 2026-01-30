@@ -48,27 +48,31 @@
                     <thead>
                         <tr>
                             <th class="text-center">No</th>
-                            <th class="text-left">No Tiket & Identitas Lokasi</th>
-                            <th class="text-left">Hasil Pengecekan</th>
+                            <th class="text-left">No Tiket & Lokasi</th>
+                            <th class="text-left">Hasil & Status</th>
                             <th class="text-left">Suku Cadang</th>
-                            <th class="text-center">Bukti</th> {{-- KOLOM DIKEMBALIKAN --}}
+                            <th class="text-center">Bukti</th>
                             <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($tindakan as $item)
-                            <tr data-id="{{ $item->id }}" data-tiket="{{ $item->tiket_perbaikan_id }}" data-hasil="{{ $item->hasil_cek }}" data-suku="{{ json_encode($item->suku_cadang) }}">
+                            {{-- data-status mengambil dari relasi tiket --}}
+                            <tr data-id="{{ $item->id }}" 
+                                data-tiket="{{ $item->tiket_perbaikan_id }}" 
+                                data-hasil="{{ $item->hasil_cek }}" 
+                                data-status="{{ $item->tiket->status_tindakan ?? 'Proses' }}"
+                                data-suku="{{ json_encode($item->suku_cadang) }}">
+                                
                                 <td class="text-center font-bold text-gray-400">{{ $loop->iteration }}</td>
                                 
                                 <td class="text-left">
                                     <div class="flex flex-col">
                                         <strong class="text-primary-500 text-sm">Tiket #{{ $item->tiket->id ?? $item->tiket_perbaikan_id }}</strong>
-                                        
                                         @if($item->tiket && $item->tiket->aset)
                                             <span class="text-[11px] text-gray-700 font-bold uppercase mt-1">{{ $item->tiket->aset->kode_tiang }}</span>
                                             <small class="text-[10px] text-gray-500 italic line-clamp-1">{{ $item->tiket->aset->lokasi_panel }}</small>
                                         @elseif($item->tiket && $item->tiket->pengaduan)
-                                            {{-- Fallback jika aset_pju_id NULL --}}
                                             <span class="text-[11px] text-orange-600 font-bold mt-1 uppercase">Lokasi Aduan:</span>
                                             <small class="text-[10px] text-gray-400 italic line-clamp-2">"{{ $item->tiket->pengaduan->deskripsi_lokasi }}"</small>
                                         @else
@@ -78,7 +82,13 @@
                                 </td>
 
                                 <td class="text-left">
-                                    <p class="text-xs text-gray-600 italic">"{{ Str::limit($item->hasil_cek, 80) }}"</p>
+                                    <p class="text-xs text-gray-600 italic mb-2">"{{ Str::limit($item->hasil_cek, 80) }}"</p>
+                                    {{-- Mengambil status dari tabel tiket_perbaikan melalui relasi --}}
+                                    @if(($item->tiket->status_tindakan ?? '') == 'Selesai')
+                                        <span class="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Selesai</span>
+                                    @else
+                                        <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Proses</span>
+                                    @endif
                                 </td>
 
                                 <td class="text-left">
@@ -91,7 +101,6 @@
                                     @else <span class="text-gray-300 text-[10px]">-</span> @endif
                                 </td>
 
-                                {{-- KOLOM BUKTI FOTO DIKEMBALIKAN --}}
                                 <td class="text-center">
                                     @if($item->foto_bukti_selesai)
                                         <a href="{{ asset('storage/'.$item->foto_bukti_selesai) }}" target="_blank" class="text-blue-500 hover:text-blue-700 transition">
@@ -104,10 +113,10 @@
 
                                 <td class="text-center">
                                     <div class="flex items-center gap-2 justify-center">
-                                        <button class="btn-edit text-blue-500 transition"><i class="material-symbols-outlined">edit</i></button>
+                                        <button class="btn-edit text-blue-500 transition hover:scale-110"><i class="material-symbols-outlined">edit</i></button>
                                         <form action="{{ route('tindakan-teknisi.destroy', $item->id) }}" method="POST" class="inline">
                                             @csrf @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Hapus?')" class="text-red-400"><i class="material-symbols-outlined">delete</i></button>
+                                            <button type="submit" onclick="return confirm('Hapus log ini?')" class="text-red-400 hover:text-red-600 transition hover:scale-110"><i class="material-symbols-outlined">delete</i></button>
                                         </form>
                                     </div>
                                 </td>
@@ -119,7 +128,7 @@
         </div>
     </div>
 
-    {{-- MODAL TETAP SAMA SEPERTI SEBELUMNYA --}}
+    {{-- MODAL --}}
     <div id="modalTindakan" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
         <div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4 border-b pb-3">
@@ -129,6 +138,7 @@
             <form id="formTindakan" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
+                
                 <div class="grid grid-cols-1 gap-5">
                     <div>
                         <label class="block text-sm font-semibold mb-1">Pilih Tiket Perbaikan Aktif</label>
@@ -144,24 +154,38 @@
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">Hasil Pengecekan</label>
-                        <textarea name="hasil_cek" id="in_hasil_cek" rows="3" class="w-full border rounded-md px-3 py-2" required></textarea>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Hasil Pengecekan</label>
+                            <textarea name="hasil_cek" id="in_hasil_cek" rows="3" class="w-full border rounded-md px-3 py-2" required></textarea>
+                        </div>
+                        {{-- Dropdown Status untuk Sinkronisasi ke Tabel Tiket --}}
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Status Tiket</label>
+                            <select name="status" id="in_status" class="w-full border rounded-md px-3 py-2 bg-white">
+                                <option value="Proses">Dalam Proses</option>
+                                <option value="Selesai">Selesai (Tutup Tiket)</option>
+                            </select>
+                            <p class="text-[10px] text-gray-400 mt-2 italic">* Mengubah ini akan mengubah status di menu Tiket Perbaikan.</p>
+                        </div>
                     </div>
+
                     <div class="border p-4 rounded-md bg-gray-50">
                         <label class="block text-sm font-bold mb-3">Suku Cadang</label>
                         <div id="sparepart-container" class="space-y-2 mb-3"></div>
                         <button type="button" id="add-sparepart" class="text-xs text-blue-600 font-bold">+ Tambah Item</button>
                     </div>
+
                     <div>
                         <label class="block text-sm font-semibold mb-1">Upload Foto Bukti</label>
-                        <p class=" text-sm ">Ukuran Maksimal 2 MB</p> 
                         <input type="file" name="foto_bukti_selesai" class="w-full border rounded-md px-3 py-2 text-sm">
                     </div>
                 </div>
+
                 <div class="flex justify-end gap-3 mt-8">
                     <button type="button" class="btn-close-modal px-6 py-2 rounded-md bg-gray-100">Batal</button>
-                    <button type="submit" class="px-6 py-2 rounded-md bg-primary-500 text-white shadow-md">Simpan</button>
+                    <button type="submit" class="px-6 py-2 rounded-md bg-primary-500 text-white shadow-md">Simpan Data</button>
                 </div>
             </form>
         </div>
@@ -196,6 +220,7 @@
             $('#formMethod').val('POST');
             $('#formTindakan').attr('action', "{{ route('tindakan-teknisi.store') }}");
             $('#formTindakan')[0].reset();
+            $('#in_status').val('Proses');
             modal.classList.add('active');
             addRow(); 
         });
@@ -205,14 +230,25 @@
             $('#modalTitle').text('Edit Log Tindakan');
             $('#formMethod').val('PUT');
             $('#formTindakan').attr('action', `/tindakan-teknisi/${tr.id}`);
+            
             $('#in_tiket_id').val(tr.tiket);
             $('#in_hasil_cek').val(tr.hasil);
+            $('#in_status').val(tr.status); // Mengambil status dari data-status (tiket)
+            
             modal.classList.add('active');
-            if (tr.suku) { tr.suku.forEach(item => addRow(item.nama, item.jumlah)); } 
-            else { addRow(); }
+            $('#sparepart-container').empty();
+            if (tr.suku && tr.suku.length > 0) { 
+                tr.suku.forEach(item => addRow(item.nama, item.jumlah)); 
+            } else { 
+                addRow(); 
+            }
         });
 
-        $('.btn-close-modal').click(() => { modal.classList.remove('active'); $('#sparepart-container').empty(); scIndex = 0; });
+        $('.btn-close-modal').click(() => { 
+            modal.classList.remove('active'); 
+            $('#sparepart-container').empty(); 
+            scIndex = 0; 
+        });
     });
 </script>
 @endpush

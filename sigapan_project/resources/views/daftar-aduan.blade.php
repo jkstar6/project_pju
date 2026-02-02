@@ -80,7 +80,7 @@
 @endpush
 
 @section('content')
-    <section class="py-12 bg-gray-50 dark:bg-neutral-900 min-h-screen">
+    <section class="py-12 bg-gray-50 dark:bg-neutral-900 min-h-screen bg-neutral-200">
         <div class="container mx-auto px-4">
             
             <div class="text-center mb-12">
@@ -134,7 +134,7 @@
                             </span>
                         </div>
 
-                        <div class="p-5 flex-1 flex flex-col">
+                        <div class="p-5 flex-1 flex flex-col bg-neutral-50">
                             <div class="flex items-center gap-2 text-neutral-500 text-xs mb-3 font-medium">
                                 <i class="ti ti-calendar"></i> 
                                 <span>{{ $item->created_at->diffForHumans() }}</span>

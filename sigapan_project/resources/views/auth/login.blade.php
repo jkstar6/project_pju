@@ -28,7 +28,7 @@
                          alt="logo" 
                          class="inline-block dark:hidden w-[50px] md:w-[60px] h-auto mb-4">
                     
-                    <img src="{{ URL::asset('/assets/admin/images/white-logo-big.svg') }}" 
+                    <img src="{{ URL::asset('/assets/admin/images/logo/white-logo-big.svg') }}" 
                          alt="logo" 
                          class="hidden dark:inline-block w-[50px] md:w-[60px] h-auto mb-4">
 

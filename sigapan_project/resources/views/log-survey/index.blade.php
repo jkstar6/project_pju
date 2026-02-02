@@ -147,7 +147,7 @@
                     <tbody>
                         @foreach ($logSurvey as $index => $log)
                             <tr data-id="{{ $log->id }}" data-aset_pju_id="{{ $log->aset_pju_id }}"
-                                data-user_id="{{ $log->user_id }}" data-tgl_survey="{{ $log->tgl_survey }}"
+                                data-tim_lapangan_id="{{ $log->tim_lapangan_id }}" data-tgl_survey="{{ $log->tgl_survey }}"
                                 data-kondisi="{{ $log->kondisi }}" data-keberadaan="{{ $log->keberadaan }}"
                                 data-catatan="{{ $log->catatan_kerusakan }}" data-lat="{{ $log->lat_input }}"
                                 data-long="{{ $log->long_input }}">
@@ -156,7 +156,7 @@
                                     <strong class="text-primary-500">{{ $log->aset->kode_tiang ?? '-' }}</strong>
                                 </td>
                                 <td class="text-left">{{ $log->user->name ?? '-' }}</td>
-                                <td class="text-center">{{ date('d M Y', strtotime($log->tgl_survey)) }}</td>
+                                <td class="text-left">{{ $log->timLapangan->nama_tim ?? '-' }}</td>
                                 <td class="text-center">
                                     @if ($log->lat_input && $log->long_input)
                                         <a href="https://www.google.com/maps?q={{ $log->lat_input }},{{ $log->long_input }}"
@@ -244,11 +244,13 @@
                         </select>
                     </div>
 
+                    {{-- Dropdown Tim Lapangan --}}
                     <div>
-                        <label class="text-sm font-medium mb-2 block">Surveyor</label>
-                        <select name="user_id" class="w-full border rounded-md px-3 py-2.5" required>
-                            @foreach ($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                        <label class="text-sm font-medium mb-2 block">Tim Lapangan</label>
+                        <select name="tim_lapangan_id" class="w-full border rounded-md px-3 py-2.5" required>
+                            <option value="">-- Pilih Tim --</option>
+                            @foreach ($timLapangans as $tim) {{-- Pastikan variabel dari Controller diganti --}}
+                                <option value="{{ $tim->id }}">{{ $tim->nama_tim }} ({{ $tim->kategori }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -330,7 +332,7 @@
                     form.action = `/log-survey/${id}`;
 
                     form.aset_pju_id.value = tr.dataset.aset_pju_id;
-                    form.user_id.value = tr.dataset.user_id;
+                    form.tim_lapangan_id.value = tr.dataset.tim_lapangan_id;
                     form.tgl_survey.value = tr.dataset.tgl_survey;
                     form.kondisi.value = tr.dataset.kondisi;
                     form.keberadaan.value = tr.dataset.keberadaan;

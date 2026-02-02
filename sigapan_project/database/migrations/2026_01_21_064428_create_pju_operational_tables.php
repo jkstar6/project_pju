@@ -64,7 +64,7 @@ return new class extends Migration
         Schema::create('log_survey', function (Blueprint $table) {
             $table->id();
             $table->foreignId('aset_pju_id')->constrained('aset_pju');
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('tim_lapangan_id')->constrained('tim_lapangan');
             $table->date('tgl_survey');
             $table->enum('kondisi', ['Nyala', 'Mati', 'Rusak Fisik']);
             $table->enum('keberadaan', ['Ada', 'Hilang'])->default('Ada');

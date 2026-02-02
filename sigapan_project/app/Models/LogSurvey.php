@@ -15,7 +15,7 @@ class LogSurvey extends Model
     // Kolom yang boleh diisi (Mass Assignment)
     protected $fillable = [
         'aset_pju_id',
-        'user_id',
+        'tim_lapangan_id',
         'tgl_survey',
         'kondisi',
         'keberadaan',
@@ -37,8 +37,8 @@ class LogSurvey extends Model
      * Relasi ke model User (Surveyor)
      * Log survey ini dibuat oleh satu user/surveyor
      */
-    public function user()
+    public function timLapangan()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(TimLapangan::class, 'tim_lapangan_id');
     }
 }

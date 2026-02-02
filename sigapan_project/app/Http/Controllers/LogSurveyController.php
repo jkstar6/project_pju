@@ -4,28 +4,27 @@ namespace App\Http\Controllers;
 
 use App\Models\LogSurvey;
 use App\Models\AsetPju;
-use App\Models\User;
+use App\Models\TimLapangan;
 use Illuminate\Http\Request;
 
 class LogSurveyController extends Controller
 {
     public function index()
     {
-        // Mengambil log dengan relasi aset dan user agar nama muncul di tabel
-        $logSurvey = LogSurvey::with(['aset', 'user'])->latest()->get();
+        // Mengambil log dengan relasi aset dan tim lapangan agar nama muncul di tabel
+        $logSurvey = LogSurvey::with(['aset', 'timLapangan'])->latest()->get();
         
         // Data untuk dropdown di Modal
         $asets = AsetPju::all(); 
-        $users = User::all(); 
-
-        return view('log-survey.index', compact('logSurvey', 'asets', 'users'));
+        $timLapangans = TimLapangan::where('kategori', 'Surveyor')->get();
+        return view('log-survey.index', compact('logSurvey', 'asets', 'timLapangans'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'aset_pju_id' => 'required|exists:aset_pju,id',
-            'user_id' => 'required|exists:users,id',
+            'tim_lapangan_id'  => 'required|exists:tim_lapangan,id',
             'tgl_survey' => 'required|date',
             'kondisi' => 'required|in:Nyala,Mati,Rusak Fisik',
             'keberadaan' => 'required|in:Ada,Hilang',
@@ -44,7 +43,7 @@ class LogSurveyController extends Controller
 
         $request->validate([
             'aset_pju_id' => 'required|exists:aset_pju,id',
-            'user_id' => 'required|exists:users,id',
+            'tim_lapangan_id'  => 'required|exists:tim_lapangan,id',
             'tgl_survey' => 'required|date',
             'kondisi' => 'required|in:Nyala,Mati,Rusak Fisik',
             'keberadaan' => 'required|in:Ada,Hilang',

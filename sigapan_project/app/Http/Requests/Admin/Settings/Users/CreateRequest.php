@@ -22,9 +22,10 @@ class CreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required',
-            'email' => 'required|email:rfc,dns|unique:users,email',
-            'roles' => 'required',
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email:rfc,dns', 'unique:users,email'],
+            // ✅ SINGLE ROLE (bukan roles[])
+            'role'     => ['required', 'string', 'exists:roles,name'],
             'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
         ];
     }

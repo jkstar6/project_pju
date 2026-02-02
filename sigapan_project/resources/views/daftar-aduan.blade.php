@@ -67,25 +67,14 @@
         }
 
         /* Warna Status Spesifik */
-        .status-menunggu {
-            background-color: #f59e0b;
-            border: 2px solid #ffffff;
-        }
-
-        .status-selesai {
-            background-color: #10b981;
-            border: 2px solid #ffffff;
-        }
-
-        .status-proses {
-            background-color: #3b82f6; 
-            border: 2px solid #ffffff;
-        }
+        .status-proses  { background-color: #3b82f6; border: 2px solid #ffffff; } /* Biru */
+        .status-tolak   { background-color: #ef4444; border: 2px solid #ffffff; } /* Merah */
+        .status-selesai { background-color: #10b981; border: 2px solid #ffffff; } /* Hijau */
 
         /* Indikator Garis Warna di Atas Kartu */
-        .card-border-menunggu { border-top: 4px solid #f59e0b; }
+        .card-border-proses  { border-top: 4px solid #3b82f6; }
+        .card-border-tolak   { border-top: 4px solid #ef4444; }
         .card-border-selesai { border-top: 4px solid #10b981; }
-        .card-border-proses { border-top: 4px solid #3b82f6; }
 
     </style>
 @endpush
@@ -101,32 +90,53 @@
 
             <div class="custom-grid-container">
 
-                {{-- LOOPING DATA DARI CONTROLLER --}}
                 @forelse($aduan as $item)
-                    {{-- 
-                        Karena data yang dikirim controller adalah yang berstatus 'Diterima',
-                        maka kita gunakan style visual 'Proses' (Biru) agar sesuai konteks verifikasi.
-                    --}}
-                    <a href="{{ url('/detail-aduan/' . $item->id) }}" class="custom-card group card-border-proses">
+                    @php
+                        // --- LOGIKA STATUS ---
+                        
+                        // Default: Diterima (Biru)
+                        $badgeClass = 'status-proses';
+                        $borderClass = 'card-border-proses';
+                        $statusLabel = 'Diterima';
+                        $icon = 'ti ti-check';
+
+                        // Case 1: Ditolak (Merah)
+                        if ($item->status_verifikasi == 'Ditolak') {
+                            $badgeClass = 'status-tolak';
+                            $borderClass = 'card-border-tolak';
+                            $statusLabel = 'Ditolak';
+                            $icon = 'ti ti-x';
+                        }
+                        // Case 2: Diterima -> Cek Tiket -> Selesai (Hijau)
+                        elseif ($item->tiket && $item->tiket->status_tindakan == 'Selesai') {
+                            $badgeClass = 'status-selesai';
+                            $borderClass = 'card-border-selesai';
+                            $statusLabel = 'Selesai';
+                            $icon = 'ti ti-circle-check';
+                        }
+                        // Case 3: Diterima -> Cek Tiket -> Proses (Biru Label Beda)
+                        elseif ($item->tiket && $item->tiket->status_tindakan == 'Proses') {
+                            $statusLabel = 'Diproses'; // Visual saja, warna tetap biru
+                            $icon = 'ti ti-loader';
+                        }
+                    @endphp
+
+                    <a href="{{ url('/detail-aduan/' . $item->id) }}" class="custom-card group {{ $borderClass }}">
                         <div class="custom-img-box">
-                            {{-- Cek apakah ada foto lapangan --}}
                             @if($item->foto_lapangan)
                                 <img src="{{ asset('storage/' . $item->foto_lapangan) }}" alt="{{ $item->tipe_aduan }}">
                             @else
-                                {{-- Placeholder jika tidak ada gambar --}}
                                 <img src="https://via.placeholder.com/400x300?text=Tidak+Ada+Foto" alt="No Image">
                             @endif
 
-                            {{-- Tampilkan Status Badge (Diterima) --}}
-                            <span class="status-badge status-proses">
-                                <i class="ti ti-check mr-1"></i> Diterima
+                            <span class="status-badge {{ $badgeClass }}">
+                                <i class="{{ $icon }} mr-1"></i> {{ $statusLabel }}
                             </span>
                         </div>
 
                         <div class="p-5 flex-1 flex flex-col">
                             <div class="flex items-center gap-2 text-neutral-500 text-xs mb-3 font-medium">
                                 <i class="ti ti-calendar"></i> 
-                                {{-- Menampilkan waktu relatif (ex: 2 jam yang lalu) --}}
                                 <span>{{ $item->created_at->diffForHumans() }}</span>
                             </div>
                             
@@ -134,7 +144,6 @@
                                 {{ $item->tipe_aduan }}
                             </h3>
                             
-                            {{-- Batasi deskripsi agar tidak terlalu panjang (limit 100 karakter) --}}
                             <p class="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2 mb-4">
                                 {{ Str::limit($item->deskripsi_lokasi, 100) }}
                             </p>
@@ -145,13 +154,12 @@
                         </div>
                     </a>
                 @empty
-                    {{-- Tampilan jika belum ada data yang diverifikasi --}}
                     <div class="col-span-1 md:col-span-3 text-center py-12">
                         <div class="inline-block p-4 rounded-full bg-gray-100 mb-4">
                             <i class="ti ti-inbox text-4xl text-gray-400"></i>
                         </div>
-                        <h3 class="text-lg font-medium text-gray-900">Belum ada aduan terverifikasi</h3>
-                        <p class="text-gray-500 mt-1">Laporan yang disetujui admin akan muncul di sini.</p>
+                        <h3 class="text-lg font-medium text-gray-900">Belum ada aduan</h3>
+                        <p class="text-gray-500 mt-1">Laporan akan muncul setelah diproses oleh admin.</p>
                     </div>
                 @endforelse
 

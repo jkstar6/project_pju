@@ -13,8 +13,8 @@ class AduanController extends Controller
      */
     public function daftarAduan()
     {
-        // Menampilkan hanya yang sudah diverifikasi (Diterima)
-        $aduan = PengaduanMasyarakat::where('status_verifikasi', 'Diterima')
+        $aduan = PengaduanMasyarakat::with('tiket')
+                    ->whereIn('status_verifikasi', ['Diterima', 'Ditolak'])
                     ->latest()
                     ->get();
 
@@ -23,28 +23,24 @@ class AduanController extends Controller
 
     /**
      * HALAMAN PUBLIK: DETAIL ADUAN
-     * Method baru untuk menampilkan detail
      */
     public function detail($id)
     {
-        // Cari data berdasarkan ID, jika tidak ketemu akan 404
-        $aduan = PengaduanMasyarakat::findOrFail($id);
-
+        // ✅ PERBAIKAN DI SINI:
+        // Load relasi nested: tiket -> tim_lapangan (untuk ambil ketua_tim)
+        $aduan = PengaduanMasyarakat::with(['tiket.tim_lapangan.leader'])
+            ->findOrFail($id);
+        
         return view('detail-aduan', compact('aduan'));
     }
 
-    /**
-     * LIST ADUAN (ADMIN)
-     */
+    // ... (Method index, store, verifikasi, tolak, destroy TETAP SAMA) ...
     public function index()
     {
         $aduan = PengaduanMasyarakat::latest()->get();
         return view('aduan-admin.index', compact('aduan'));
     }
 
-    /**
-     * SIMPAN ADUAN (MASYARAKAT)
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -81,7 +77,6 @@ class AduanController extends Controller
         return back()->with('success', 'Aduan berhasil dikirim.');
     }
 
-    // ... (Method verifikasi, tolak, destroy tetap sama seperti sebelumnya) ...
     public function verifikasi(Request $request, $id)
     {
         $request->validate(['catatan_admin' => 'required|string']);

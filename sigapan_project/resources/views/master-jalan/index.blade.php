@@ -29,7 +29,6 @@
             font-size: 13px;
             font-weight: 500;
         }
-        /* Warna Badge Berdasarkan Hierarki Jalan */
         .kategori-nasional { background: #fee2e2; color: #991b1b; }
         .kategori-provinsi { background: #ffedd5; color: #9a3412; }
         .kategori-kabupaten { background: #dbeafe; color: #1e40af; }
@@ -40,25 +39,33 @@
         #mapCreate, #mapEdit {
             height: 280px;
             border-radius: 10px;
-            z-index: 1; /* Pastikan map tidak menutupi elemen lain */
+            z-index: 1;
         }
     </style>
 @endpush
 
 @section('content')
+    @php
+        // ✅ Master Jalan: CRUD hanya Admin (Teknisi & Survey read-only)
+        $canManageMasterJalan = auth()->check() && auth()->user()->hasRole('Admin');
+    @endphp
+
     <div class="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md">
         <div class="trezo-card-header mb-[20px] md:mb-[25px] sm:flex sm:items-center sm:justify-between">
             <div class="trezo-card-title">
                 <h5 class="mb-0">Daftar @yield('title')</h5>
             </div>
 
-            <div class="trezo-card-subtitle sm:flex sm:items-center">
-                <button type="button" id="btn-open-create"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 transition">
-                    <span class="material-symbols-outlined" style="font-size:18px;">add</span>
-                    Tambah Jalan Baru
-                </button>
-            </div>
+            {{-- ✅ tombol tambah hanya Admin --}}
+            @if($canManageMasterJalan)
+                <div class="trezo-card-subtitle sm:flex sm:items-center">
+                    <button type="button" id="btn-open-create"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 transition">
+                        <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+                        Tambah Jalan Baru
+                    </button>
+                </div>
+            @endif
         </div>
 
         {{-- Flash Message --}}
@@ -84,7 +91,11 @@
                             <th class="text-center">Lebar (m)</th>
                             <th class="text-center">Panjang (m)</th>
                             <th class="text-center">Tipe Perkerasan</th>
-                            <th class="text-center">Aksi</th>
+
+                            {{-- ✅ kolom aksi hanya Admin --}}
+                            @if($canManageMasterJalan)
+                                <th class="text-center">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
 
@@ -100,6 +111,7 @@
                                     default => 'kategori-lingkungan',
                                 };
                             @endphp
+
                             <tr
                                 data-id="{{ $item->id }}"
                                 data-nama_jalan="{{ $item->nama_jalan }}"
@@ -123,13 +135,16 @@
                                 <td class="text-center">{{ $item->panjang_jalan }} m</td>
                                 <td class="text-center">{{ $item->tipe_perkerasan }}</td>
 
-                                <td class="text-center">
-                                    <div class="flex items-center gap-[10px] justify-center">
-                                        <button type="button" class="btn-icon btn-edit text-blue-600 custom-tooltip" data-text="Edit">
-                                            <i class="material-symbols-outlined">edit</i>
-                                        </button>
-                                    </div>
-                                </td>
+                                {{-- ✅ tombol edit hanya Admin --}}
+                                @if($canManageMasterJalan)
+                                    <td class="text-center">
+                                        <div class="flex items-center gap-[10px] justify-center">
+                                            <button type="button" class="btn-icon btn-edit text-blue-600 custom-tooltip" data-text="Edit">
+                                                <i class="material-symbols-outlined">edit</i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
@@ -138,563 +153,533 @@
         </div>
     </div>
 
-    {{-- MODAL CREATE --}}
-    {{-- PERBAIKAN: Menambahkan max-h-[90vh] dan overflow-y-auto pada child div agar bisa scroll --}}
-    <div id="modalCreate" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
-        <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-4">
-                <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Tambah Jalan Baru</h5>
-                <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
-                    <i class="material-symbols-outlined">close</i>
-                </button>
+    {{-- ✅ MODAL CREATE hanya Admin --}}
+    @if($canManageMasterJalan)
+        <div id="modalCreate" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
+            <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5 max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Tambah Jalan Baru</h5>
+                    <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
+                        <i class="material-symbols-outlined">close</i>
+                    </button>
+                </div>
+
+                <form action="{{ route('master-jalan.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @csrf
+
+                    <div class="md:col-span-2">
+                        <label class="text-sm text-gray-600 dark:text-gray-300">
+                            Peta Bantul (ketik alamat di Nama Jalan → map ikut; atau klik 2 titik untuk arah jalan)
+                        </label>
+                        <div id="mapCreate" class="mt-2"></div>
+                        <input type="hidden" name="geom_polygon" id="geom_polygon_create">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Nama Jalan</label>
+                        <input name="nama_jalan" id="nama_jalan_create"
+                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
+                            placeholder="Contoh: Jl. Sudirman, Bantul" required>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Tips: setelah alamat ketemu, isi Lebar & Panjang → polygon otomatis terbentuk.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Kategori Jalan</label>
+                        <select name="kategori_jalan"
+                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                            <option value="Nasional">Nasional</option>
+                            <option value="Provinsi">Provinsi</option>
+                            <option value="Kabupaten">Kabupaten</option>
+                            <option value="Desa">Desa</option>
+                            <option value="Lingkungan">Lingkungan</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Tipe Perkerasan</label>
+                        <select name="tipe_perkerasan"
+                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                            <option value="Aspal">Aspal</option>
+                            <option value="Beton">Beton</option>
+                            <option value="Paving">Paving</option>
+                            <option value="Tanah">Tanah</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Lebar Jalan (meter)</label>
+                        <input type="number" step="0.01" name="lebar_jalan" id="lebar_jalan_create" min="0"
+                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
+                            required placeholder="0.00">
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Panjang Jalan (meter)</label>
+                        <input type="number" step="0.01" name="panjang_jalan" id="panjang_jalan_create" min="0"
+                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
+                            required placeholder="0.00">
+                    </div>
+
+                    <div class="md:col-span-2 flex justify-end gap-2 mt-2">
+                        <button type="button"
+                            class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <form action="{{ route('master-jalan.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @csrf
-
-                {{-- MAP + GEOM --}}
-                <div class="md:col-span-2">
-                    <label class="text-sm text-gray-600 dark:text-gray-300">
-                        Peta Bantul (ketik alamat di Nama Jalan → map ikut; atau klik 2 titik untuk arah jalan)
-                    </label>
-                    <div id="mapCreate" class="mt-2"></div>
-                    <input type="hidden" name="geom_polygon" id="geom_polygon_create">
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Nama Jalan</label>
-                    <input name="nama_jalan" id="nama_jalan_create"
-                        class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
-                        placeholder="Contoh: Jl. Sudirman, Bantul" required>
-                    <p class="text-xs text-gray-500 mt-1">
-                        Tips: setelah alamat ketemu, isi Lebar & Panjang → polygon otomatis terbentuk di lokasi tersebut.
-                    </p>
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Kategori Jalan</label>
-                    <select name="kategori_jalan"
-                        class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
-                        <option value="Nasional">Nasional</option>
-                        <option value="Provinsi">Provinsi</option>
-                        <option value="Kabupaten">Kabupaten</option>
-                        <option value="Desa">Desa</option>
-                        <option value="Lingkungan">Lingkungan</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Tipe Perkerasan</label>
-                    <select name="tipe_perkerasan"
-                        class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
-                        <option value="Aspal">Aspal</option>
-                        <option value="Beton">Beton</option>
-                        <option value="Paving">Paving</option>
-                        <option value="Tanah">Tanah</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Lebar Jalan (meter)</label>
-                    <input type="number" step="0.01" name="lebar_jalan" id="lebar_jalan_create" min="0"
-                        class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
-                        required placeholder="0.00">
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Panjang Jalan (meter)</label>
-                    <input type="number" step="0.01" name="panjang_jalan" id="panjang_jalan_create" min="0"
-                        class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
-                        required placeholder="0.00">
-                </div>
-
-                <div class="md:col-span-2 flex justify-end gap-2 mt-2">
-                    <button type="button"
-                        class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600">
-                        Simpan
-                    </button>
-                </div>
-            </form>
         </div>
-    </div>
 
-    {{-- MODAL EDIT --}}
-    {{-- PERBAIKAN: Menambahkan max-h-[90vh] dan overflow-y-auto --}}
-    <div id="modalEdit" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
-        <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-4">
-                <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Edit Data Jalan</h5>
-                <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
-                    <i class="material-symbols-outlined">close</i>
-                </button>
+        {{-- ✅ MODAL EDIT hanya Admin --}}
+        <div id="modalEdit" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
+            <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5 max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Edit Data Jalan</h5>
+                    <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
+                        <i class="material-symbols-outlined">close</i>
+                    </button>
+                </div>
+
+                <form id="formEdit" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="md:col-span-2">
+                        <label class="text-sm text-gray-600 dark:text-gray-300">
+                            Peta Bantul (edit alamat di Nama Jalan → map ikut; atau klik 2 titik untuk arah jalan)
+                        </label>
+                        <div id="mapEdit" class="mt-2"></div>
+                        <input type="hidden" name="geom_polygon" id="geom_polygon_edit">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Nama Jalan</label>
+                        <input name="nama_jalan" id="edit_nama_jalan"
+                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
+                            required>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Kategori Jalan</label>
+                        <select name="kategori_jalan" id="edit_kategori_jalan"
+                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                            <option value="Nasional">Nasional</option>
+                            <option value="Provinsi">Provinsi</option>
+                            <option value="Kabupaten">Kabupaten</option>
+                            <option value="Desa">Desa</option>
+                            <option value="Lingkungan">Lingkungan</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Tipe Perkerasan</label>
+                        <select name="tipe_perkerasan" id="edit_tipe_perkerasan"
+                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                            <option value="Aspal">Aspal</option>
+                            <option value="Beton">Beton</option>
+                            <option value="Paving">Paving</option>
+                            <option value="Tanah">Tanah</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Lebar Jalan (meter)</label>
+                        <input type="number" step="0.01" name="lebar_jalan" id="edit_lebar_jalan" min="0"
+                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
+                            required>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Panjang Jalan (meter)</label>
+                        <input type="number" step="0.01" name="panjang_jalan" id="edit_panjang_jalan" min="0"
+                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
+                            required>
+                    </div>
+
+                    <div class="md:col-span-2 flex justify-end gap-2 mt-2">
+                        <button type="button"
+                            class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600">
+                            Update
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <form id="formEdit" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @csrf
-                @method('PUT')
-
-                {{-- MAP + GEOM --}}
-                <div class="md:col-span-2">
-                    <label class="text-sm text-gray-600 dark:text-gray-300">
-                        Peta Bantul (edit alamat di Nama Jalan → map ikut; atau klik 2 titik untuk arah jalan)
-                    </label>
-                    <div id="mapEdit" class="mt-2"></div>
-                    <input type="hidden" name="geom_polygon" id="geom_polygon_edit">
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Nama Jalan</label>
-                    <input name="nama_jalan" id="edit_nama_jalan"
-                        class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
-                        required>
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Kategori Jalan</label>
-                    <select name="kategori_jalan" id="edit_kategori_jalan"
-                        class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
-                        <option value="Nasional">Nasional</option>
-                        <option value="Provinsi">Provinsi</option>
-                        <option value="Kabupaten">Kabupaten</option>
-                        <option value="Desa">Desa</option>
-                        <option value="Lingkungan">Lingkungan</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Tipe Perkerasan</label>
-                    <select name="tipe_perkerasan" id="edit_tipe_perkerasan"
-                        class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
-                        <option value="Aspal">Aspal</option>
-                        <option value="Beton">Beton</option>
-                        <option value="Paving">Paving</option>
-                        <option value="Tanah">Tanah</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Lebar Jalan (meter)</label>
-                    <input type="number" step="0.01" name="lebar_jalan" id="edit_lebar_jalan" min="0"
-                        class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
-                        required>
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-300">Panjang Jalan (meter)</label>
-                    <input type="number" step="0.01" name="panjang_jalan" id="edit_panjang_jalan" min="0"
-                        class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
-                        required>
-                </div>
-
-                <div class="md:col-span-2 flex justify-end gap-2 mt-2">
-                    <button type="button"
-                        class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600">
-                        Update
-                    </button>
-                </div>
-            </form>
         </div>
-    </div>
+    @endif
 @endsection
 
 @push('scripts')
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
-
-    {{-- Leaflet (CDN) --}}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
+        const CAN_MANAGE_MASTER_JALAN = @json($canManageMasterJalan);
+
         // ==========================
-        // DataTable
+        // DataTable (semua role boleh)
         // ==========================
         const dt = $('#data-table').DataTable({
             responsive: true,
             pageLength: 10,
             columnDefs: [
-                { targets: [0,2,3,4,5,6], className: 'text-center' },
-                { targets: [1], className: 'text-left' }
+                // targets disesuaikan otomatis: kolom aksi hanya ada kalau admin
+                { targets: 'text-center', className: 'text-center' },
+                { targets: 'text-left', className: 'text-left' }
             ]
         });
 
         function renumber(){
             const nodes = dt.rows({search:'applied', order:'applied'}).nodes();
             let i = 1;
-            $(nodes).each(function(){
-                $(this).find('.col-no').text(i++);
-            });
+            $(nodes).each(function(){ $(this).find('.col-no').text(i++); });
         }
         dt.on('draw', renumber);
         renumber();
 
-        // ==========================
-        // Modal helpers
-        // ==========================
-        const modalCreate = document.getElementById('modalCreate');
-        const modalEdit = document.getElementById('modalEdit');
-
-        function openModal(m){ m.classList.add('active'); }
-        function closeModal(m){ m.classList.remove('active'); }
-
-        document.getElementById('btn-open-create').addEventListener('click', () => {
-            openModal(modalCreate);
-            initMapCreateOnce();
-            resetCreateMapState();
-            setTimeout(() => mapCreate.invalidateSize(), 150);
-        });
-
-        document.querySelectorAll('.btn-close-modal').forEach(btn => {
-            btn.addEventListener('click', () => {
-                closeModal(modalCreate);
-                closeModal(modalEdit);
+        // ✅ BUKAN ADMIN: stop semua logic modal + map biar tombol CRUD gak ada & JS gak error
+        if (!CAN_MANAGE_MASTER_JALAN) {
+            console.log('Read-only mode: Master Jalan');
+            // prevent accidental edit click if someone injects button
+            document.addEventListener('click', function(e){
+                if (e.target.closest('.btn-edit') || e.target.closest('#btn-open-create')) {
+                    e.preventDefault();
+                }
             });
-        });
+            // stop here
+        } else {
 
-        window.addEventListener('click', function(e){
-            if (e.target === modalCreate) closeModal(modalCreate);
-            if (e.target === modalEdit) closeModal(modalEdit);
-        });
+            // ==========================
+            // Modal helpers
+            // ==========================
+            const modalCreate = document.getElementById('modalCreate');
+            const modalEdit = document.getElementById('modalEdit');
 
-        // ==========================
-        // Bantul focus (lebih zoom)
-        // ==========================
-        const BANTUL_CENTER = [-7.900, 110.330];
-        const BANTUL_DEFAULT_ZOOM = 15;
-        const BANTUL_WORK_ZOOM = 17;
+            function openModal(m){ m.classList.add('active'); }
+            function closeModal(m){ m.classList.remove('active'); }
 
-        const BANTUL_BOUNDS = L.latLngBounds(
-            [-8.050, 110.200],
-            [-7.750, 110.500]
-        );
+            document.getElementById('btn-open-create').addEventListener('click', () => {
+                openModal(modalCreate);
+                initMapCreateOnce();
+                resetCreateMapState();
+                setTimeout(() => mapCreate.invalidateSize(), 150);
+            });
 
-        // baseline auto dari hasil geocode
-        const DEFAULT_BEARING_RAD = 0;       // 0 = utara-selatan
-        const BASELINE_SEED_METERS = 10;     // seed baseline sebelum di-extend sesuai panjang input
+            document.querySelectorAll('.btn-close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    closeModal(modalCreate);
+                    closeModal(modalEdit);
+                });
+            });
 
-        // ==========================
-        // Debounce
-        // ==========================
-        function debounce(fn, delay = 700) {
-            let t;
-            return (...args) => {
-                clearTimeout(t);
-                t = setTimeout(() => fn(...args), delay);
-            };
-        }
+            window.addEventListener('click', function(e){
+                if (e.target === modalCreate) closeModal(modalCreate);
+                if (e.target === modalEdit) closeModal(modalEdit);
+            });
 
-        // ==========================
-        // Nominatim geocode (OSM)
-        // ==========================
-        async function geocodeToBantul(query) {
-            const q = `${query}, Bantul, DI Yogyakarta, Indonesia`;
-            const url = new URL('https://nominatim.openstreetmap.org/search');
-            url.searchParams.set('format', 'json');
-            url.searchParams.set('q', q);
-            url.searchParams.set('limit', '1');
+            // ==========================
+            // Bantul focus
+            // ==========================
+            const BANTUL_CENTER = [-7.900, 110.330];
+            const BANTUL_DEFAULT_ZOOM = 15;
+            const BANTUL_WORK_ZOOM = 17;
 
-            const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
-            if (!res.ok) return null;
-
-            const data = await res.json();
-            if (!data || !data.length) return null;
-
-            return {
-                lat: parseFloat(data[0].lat),
-                lng: parseFloat(data[0].lon),
-                display: data[0].display_name
-            };
-        }
-
-        let markerCreate = null;
-        let markerEdit = null;
-
-        function setMarker(map, markerRef, latlng, popupText = '') {
-            if (markerRef) map.removeLayer(markerRef);
-            markerRef = L.marker(latlng).addTo(map);
-            if (popupText) markerRef.bindPopup(popupText).openPopup();
-            map.setView(latlng, BANTUL_WORK_ZOOM, { animate: true });
-            return markerRef;
-        }
-
-        // ==========================
-        // Geo helpers: offset & polygon
-        // ==========================
-        function offsetPoint(latlng, distMeters, bearingRad) {
-            const R = 6378137;
-            const d = distMeters / R;
-            const brng = bearingRad;
-
-            const lat1 = latlng.lat * Math.PI / 180;
-            const lng1 = latlng.lng * Math.PI / 180;
-
-            const lat2 = Math.asin(
-                Math.sin(lat1) * Math.cos(d) +
-                Math.cos(lat1) * Math.sin(d) * Math.cos(brng)
+            const BANTUL_BOUNDS = L.latLngBounds(
+                [-8.050, 110.200],
+                [-7.750, 110.500]
             );
 
-            const lng2 = lng1 + Math.atan2(
-                Math.sin(brng) * Math.sin(d) * Math.cos(lat1),
-                Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
-            );
+            const DEFAULT_BEARING_RAD = 0;
+            const BASELINE_SEED_METERS = 10;
 
-            return L.latLng(lat2 * 180 / Math.PI, lng2 * 180 / Math.PI);
-        }
+            function debounce(fn, delay = 700) {
+                let t;
+                return (...args) => {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn(...args), delay);
+                };
+            }
 
-        function buildRectangleFromLine(p1, p2, widthMeters) {
-            const angle = Math.atan2((p2.lng - p1.lng), (p2.lat - p1.lat));
-            const half = widthMeters / 2;
+            async function geocodeToBantul(query) {
+                const q = `${query}, Bantul, DI Yogyakarta, Indonesia`;
+                const url = new URL('https://nominatim.openstreetmap.org/search');
+                url.searchParams.set('format', 'json');
+                url.searchParams.set('q', q);
+                url.searchParams.set('limit', '1');
 
-            const left1  = offsetPoint(p1, half, angle + Math.PI / 2);
-            const right1 = offsetPoint(p1, half, angle - Math.PI / 2);
-            const left2  = offsetPoint(p2, half, angle + Math.PI / 2);
-            const right2 = offsetPoint(p2, half, angle - Math.PI / 2);
+                const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) return null;
 
-            return [left1, left2, right2, right1];
-        }
+                const data = await res.json();
+                if (!data || !data.length) return null;
 
-        function extendLineToLength(p1, p2, targetLengthMeters) {
-            const angle = Math.atan2((p2.lng - p1.lng), (p2.lat - p1.lat));
-            return offsetPoint(p1, targetLengthMeters, angle);
-        }
+                return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), display: data[0].display_name };
+            }
 
-        // ==========================
-        // Map Create
-        // ==========================
-        let mapCreate, baseLineCreate = [], lineLayerCreate = null, polygonLayerCreate = null;
+            let markerCreate = null;
+            let markerEdit = null;
 
-        function renderCreate() {
-            const width = parseFloat(document.getElementById('lebar_jalan_create').value);
-            const length = parseFloat(document.getElementById('panjang_jalan_create').value);
+            function setMarker(map, markerRef, latlng, popupText = '') {
+                if (markerRef) map.removeLayer(markerRef);
+                markerRef = L.marker(latlng).addTo(map);
+                if (popupText) markerRef.bindPopup(popupText).openPopup();
+                map.setView(latlng, BANTUL_WORK_ZOOM, { animate: true });
+                return markerRef;
+            }
 
-            if (baseLineCreate.length < 2 || !width || !length) return;
+            function offsetPoint(latlng, distMeters, bearingRad) {
+                const R = 6378137;
+                const d = distMeters / R;
+                const brng = bearingRad;
 
-            let p1 = baseLineCreate[0];
-            let p2 = baseLineCreate[1];
+                const lat1 = latlng.lat * Math.PI / 180;
+                const lng1 = latlng.lng * Math.PI / 180;
 
-            // extend sesuai panjang input
-            p2 = extendLineToLength(p1, p2, length);
+                const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(brng));
+                const lng2 = lng1 + Math.atan2(
+                    Math.sin(brng) * Math.sin(d) * Math.cos(lat1),
+                    Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
+                );
 
-            if (lineLayerCreate) mapCreate.removeLayer(lineLayerCreate);
-            lineLayerCreate = L.polyline([p1, p2], { weight: 4 }).addTo(mapCreate);
+                return L.latLng(lat2 * 180 / Math.PI, lng2 * 180 / Math.PI);
+            }
 
-            const rect = buildRectangleFromLine(p1, p2, width);
+            function buildRectangleFromLine(p1, p2, widthMeters) {
+                const angle = Math.atan2((p2.lng - p1.lng), (p2.lat - p1.lat));
+                const half = widthMeters / 2;
 
-            if (polygonLayerCreate) mapCreate.removeLayer(polygonLayerCreate);
-            polygonLayerCreate = L.polygon(rect, { color: '#6366f1', fillOpacity: 0.35 }).addTo(mapCreate);
+                const left1  = offsetPoint(p1, half, angle + Math.PI / 2);
+                const right1 = offsetPoint(p1, half, angle - Math.PI / 2);
+                const left2  = offsetPoint(p2, half, angle + Math.PI / 2);
+                const right2 = offsetPoint(p2, half, angle - Math.PI / 2);
 
-            document.getElementById('geom_polygon_create').value = JSON.stringify(polygonLayerCreate.toGeoJSON());
-            mapCreate.fitBounds(polygonLayerCreate.getBounds(), { padding: [20,20] });
-        }
+                return [left1, left2, right2, right1];
+            }
 
-        function initMapCreateOnce() {
-            if (mapCreate) return;
+            function extendLineToLength(p1, p2, targetLengthMeters) {
+                const angle = Math.atan2((p2.lng - p1.lng), (p2.lat - p1.lat));
+                return offsetPoint(p1, targetLengthMeters, angle);
+            }
 
-            mapCreate = L.map('mapCreate', {
-                maxBounds: BANTUL_BOUNDS,
-                maxBoundsViscosity: 1.0,
-                minZoom: 13
-            }).setView(BANTUL_CENTER, BANTUL_DEFAULT_ZOOM);
+            // ==========================
+            // Map Create
+            // ==========================
+            let mapCreate, baseLineCreate = [], lineLayerCreate = null, polygonLayerCreate = null;
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapCreate);
+            function renderCreate() {
+                const width  = parseFloat(document.getElementById('lebar_jalan_create').value);
+                const length = parseFloat(document.getElementById('panjang_jalan_create').value);
 
-            // Klik manual 2 titik untuk arah jalan (override baseline)
-            mapCreate.on('click', (e) => {
-                baseLineCreate.push(e.latlng);
-                if (baseLineCreate.length > 2) baseLineCreate = [baseLineCreate[1], e.latlng];
-                renderCreate();
-            });
+                if (baseLineCreate.length < 2 || !width || !length) return;
 
-            // Geocode: ketik alamat -> map pindah + baseline otomatis -> polygon ikut lebar/panjang input
-            const inputCreate = document.getElementById('nama_jalan_create');
-            inputCreate.addEventListener('input', debounce(async () => {
-                const val = inputCreate.value.trim();
-                if (val.length < 5) return;
+                let p1 = baseLineCreate[0];
+                let p2 = baseLineCreate[1];
+                p2 = extendLineToLength(p1, p2, length);
 
-                const result = await geocodeToBantul(val);
-                if (!result) return;
+                if (lineLayerCreate) mapCreate.removeLayer(lineLayerCreate);
+                lineLayerCreate = L.polyline([p1, p2], { weight: 4 }).addTo(mapCreate);
 
-                const latlng = L.latLng(result.lat, result.lng);
-                if (!BANTUL_BOUNDS.contains(latlng)) return;
+                const rect = buildRectangleFromLine(p1, p2, width);
 
-                markerCreate = setMarker(mapCreate, markerCreate, latlng, result.display);
+                if (polygonLayerCreate) mapCreate.removeLayer(polygonLayerCreate);
+                polygonLayerCreate = L.polygon(rect, { fillOpacity: 0.35 }).addTo(mapCreate);
 
-                // baseline otomatis dari lokasi geocode
-                baseLineCreate = [
-                    latlng,
-                    offsetPoint(latlng, BASELINE_SEED_METERS, DEFAULT_BEARING_RAD)
-                ];
+                document.getElementById('geom_polygon_create').value = JSON.stringify(polygonLayerCreate.toGeoJSON());
+                mapCreate.fitBounds(polygonLayerCreate.getBounds(), { padding: [20,20] });
+            }
 
-                // supaya saat user sudah isi lebar/panjang, polygon langsung muncul
-                renderCreate();
-            }, 750));
-        }
+            function initMapCreateOnce() {
+                if (mapCreate) return;
 
-        function resetCreateMapState() {
-            baseLineCreate = [];
-            document.getElementById('geom_polygon_create').value = '';
+                mapCreate = L.map('mapCreate', {
+                    maxBounds: BANTUL_BOUNDS,
+                    maxBoundsViscosity: 1.0,
+                    minZoom: 13
+                }).setView(BANTUL_CENTER, BANTUL_DEFAULT_ZOOM);
 
-            if (lineLayerCreate) { mapCreate.removeLayer(lineLayerCreate); lineLayerCreate = null; }
-            if (polygonLayerCreate) { mapCreate.removeLayer(polygonLayerCreate); polygonLayerCreate = null; }
-            if (markerCreate) { mapCreate.removeLayer(markerCreate); markerCreate = null; }
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapCreate);
 
-            mapCreate.setView(BANTUL_CENTER, BANTUL_DEFAULT_ZOOM);
-        }
-
-        ['lebar_jalan_create', 'panjang_jalan_create'].forEach(id => {
-            document.getElementById(id).addEventListener('input', renderCreate);
-        });
-
-        // ==========================
-        // Map Edit
-        // ==========================
-        let mapEdit, baseLineEdit = [], lineLayerEdit = null, polygonLayerEdit = null;
-
-        function renderEdit() {
-            const width = parseFloat(document.getElementById('edit_lebar_jalan').value);
-            const length = parseFloat(document.getElementById('edit_panjang_jalan').value);
-
-            if (baseLineEdit.length < 2 || !width || !length) return;
-
-            let p1 = baseLineEdit[0];
-            let p2 = baseLineEdit[1];
-
-            p2 = extendLineToLength(p1, p2, length);
-
-            if (lineLayerEdit) mapEdit.removeLayer(lineLayerEdit);
-            lineLayerEdit = L.polyline([p1, p2], { weight: 4 }).addTo(mapEdit);
-
-            const rect = buildRectangleFromLine(p1, p2, width);
-
-            if (polygonLayerEdit) mapEdit.removeLayer(polygonLayerEdit);
-            polygonLayerEdit = L.polygon(rect, { color: '#6366f1', fillOpacity: 0.35 }).addTo(mapEdit);
-
-            document.getElementById('geom_polygon_edit').value = JSON.stringify(polygonLayerEdit.toGeoJSON());
-            mapEdit.fitBounds(polygonLayerEdit.getBounds(), { padding: [20,20] });
-        }
-
-        function initMapEditOnce() {
-            if (mapEdit) return;
-
-            mapEdit = L.map('mapEdit', {
-                maxBounds: BANTUL_BOUNDS,
-                maxBoundsViscosity: 1.0,
-                minZoom: 13
-            }).setView(BANTUL_CENTER, BANTUL_DEFAULT_ZOOM);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapEdit);
-
-            // Klik manual 2 titik (override baseline)
-            mapEdit.on('click', (e) => {
-                baseLineEdit.push(e.latlng);
-                if (baseLineEdit.length > 2) baseLineEdit = [baseLineEdit[1], e.latlng];
-                renderEdit();
-            });
-
-            // Geocode edit
-            const inputEdit = document.getElementById('edit_nama_jalan');
-            inputEdit.addEventListener('input', debounce(async () => {
-                const val = inputEdit.value.trim();
-                if (val.length < 5) return;
-
-                const result = await geocodeToBantul(val);
-                if (!result) return;
-
-                const latlng = L.latLng(result.lat, result.lng);
-                if (!BANTUL_BOUNDS.contains(latlng)) return;
-
-                markerEdit = setMarker(mapEdit, markerEdit, latlng, result.display);
-
-                baseLineEdit = [
-                    latlng,
-                    offsetPoint(latlng, BASELINE_SEED_METERS, DEFAULT_BEARING_RAD)
-                ];
-
-                renderEdit();
-            }, 750));
-        }
-
-        function clearEditMapLayers() {
-            baseLineEdit = [];
-            document.getElementById('geom_polygon_edit').value = '';
-
-            if (lineLayerEdit) { mapEdit.removeLayer(lineLayerEdit); lineLayerEdit = null; }
-            if (polygonLayerEdit) { mapEdit.removeLayer(polygonLayerEdit); polygonLayerEdit = null; }
-            if (markerEdit) { mapEdit.removeLayer(markerEdit); markerEdit = null; }
-
-            mapEdit.setView(BANTUL_CENTER, BANTUL_DEFAULT_ZOOM);
-        }
-
-        ['edit_lebar_jalan', 'edit_panjang_jalan'].forEach(id => {
-            document.getElementById(id).addEventListener('input', renderEdit);
-        });
-
-        function loadEditPolygonFromSaved(geojsonStr) {
-            clearEditMapLayers();
-            if (!geojsonStr) return;
-
-            try {
-                const gj = (typeof geojsonStr === 'string') ? JSON.parse(geojsonStr) : geojsonStr;
-                const layer = L.geoJSON(gj);
-                layer.eachLayer(l => {
-                    polygonLayerEdit = l;
-                    polygonLayerEdit.setStyle({ color:'#6366f1', fillOpacity:0.35 });
-                    polygonLayerEdit.addTo(mapEdit);
+                mapCreate.on('click', (e) => {
+                    baseLineCreate.push(e.latlng);
+                    if (baseLineCreate.length > 2) baseLineCreate = [baseLineCreate[1], e.latlng];
+                    renderCreate();
                 });
 
-                if (polygonLayerEdit) {
-                    document.getElementById('geom_polygon_edit').value = JSON.stringify(polygonLayerEdit.toGeoJSON());
-                    mapEdit.fitBounds(polygonLayerEdit.getBounds(), { padding: [20,20] });
-                }
-            } catch(err) {
-                console.warn('geom_polygon invalid:', err);
+                const inputCreate = document.getElementById('nama_jalan_create');
+                inputCreate.addEventListener('input', debounce(async () => {
+                    const val = inputCreate.value.trim();
+                    if (val.length < 5) return;
+
+                    const result = await geocodeToBantul(val);
+                    if (!result) return;
+
+                    const latlng = L.latLng(result.lat, result.lng);
+                    if (!BANTUL_BOUNDS.contains(latlng)) return;
+
+                    markerCreate = setMarker(mapCreate, markerCreate, latlng, result.display);
+                    baseLineCreate = [latlng, offsetPoint(latlng, BASELINE_SEED_METERS, DEFAULT_BEARING_RAD)];
+                    renderCreate();
+                }, 750));
             }
-        }
 
-        // ==========================
-        // Open Edit Modal
-        // ==========================
-        document.addEventListener('click', function(e){
-            const btn = e.target.closest('.btn-edit');
-            if (!btn) return;
+            function resetCreateMapState() {
+                baseLineCreate = [];
+                document.getElementById('geom_polygon_create').value = '';
 
-            const tr = btn.closest('tr');
+                if (lineLayerCreate) { mapCreate.removeLayer(lineLayerCreate); lineLayerCreate = null; }
+                if (polygonLayerCreate) { mapCreate.removeLayer(polygonLayerCreate); polygonLayerCreate = null; }
+                if (markerCreate) { mapCreate.removeLayer(markerCreate); markerCreate = null; }
 
-            const id = tr.dataset.id;
-            const nama = tr.dataset.nama_jalan;
-            const kategori = tr.dataset.kategori_jalan;
-            const tipe = tr.dataset.tipe_perkerasan;
-            const lebar = tr.dataset.lebar_jalan;
-            const panjang = tr.dataset.panjang_jalan;
-            const geomPolygon = tr.dataset.geom_polygon;
+                mapCreate.setView(BANTUL_CENTER, BANTUL_DEFAULT_ZOOM);
+            }
 
-            const form = document.getElementById('formEdit');
-            form.action = `/master-jalan/${id}`;
+            ['lebar_jalan_create', 'panjang_jalan_create'].forEach(id => {
+                document.getElementById(id).addEventListener('input', renderCreate);
+            });
 
-            document.getElementById('edit_nama_jalan').value = nama;
-            document.getElementById('edit_kategori_jalan').value = kategori;
-            document.getElementById('edit_tipe_perkerasan').value = tipe;
-            document.getElementById('edit_lebar_jalan').value = lebar;
-            document.getElementById('edit_panjang_jalan').value = panjang;
+            // ==========================
+            // Map Edit
+            // ==========================
+            let mapEdit, baseLineEdit = [], lineLayerEdit = null, polygonLayerEdit = null;
 
-            openModal(modalEdit);
-            initMapEditOnce();
+            function renderEdit() {
+                const width  = parseFloat(document.getElementById('edit_lebar_jalan').value);
+                const length = parseFloat(document.getElementById('edit_panjang_jalan').value);
 
-            setTimeout(() => {
-                mapEdit.invalidateSize();
-                loadEditPolygonFromSaved(geomPolygon);
+                if (baseLineEdit.length < 2 || !width || !length) return;
 
-                // kalau belum ada geom, seed baseline dari nama jalan (biar input lebar/panjang langsung bisa render)
-                if (!geomPolygon && nama && nama.length >= 5) {
-                    const inputEdit = document.getElementById('edit_nama_jalan');
-                    inputEdit.dispatchEvent(new Event('input'));
+                let p1 = baseLineEdit[0];
+                let p2 = baseLineEdit[1];
+                p2 = extendLineToLength(p1, p2, length);
+
+                if (lineLayerEdit) mapEdit.removeLayer(lineLayerEdit);
+                lineLayerEdit = L.polyline([p1, p2], { weight: 4 }).addTo(mapEdit);
+
+                const rect = buildRectangleFromLine(p1, p2, width);
+
+                if (polygonLayerEdit) mapEdit.removeLayer(polygonLayerEdit);
+                polygonLayerEdit = L.polygon(rect, { fillOpacity: 0.35 }).addTo(mapEdit);
+
+                document.getElementById('geom_polygon_edit').value = JSON.stringify(polygonLayerEdit.toGeoJSON());
+                mapEdit.fitBounds(polygonLayerEdit.getBounds(), { padding: [20,20] });
+            }
+
+            function initMapEditOnce() {
+                if (mapEdit) return;
+
+                mapEdit = L.map('mapEdit', {
+                    maxBounds: BANTUL_BOUNDS,
+                    maxBoundsViscosity: 1.0,
+                    minZoom: 13
+                }).setView(BANTUL_CENTER, BANTUL_DEFAULT_ZOOM);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapEdit);
+
+                mapEdit.on('click', (e) => {
+                    baseLineEdit.push(e.latlng);
+                    if (baseLineEdit.length > 2) baseLineEdit = [baseLineEdit[1], e.latlng];
+                    renderEdit();
+                });
+
+                const inputEdit = document.getElementById('edit_nama_jalan');
+                inputEdit.addEventListener('input', debounce(async () => {
+                    const val = inputEdit.value.trim();
+                    if (val.length < 5) return;
+
+                    const result = await geocodeToBantul(val);
+                    if (!result) return;
+
+                    const latlng = L.latLng(result.lat, result.lng);
+                    if (!BANTUL_BOUNDS.contains(latlng)) return;
+
+                    markerEdit = setMarker(mapEdit, markerEdit, latlng, result.display);
+                    baseLineEdit = [latlng, offsetPoint(latlng, BASELINE_SEED_METERS, DEFAULT_BEARING_RAD)];
+                    renderEdit();
+                }, 750));
+            }
+
+            function clearEditMapLayers() {
+                baseLineEdit = [];
+                document.getElementById('geom_polygon_edit').value = '';
+
+                if (lineLayerEdit) { mapEdit.removeLayer(lineLayerEdit); lineLayerEdit = null; }
+                if (polygonLayerEdit) { mapEdit.removeLayer(polygonLayerEdit); polygonLayerEdit = null; }
+                if (markerEdit) { mapEdit.removeLayer(markerEdit); markerEdit = null; }
+
+                mapEdit.setView(BANTUL_CENTER, BANTUL_DEFAULT_ZOOM);
+            }
+
+            ['edit_lebar_jalan', 'edit_panjang_jalan'].forEach(id => {
+                document.getElementById(id).addEventListener('input', renderEdit);
+            });
+
+            function loadEditPolygonFromSaved(geojsonStr) {
+                clearEditMapLayers();
+                if (!geojsonStr) return;
+
+                try {
+                    const gj = (typeof geojsonStr === 'string') ? JSON.parse(geojsonStr) : geojsonStr;
+                    const layer = L.geoJSON(gj);
+                    layer.eachLayer(l => {
+                        polygonLayerEdit = l;
+                        polygonLayerEdit.addTo(mapEdit);
+                    });
+
+                    if (polygonLayerEdit) {
+                        document.getElementById('geom_polygon_edit').value = JSON.stringify(polygonLayerEdit.toGeoJSON());
+                        mapEdit.fitBounds(polygonLayerEdit.getBounds(), { padding: [20,20] });
+                    }
+                } catch(err) {
+                    console.warn('geom_polygon invalid:', err);
                 }
-            }, 150);
-        });
+            }
+
+            // ==========================
+            // Open Edit Modal
+            // ==========================
+            document.addEventListener('click', function(e){
+                const btn = e.target.closest('.btn-edit');
+                if (!btn) return;
+
+                const tr = btn.closest('tr');
+
+                const id = tr.dataset.id;
+                const nama = tr.dataset.nama_jalan;
+                const kategori = tr.dataset.kategori_jalan;
+                const tipe = tr.dataset.tipe_perkerasan;
+                const lebar = tr.dataset.lebar_jalan;
+                const panjang = tr.dataset.panjang_jalan;
+                const geomPolygon = tr.dataset.geom_polygon;
+
+                const form = document.getElementById('formEdit');
+                form.action = `{{ url('/master-jalan') }}/${id}`;
+
+                document.getElementById('edit_nama_jalan').value = nama;
+                document.getElementById('edit_kategori_jalan').value = kategori;
+                document.getElementById('edit_tipe_perkerasan').value = tipe;
+                document.getElementById('edit_lebar_jalan').value = lebar;
+                document.getElementById('edit_panjang_jalan').value = panjang;
+
+                openModal(modalEdit);
+                initMapEditOnce();
+
+                setTimeout(() => {
+                    mapEdit.invalidateSize();
+                    loadEditPolygonFromSaved(geomPolygon);
+
+                    if (!geomPolygon && nama && nama.length >= 5) {
+                        document.getElementById('edit_nama_jalan').dispatchEvent(new Event('input'));
+                    }
+                }, 150);
+            });
+        }
     </script>
 @endpush

@@ -17,43 +17,48 @@
                     </button>
                 </div>
             </div>
+
             {{-- START: Form Edit --}}
             <form action="" method="POST" id="form-edit">
                 @csrf
                 @method('PUT')
+
                 {{-- START: Modal Body --}}
                 <div class="trezo-card-content pb-[20px] md:pb-[25px]">
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-[20px] md:gap-[25px]">
                         {{-- START: Name --}}
                         <div>
                             <label class="mb-[12px] font-medium block">
-                                Name
-                                <strong class="text-red-500">*</strong>
+                                Name <strong class="text-red-500">*</strong>
                             </label>
-                            <input type="text" name="name" id="name" class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500" placeholder="Insert user full name here ..." required>
+                            <input type="text" name="name" id="name"
+                                class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                                placeholder="Insert user full name here ..." required>
                         </div>
                         {{-- END: Name --}}
 
                         {{-- START: Email --}}
                         <div>
                             <label class="mb-[12px] font-medium block">
-                                Email
-                                <strong class="text-red-500">*</strong>
+                                Email <strong class="text-red-500">*</strong>
                             </label>
-                            <input type="email" name="email" id="email" class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500" placeholder="Insert user email here ..." required>
+                            <input type="email" name="email" id="email"
+                                class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                                placeholder="Insert user email here ..." required>
                         </div>
                         {{-- END: Email --}}
-                        
-                        {{-- START: Role --}}
+
+                        {{-- START: Role (SINGLE ROLE ONLY) --}}
                         <div>
                             <label class="mb-[12px] font-medium block">
-                                Role
-                                <strong class="text-red-500">*</strong>
+                                Role <strong class="text-red-500">*</strong>
                             </label>
-                            <select name="roles[]" id="roles" class="h-[45px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[13px] block w-full outline-0 cursor-pointer transition-all focus:border-primary-500" multiple="multiple" required>
-                                <option selected>- Select Role -</option>
+                            <select name="role" id="role"
+                                class="h-[45px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[13px] block w-full outline-0 cursor-pointer transition-all focus:border-primary-500"
+                                required>
+                                <option value="">- Select Role -</option>
                                 @foreach ($roles as $role)
-                                    @if ($role->name !== \App\Enums\RoleEnum::DEVELOPER->value)
+                                    @if ($role->name !== \App\Enums\RoleEnum::DEVELOPER->value && strtolower($role->name) !== 'superadmin')
                                         <option value="{{ $role->name }}">{{ $role->name }}</option>
                                     @endif
                                 @endforeach
@@ -64,10 +69,11 @@
                         {{-- START: Is Active --}}
                         <div>
                             <label class="mb-[12px] font-medium block">
-                                Account Status
-                                <strong class="text-red-500">*</strong>
+                                Account Status <strong class="text-red-500">*</strong>
                             </label>
-                            <select name="is_active" id="is_active" class="h-[45px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[13px] block w-full outline-0 cursor-pointer transition-all focus:border-primary-500" required>
+                            <select name="is_active" id="is_active"
+                                class="h-[45px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[13px] block w-full outline-0 cursor-pointer transition-all focus:border-primary-500"
+                                required>
                                 <option value="1">Aktif</option>
                                 <option value="0">Tidak Aktif</option>
                             </select>
@@ -78,27 +84,29 @@
                     {{-- START: Password --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-[20px] md:gap-[25px] mt-5">
                         <div>
-                            <label class="mb-[12px] font-medium block">
-                                Password
-                            </label>
-                            <input type="password" name="password" class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500" placeholder="Insert user password here ...">
+                            <label class="mb-[12px] font-medium block">Password</label>
+                            <input type="password" name="password"
+                                class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                                placeholder="Insert user password here ...">
                         </div>
                         <div>
-                            <label class="mb-[12px] font-medium block">
-                                Password Confirmation
-                            </label>
-                            <input type="password" name="password_confirmation" class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500" placeholder="Please retype user password for confirmation here ...">
+                            <label class="mb-[12px] font-medium block">Password Confirmation</label>
+                            <input type="password" name="password_confirmation"
+                                class="h-[45px] rounded-md text-black dark:text-white border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[17px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500"
+                                placeholder="Please retype user password for confirmation here ...">
                         </div>
                     </div>
                     {{-- END: Password --}}
                 </div>
                 {{-- END: Modal Body --}}
+
                 {{-- START: Modal Footer --}}
                 <div class="trezo-card-footer flex items-center justify-between -mx-[20px] md:-mx-[25px] px-[20px] md:px-[25px] pt-[20px] md:pt-[25px] border-t border-gray-100 dark:border-[#172036]">
-                    <button class="inline-block py-[10px] px-[30px] bg-danger-500 text-white transition-all hover:bg-danger-400 rounded-md border border-danger-500 hover:border-danger-400" type="button" id="modal-add-toggle">
+                    <button class="inline-block py-[10px] px-[30px] bg-danger-500 text-white transition-all hover:bg-danger-400 rounded-md border border-danger-500 hover:border-danger-400"
+                        type="button" id="modal-add-toggle">
                         Close
                     </button>
-                    <button class="inline-block py-[10px] px-[30px] bg-primary-500 text-white transition-all hover:bg-primary-400 rounded-md border border-primary-500 hover:border-primary-400 ltr:mr-[11px] rtl:ml-[11px] mb-[15px]" 
+                    <button class="inline-block py-[10px] px-[30px] bg-primary-500 text-white transition-all hover:bg-primary-400 rounded-md border border-primary-500 hover:border-primary-400 ltr:mr-[11px] rtl:ml-[11px] mb-[15px]"
                         type="submit">
                         Save Changes
                     </button>
@@ -113,15 +121,12 @@
 @push('scripts')
     {{-- START: Showing Modal Edit --}}
     <script>
-        // Add New Popup Toggle
         const editNewPopupID = document.getElementById("modal-edit");
         if (editNewPopupID) {
             var buttons = document.querySelectorAll("#modal-edit-toggle");
             buttons.forEach(function(button) {
                 button.addEventListener("click", function() {
-                    // Toggle class on the div
-                    var divElement = document.getElementById("modal-edit");
-                    divElement.classList.toggle("active");
+                    document.getElementById("modal-edit").classList.toggle("active");
                 });
             });
         }
@@ -136,24 +141,25 @@
             // Trigger button to open modal
             $('#modal-edit-toggle').click();
 
-            // User Id
-            var userId = $(this).data('id');
             var urlFormAction = $(this).data('url-action');
             var urlGetData = $(this).data('url-get');
-            // Send request to get user data
+
             $.ajax({
-                url: urlGetData, // Url for get data edit
+                url: urlGetData,
                 type: 'GET',
                 success: function(response) {
-                    console.log(response.role_names);
-                    // Modal title
                     $('#modal-title').text('Edit Data Pengguna | ' + response.name);
-                    // Set form action
                     $('#form-edit').attr('action', urlFormAction);
-                    // Set value to form inputs
+
                     $('#form-edit').find('#name').val(response.name);
                     $('#form-edit').find('#email').val(response.email);
-                    $('#form-edit').find('#roles').val(response.role_names).trigger('change');
+
+                    // ✅ SINGLE ROLE: ambil role pertama kalau backend masih kirim array role_names
+                    const roleName = Array.isArray(response.role_names)
+                        ? (response.role_names[0] ?? '')
+                        : (response.role_name ?? '');
+                    $('#form-edit').find('#role').val(roleName).trigger('change');
+
                     $('#form-edit').find('#is_active').val(response.is_active).trigger('change');
                 },
                 error: function(xhr) {
@@ -164,7 +170,7 @@
                     });
                 }
             });
-        });        
-        </script>
-        <!-- End Edit User (Modal) -->
+        });
+    </script>
+    <!-- End Edit User (Modal) -->
 @endpush

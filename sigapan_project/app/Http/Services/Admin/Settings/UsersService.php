@@ -5,7 +5,6 @@ namespace App\Http\Services\Admin\Settings;
 use App\Models\User;
 use App\Enums\RoleEnum;
 use Spatie\Permission\Models\Role;
-use Illuminate\Container\Attributes\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class UsersService
@@ -18,7 +17,7 @@ class UsersService
                 $query->where('name', RoleEnum::DEVELOPER->value);
             })
             ->orderBy('name');
-        
+
         return Datatables::eloquent($users)
             ->addIndexColumn()
             ->addColumn('created_at', function ($row) {
@@ -28,7 +27,8 @@ class UsersService
                 return $row->getRoleNames()->isNotEmpty() ? $row->getRoleNames()->implode(', ') : '-';
             })
             ->addColumn('status', function ($row) {
-                if ($row->is_active == 1) {
+                // konsisten pakai is_active seperti di store()
+                if ((int) $row->is_active === 1) {
                     return '<span class="px-[8px] py-[3px] inline-block bg-primary-50 dark:bg-[#15203c] text-primary-500 rounded-sm font-medium text-xs">Aktif</span>';
                 }
                 return '<span class="px-[8px] py-[3px] inline-block bg-orange-100 dark:bg-[#15203c] text-orange-600 rounded-sm font-medium text-xs">Tidak Aktif</span>';
@@ -37,6 +37,7 @@ class UsersService
                 $wrapperStart = '<div class="flex items-center gap-[9px] justify-center">';
                 $btnEdit = '';
                 $btnDelete = '';
+
                 // Btn Edit
                 if (auth()->user()->can('settings-users.update')) {
                     $btnEdit = '<button type="button" title="Edit data pengguna" id="btn-modal-edit-user"
@@ -67,78 +68,101 @@ class UsersService
             ->make(true);
     }
 
-    /* Get all roles (except developer) */
+    /* Get all roles (except developer, superadmin, and legacy 'admin' lowercase) */
     public function getAllRoles()
     {
-        return Role::where('name', '!=', 'developer')->get();
+        return Role::query()
+            ->whereNotIn('name', [
+                RoleEnum::DEVELOPER->value,
+                'superadmin',
+                'admin', // jaga-jaga kalau masih ada duplikat lowercase
+            ])
+            ->orderBy('name')
+            ->get();
     }
 
     /* Get user by ID */
     public function getUserById(int $id)
     {
-        $user = User::findOrFail($id);
-        // If you want to include role names, you can add them as an attribute
+        $user = User::with('roles')->findOrFail($id);
+
+        // untuk kompatibilitas dengan JS lama (array)
         $user->role_names = $user->roles->pluck('name')->toArray();
+
+        // ✅ single role untuk UI single select
+        $user->role_name = $user->roles->first()?->name;
+
         return $user;
     }
 
-    /* Store new user data */
+    /* Store new user data (SINGLE ROLE ONLY) */
     public function store(array $data)
     {
         try {
-            // DB Transaction
             \DB::beginTransaction();
+
             $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => bcrypt($data['password']),
+                'name'      => $data['name'],
+                'email'     => $data['email'],
+                'password'  => bcrypt($data['password']),
                 'is_active' => 1,
             ]);
-            
-            // Assign roles
-            if (isset($data['roles']) && is_array($data['roles'])) {
-                $user->syncRoles($data['roles']);
+
+            /**
+             * ✅ SINGLE ROLE ONLY
+             * Pastikan request mengirim "role" (string), bukan roles[]
+             */
+            if (!empty($data['role'])) {
+                $user->syncRoles([$data['role']]);
             }
 
-            // Return success response
             \DB::commit();
             return redirect()->back()->with('success', 'Pengguna berhasil ditambahkan');
         } catch (\Exception $e) {
-            // Return error response
             \DB::rollBack();
-            return redirect()->back()->withInput()->withErrors(['error' => 'Pengguna gagal ditambahkan. Error :' . $e->getMessage()]);
+            return redirect()->back()->withInput()->withErrors([
+                'error' => 'Pengguna gagal ditambahkan. Error :' . $e->getMessage()
+            ]);
         }
     }
 
-    /* Update user data */
+    /* Update user data (SINGLE ROLE ONLY) */
     public function update($userId, array $data)
     {
         try {
-            // DB Transaction
             \DB::beginTransaction();
 
-            // Get data user
             $user = User::findOrFail($userId);
-            // Update user data
+
+            // Update user data (samakan dengan field tabel kamu)
             $user->update([
-                'name' => $data['name'] ?? $user->name,
-                'username' => $data['username'] ?? $user->username,
-                'email' => $data['email'] ?? $user->email,
-                'status' => isset($data['status']) ? (int) $data['status'] : $user->status,
+                'name'      => $data['name'] ?? $user->name,
+                'email'     => $data['email'] ?? $user->email,
+                'is_active' => isset($data['is_active']) ? (int) $data['is_active'] : $user->is_active,
             ]);
 
-            // Assign roles
-            if (isset($data['roles']) && is_array($data['roles'])) {
-                $user->syncRoles($data['roles']);
+            // Update password jika diisi
+            if (!empty($data['password'])) {
+                $user->update([
+                    'password' => bcrypt($data['password']),
+                ]);
             }
 
-            // Return success response
+            /**
+             * ✅ SINGLE ROLE ONLY
+             * Pastikan request mengirim "role" (string), bukan roles[]
+             */
+            if (!empty($data['role'])) {
+                $user->syncRoles([$data['role']]);
+            }
+
             \DB::commit();
             return redirect()->back()->with('success', 'Pengguna berhasil diperbarui');
         } catch (\Exception $e) {
-            // Return error response
             \DB::rollBack();
-            return redirect()->back()->withInput()->withErrors(['error' => 'Pengguna gagal diperbarui. Error :' . $e->getMessage()]);
+            return redirect()->back()->withInput()->withErrors([
+                'error' => 'Pengguna gagal diperbarui. Error :' . $e->getMessage()
+            ]);
         }
     }
 
@@ -146,20 +170,18 @@ class UsersService
     public function delete($userId)
     {
         try {
-            // DB Transaction
             \DB::beginTransaction();
 
-            // Get data user
             $user = User::findOrFail($userId);
             $user->delete();
 
-            // Return success response
             \DB::commit();
             return redirect()->route('settings.users.index')->with('success', 'Pengguna berhasil dihapus');
         } catch (\Exception $e) {
-            // Return error response
             \DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Pengguna gagal dihapus. Error :' . $e->getMessage()]);
+            return redirect()->back()->withErrors([
+                'error' => 'Pengguna gagal dihapus. Error :' . $e->getMessage()
+            ]);
         }
     }
 }

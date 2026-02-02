@@ -40,18 +40,27 @@
 @endpush
 
 @section('content')
+    @php
+        // ✅ Hanya admin yang boleh CRUD koneksi jaringan
+        $canManageKoneksi = auth()->check() && auth()->user()->hasRole('Admin');
+    @endphp
+
     <div class="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md shadow-sm">
         <div class="trezo-card-header mb-[20px] md:mb-[25px] sm:flex sm:items-center sm:justify-between border-b pb-4">
             <div>
                 <h5 class="mb-0 text-lg font-bold">Data @yield('title')</h5>
                 <p class="hint mt-1">Mapping jalur kabel dari Aset PJU ke Panel KWh (Polyline + estimasi panjang otomatis).</p>
             </div>
-            <div class="mt-3 sm:mt-0">
-                <button type="button" id="btn-open-create"
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 transition shadow-sm text-sm font-medium">
-                    <span class="material-symbols-outlined">add</span> Tambah Koneksi
-                </button>
-            </div>
+
+            {{-- ✅ tombol tambah hanya admin --}}
+            @if($canManageKoneksi)
+                <div class="mt-3 sm:mt-0">
+                    <button type="button" id="btn-open-create"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 transition shadow-sm text-sm font-medium">
+                        <span class="material-symbols-outlined">add</span> Tambah Koneksi
+                    </button>
+                </div>
+            @endif
         </div>
 
         {{-- Flash --}}
@@ -66,7 +75,7 @@
             </div>
         @endif
 
-        {{-- VALIDATION ERRORS --}}
+        {{-- Validation errors --}}
         @if($errors->any())
             <div class="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm border border-red-200">
                 <ul class="list-disc pl-5">
@@ -91,7 +100,11 @@
                         <th class="text-center">Tgl Koneksi</th>
                         <th class="text-center">Panjang Est. (m)</th>
                         <th class="text-left">Keterangan Jalur</th>
-                        <th class="text-center">Aksi</th>
+
+                        {{-- ✅ kolom aksi hanya admin --}}
+                        @if($canManageKoneksi)
+                            <th class="text-center">Aksi</th>
+                        @endif
                     </tr>
                     </thead>
 
@@ -101,7 +114,6 @@
                             $st = $item->status_koneksi ?? 'Aktif';
                             $stClass = $st === 'Diputus' ? 'status-diputus' : 'status-aktif';
 
-                            // Ambil koordinat relasi jika ada (untuk data-* dipakai edit+map)
                             $ap = $item->asetPju;
                             $pk = $item->panelKwh;
 
@@ -110,7 +122,6 @@
                             $pkLat = $pk->latitude ?? null;
                             $pkLng = $pk->longitude ?? null;
 
-                            // Label aman (kalau kolom nama/kode beda, minimal tampil ID)
                             $apLabel = $ap->kode_tiang ?? $ap->nama_aset ?? ('Aset #' . ($item->aset_pju_id ?? '-'));
                             $pkLabel = $pk->no_pelanggan_pln ?? $pk->lokasi_panel ?? ('Panel #' . ($item->panel_kwh_id ?? '-'));
                         @endphp
@@ -173,25 +184,27 @@
                                 <span class="text-sm text-gray-600">{{ $item->keterangan_jalur ?? '-' }}</span>
                             </td>
 
-                            <td class="text-center">
-                                <div class="flex items-center gap-3 justify-center">
-                                    <button type="button" class="btn-edit text-blue-500 hover:text-blue-700 transition"
-                                            title="Edit">
-                                        <i class="material-symbols-outlined">edit</i>
-                                    </button>
-
-                                    <form action="{{ route('koneksi-jaringan.destroy', $item->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                                onclick="return confirm('Hapus koneksi ini?')"
-                                                class="text-red-500 hover:text-red-700 transition"
-                                                title="Hapus">
-                                            <i class="material-symbols-outlined">delete</i>
+                            {{-- ✅ aksi hanya admin --}}
+                            @if($canManageKoneksi)
+                                <td class="text-center">
+                                    <div class="flex items-center gap-3 justify-center">
+                                        <button type="button" class="btn-edit text-blue-500 hover:text-blue-700 transition" title="Edit">
+                                            <i class="material-symbols-outlined">edit</i>
                                         </button>
-                                    </form>
-                                </div>
-                            </td>
+
+                                        <form action="{{ route('koneksi-jaringan.destroy', $item->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    onclick="return confirm('Hapus koneksi ini?')"
+                                                    class="text-red-500 hover:text-red-700 transition"
+                                                    title="Hapus">
+                                                <i class="material-symbols-outlined">delete</i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            @endif
                         </tr>
                     @endforeach
                     </tbody>
@@ -200,203 +213,198 @@
         </div>
     </div>
 
-    {{-- MODAL (Create/Edit) --}}
-    <div id="modalKoneksi" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
-        <div class="w-full max-w-3xl rounded-lg bg-white dark:bg-[#0c1427] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-4 border-b pb-3">
-                <h5 id="modalTitle" class="text-xl font-bold">Tambah Koneksi</h5>
-                <button type="button" class="btn-close-modal text-gray-400 hover:text-gray-600">
-                    <i class="material-symbols-outlined">close</i>
-                </button>
-            </div>
-
-            <div class="mb-3 p-3 rounded-md bg-blue-50 border border-blue-100 text-sm text-blue-700">
-                <i class="material-symbols-outlined align-middle !text-sm mr-1">info</i>
-                <b>Panduan:</b> Pilih <b>Panel KWh</b> terlebih dahulu. Daftar <b>Aset PJU</b> akan otomatis terfilter menyesuaikan aset yang terdaftar pada panel tersebut.
-            </div>
-
-            <form id="formKoneksi" action="{{ route('koneksi-jaringan.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @csrf
-                <input type="hidden" name="_method" id="formMethod" value="POST">
-
-                {{-- PANEL KWH (Ditaruh diatas Aset PJU agar UX flow benar: Pilih Induk dulu, baru Anak) --}}
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold mb-1">Panel KWh</label>
-                    <select name="panel_kwh_id" id="panel_kwh_id" class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500 bg-gray-50" required>
-                        <option value="">-- Pilih Panel KWh --</option>
-                        @foreach($panelKwh as $pk)
-                            @php
-                                $label = $pk->no_pelanggan_pln ?? $pk->lokasi_panel ?? ('Panel #' . $pk->id);
-                                $lat = $pk->latitude ?? '';
-                                $lng = $pk->longitude ?? '';
-                            @endphp
-                            <option value="{{ $pk->id }}" data-lat="{{ $lat }}" data-lng="{{ $lng }}">
-                                {{ $label }} ({{ $pk->lokasi_panel }})
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="hint mt-1">* Panel wajib dipilih untuk memunculkan daftar aset.</div>
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold mb-1">Aset PJU</label>
-                    {{-- ID aset_pju_id_temp ini hanya untuk script, name tetap aset_pju_id --}}
-                    <select name="aset_pju_id" id="aset_pju_id" class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500" required>
-                        <option value="">-- Pilih Panel KWh Terlebih Dahulu --</option>
-                        @foreach($asetPju as $ap)
-                            @php
-                                $label = $ap->kode_tiang ?? $ap->nama_aset ?? ('Aset #' . $ap->id);
-                                $lat = $ap->latitude ?? '';
-                                $lng = $ap->longitude ?? '';
-                                // PENTING: Foreign key Panel KWh di tabel Aset PJU
-                                $parentId = $ap->panel_kwh_id ?? ''; 
-                            @endphp
-                            {{-- Tambahkan data-panel-id untuk filtering --}}
-                            <option value="{{ $ap->id }}" 
-                                    data-lat="{{ $lat }}" 
-                                    data-lng="{{ $lng }}"
-                                    data-panel-id="{{ $parentId }}">
-                                {{ $label }} ({{ $ap->jenis_lampu }} - {{ $ap->watt }}W)
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="hint mt-1">* Hanya menampilkan aset yang terhubung dengan Panel diatas.</div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Nomor MCB Panel</label>
-                    <input name="nomor_mcb_panel" id="nomor_mcb_panel"
-                           class="w-full border rounded-md px-3 py-2 outline-none" placeholder="Contoh: MCB-01">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Fasa</label>
-                    <select name="fasa" id="fasa" class="w-full border rounded-md px-3 py-2 outline-none">
-                        <option value="">-- Pilih --</option>
-                        <option value="R">R</option>
-                        <option value="S">S</option>
-                        <option value="T">T</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Status Koneksi</label>
-                    <select name="status_koneksi" id="status_koneksi" class="w-full border rounded-md px-3 py-2 outline-none" required>
-                        <option value="Aktif">Aktif</option>
-                        <option value="Diputus">Diputus</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Tanggal Koneksi</label>
-                    <input type="date" name="tgl_koneksi" id="tgl_koneksi"
-                           class="w-full border rounded-md px-3 py-2 outline-none">
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold mb-1">Peta Jalur Kabel</label>
-                    <div id="map-koneksi"></div>
-                    <div class="hint mt-2" id="mapHint">Pilih Aset PJU & Panel KWh untuk menampilkan jalur.</div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold mb-1">Panjang Kabel Estimasi (meter)</label>
-                    <input type="number" step="0.01" min="0" name="panjang_kabel_est" id="panjang_kabel_est"
-                           class="w-full border rounded-md px-3 py-2 outline-none" placeholder="Otomatis dari peta">
-                    <div class="hint mt-1">* Otomatis terisi dari jarak garis. Bisa kamu ubah manual.</div>
-                </div>
-
-                <div class="md:col-span-1">
-                    <label class="block text-sm font-semibold mb-1">Keterangan Jalur</label>
-                    <textarea name="keterangan_jalur" id="keterangan_jalur" rows="2"
-                              class="w-full border rounded-md px-3 py-2 outline-none"
-                              placeholder="Contoh: lewat tiang A → tiang B, menyebrang jalan, dll."></textarea>
-                </div>
-
-                <div class="md:col-span-2 flex justify-end gap-3 mt-4">
-                    <button type="button" class="btn-close-modal px-5 py-2 rounded-md bg-gray-100 hover:bg-gray-200 font-medium">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-5 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 font-medium shadow-md">
-                        Simpan
+    {{-- ✅ Modal hanya admin --}}
+    @if($canManageKoneksi)
+        <div id="modalKoneksi" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
+            <div class="w-full max-w-3xl rounded-lg bg-white dark:bg-[#0c1427] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4 border-b pb-3">
+                    <h5 id="modalTitle" class="text-xl font-bold">Tambah Koneksi</h5>
+                    <button type="button" class="btn-close-modal text-gray-400 hover:text-gray-600">
+                        <i class="material-symbols-outlined">close</i>
                     </button>
                 </div>
-            </form>
+
+                <div class="mb-3 p-3 rounded-md bg-blue-50 border border-blue-100 text-sm text-blue-700">
+                    <i class="material-symbols-outlined align-middle !text-sm mr-1">info</i>
+                    <b>Panduan:</b> Pilih <b>Panel KWh</b> terlebih dahulu. Daftar <b>Aset PJU</b> akan otomatis terfilter menyesuaikan aset yang terdaftar pada panel tersebut.
+                </div>
+
+                <form id="formKoneksi" action="{{ route('koneksi-jaringan.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @csrf
+                    <input type="hidden" name="_method" id="formMethod" value="POST">
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold mb-1">Panel KWh</label>
+                        <select name="panel_kwh_id" id="panel_kwh_id" class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500 bg-gray-50" required>
+                            <option value="">-- Pilih Panel KWh --</option>
+                            @foreach($panelKwh as $pk)
+                                @php
+                                    $label = $pk->no_pelanggan_pln ?? $pk->lokasi_panel ?? ('Panel #' . $pk->id);
+                                    $lat = $pk->latitude ?? '';
+                                    $lng = $pk->longitude ?? '';
+                                @endphp
+                                <option value="{{ $pk->id }}" data-lat="{{ $lat }}" data-lng="{{ $lng }}">
+                                    {{ $label }} ({{ $pk->lokasi_panel }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="hint mt-1">* Panel wajib dipilih untuk memunculkan daftar aset.</div>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold mb-1">Aset PJU</label>
+                        <select name="aset_pju_id" id="aset_pju_id" class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500" required>
+                            <option value="">-- Pilih Panel KWh Terlebih Dahulu --</option>
+                            @foreach($asetPju as $ap)
+                                @php
+                                    $label = $ap->kode_tiang ?? $ap->nama_aset ?? ('Aset #' . $ap->id);
+                                    $lat = $ap->latitude ?? '';
+                                    $lng = $ap->longitude ?? '';
+                                    $parentId = $ap->panel_kwh_id ?? '';
+                                @endphp
+                                <option value="{{ $ap->id }}"
+                                        data-lat="{{ $lat }}"
+                                        data-lng="{{ $lng }}"
+                                        data-panel-id="{{ $parentId }}">
+                                    {{ $label }} ({{ $ap->jenis_lampu }} - {{ $ap->watt }}W)
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="hint mt-1">* Hanya menampilkan aset yang terhubung dengan Panel diatas.</div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Nomor MCB Panel</label>
+                        <input name="nomor_mcb_panel" id="nomor_mcb_panel"
+                               class="w-full border rounded-md px-3 py-2 outline-none" placeholder="Contoh: MCB-01">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Fasa</label>
+                        <select name="fasa" id="fasa" class="w-full border rounded-md px-3 py-2 outline-none">
+                            <option value="">-- Pilih --</option>
+                            <option value="R">R</option>
+                            <option value="S">S</option>
+                            <option value="T">T</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Status Koneksi</label>
+                        <select name="status_koneksi" id="status_koneksi" class="w-full border rounded-md px-3 py-2 outline-none" required>
+                            <option value="Aktif">Aktif</option>
+                            <option value="Diputus">Diputus</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Tanggal Koneksi</label>
+                        <input type="date" name="tgl_koneksi" id="tgl_koneksi"
+                               class="w-full border rounded-md px-3 py-2 outline-none">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold mb-1">Peta Jalur Kabel</label>
+                        <div id="map-koneksi"></div>
+                        <div class="hint mt-2" id="mapHint">Pilih Aset PJU & Panel KWh untuk menampilkan jalur.</div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Panjang Kabel Estimasi (meter)</label>
+                        <input type="number" step="0.01" min="0" name="panjang_kabel_est" id="panjang_kabel_est"
+                               class="w-full border rounded-md px-3 py-2 outline-none" placeholder="Otomatis dari peta">
+                        <div class="hint mt-1">* Otomatis terisi dari jarak garis. Bisa kamu ubah manual.</div>
+                    </div>
+
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-semibold mb-1">Keterangan Jalur</label>
+                        <textarea name="keterangan_jalur" id="keterangan_jalur" rows="2"
+                                  class="w-full border rounded-md px-3 py-2 outline-none"
+                                  placeholder="Contoh: lewat tiang A → tiang B, menyebrang jalan, dll."></textarea>
+                    </div>
+
+                    <div class="md:col-span-2 flex justify-end gap-3 mt-4">
+                        <button type="button" class="btn-close-modal px-5 py-2 rounded-md bg-gray-100 hover:bg-gray-200 font-medium">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-5 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 font-medium shadow-md">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    {{-- Route helper (biar JS tidak pakai route name yang salah) --}}
-    <script>
-        window.KONEKSI_ROUTE = {
-            store: @json(route('koneksi-jaringan.store')),
-            updateBase: @json(url('/koneksi-jaringan')) // /koneksi-jaringan/{id}
-        };
-    </script>
+        {{-- Route helper --}}
+        <script>
+            window.KONEKSI_ROUTE = {
+                store: @json(route('koneksi-jaringan.store')),
+                updateBase: @json(url('/koneksi-jaringan'))
+            };
+        </script>
+    @endif
 @endsection
 
 @push('scripts')
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
 
-    {{-- Leaflet JS --}}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
+        const CAN_MANAGE_KONEKSI = @json($canManageKoneksi);
+
         $(document).ready(function () {
             // DataTable
             const dt = $('#data-table').DataTable({
                 responsive: true,
                 pageLength: 10,
                 columnDefs: [
-                    { targets: [0,3,4,5,6,7,9], className: 'text-center' },
-                    { targets: [1,2,8], className: 'text-left' }
+                    // ✅ kalau bukan admin, kolom aksi tidak ada → target terakhir beda
+                    { targets: CAN_MANAGE_KONEKSI ? [0,3,4,5,6,7,9] : [0,3,4,5,6,7], className: 'text-center' },
+                    { targets: CAN_MANAGE_KONEKSI ? [1,2,8] : [1,2,8], className: 'text-left' }
                 ]
             });
+
+            // ✅ kalau bukan admin, stop disini (nggak ada modal/create/edit)
+            if (!CAN_MANAGE_KONEKSI) return;
 
             // ============================================
             // LOGIC FILTER ASET BY PANEL
             // ============================================
             let allAsetOptions = [];
 
-            // 1. Simpan semua option aset pju ke array saat load
             $('#aset_pju_id option').each(function() {
-                if($(this).val()) { // Skip placeholder
+                if($(this).val()) {
                     allAsetOptions.push({
                         val: $(this).val(),
                         text: $(this).text(),
                         lat: $(this).data('lat'),
                         lng: $(this).data('lng'),
-                        panelId: $(this).data('panel-id') // ambil ID panel induk
+                        panelId: $(this).data('panel-id')
                     });
                 }
             });
 
-            // 2. Fungsi Filter
             function filterAsetPjuByPanel(selectedPanelId, selectedAseId = null) {
                 const $asetSelect = $('#aset_pju_id');
-                
-                // Kosongkan dropdown aset
                 $asetSelect.empty();
-                
-                // Tambah default option
+
                 if(!selectedPanelId) {
                     $asetSelect.append('<option value="">-- Pilih Panel KWh Terlebih Dahulu --</option>');
-                    return; // Stop jika tidak ada panel dipilih
+                    return;
                 } else {
                     $asetSelect.append('<option value="">-- Pilih Aset PJU --</option>');
                 }
 
                 let count = 0;
-                // Loop array memory dan append yang cocok
                 allAsetOptions.forEach(opt => {
-                    // Filter: Hanya tampilkan jika panelId nya cocok
-                    // Gunakan '==' karena data-attr string vs integer val
                     if (opt.panelId == selectedPanelId) {
                         const isSelected = (selectedAseId && opt.val == selectedAseId) ? 'selected' : '';
                         $asetSelect.append(`
-                            <option value="${opt.val}" 
-                                    data-lat="${opt.lat}" 
-                                    data-lng="${opt.lng}" 
+                            <option value="${opt.val}"
+                                    data-lat="${opt.lat}"
+                                    data-lng="${opt.lng}"
                                     data-panel-id="${opt.panelId}"
                                     ${isSelected}>
                                 ${opt.text}
@@ -407,19 +415,15 @@
                 });
 
                 if(count === 0) {
-                     $asetSelect.append('<option value="" disabled>Tidak ada aset pada panel ini</option>');
+                    $asetSelect.append('<option value="" disabled>Tidak ada aset pada panel ini</option>');
                 }
             }
 
-            // 3. Event Listener Panel Change
             $('#panel_kwh_id').on('change', function() {
                 const panelId = $(this).val();
                 filterAsetPjuByPanel(panelId);
-                
-                // Trigger change aset agar map juga update/clear
                 $('#aset_pju_id').trigger('change');
             });
-
 
             // ============================================
             // MODAL & MAP LOGIC
@@ -427,10 +431,10 @@
             const modal = document.getElementById('modalKoneksi');
             const openModal = () => modal.classList.add('active');
             const closeModal = () => modal.classList.remove('active');
+
             document.querySelectorAll('.btn-close-modal').forEach(btn => btn.addEventListener('click', closeModal));
             window.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-            // Leaflet Map (Bantul focus)
             const bantulCenter = [-7.8897, 110.3289];
             let map = null;
             let markerAset = null;
@@ -439,7 +443,7 @@
 
             function initMapOnce() {
                 if (map) return;
-                map = L.map('map-koneksi').setView(bantulCenter, 13); // lebih zoom ke Bantul
+                map = L.map('map-koneksi').setView(bantulCenter, 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© OpenStreetMap'
                 }).addTo(map);
@@ -460,7 +464,6 @@
             }
 
             function computeDistanceMeters(a, b) {
-                // Leaflet distance (meters)
                 return L.latLng(a[0], a[1]).distanceTo(L.latLng(b[0], b[1]));
             }
 
@@ -499,8 +502,7 @@
                 $('#formKoneksi').attr('action', window.KONEKSI_ROUTE.store);
                 $('#formKoneksi')[0].reset();
 
-                // Reset Filter UI
-                filterAsetPjuByPanel(''); 
+                filterAsetPjuByPanel('');
 
                 openModal();
                 initMapOnce();
@@ -510,8 +512,6 @@
                 document.getElementById('mapHint').textContent = 'Pilih Aset PJU & Panel KWh untuk menampilkan jalur.';
             });
 
-            // When select changes -> redraw line
-            // Gunakan event delegation atau direct karena element exist
             $('#aset_pju_id, #panel_kwh_id').on('change', function () {
                 if (!map) return;
                 drawConnection();
@@ -528,13 +528,9 @@
                 $('#formMethod').val('PUT');
                 $('#formKoneksi').attr('action', `${window.KONEKSI_ROUTE.updateBase}/${id}`);
 
-                // 1. Set Panel First
                 $('#panel_kwh_id').val(panelId);
-
-                // 2. Filter Aset dropdown based on panel ID, and select the correct aset
                 filterAsetPjuByPanel(panelId, asetId);
 
-                // 3. Set other values
                 $('#nomor_mcb_panel').val($tr.data('nomor_mcb_panel') ?? '');
                 $('#fasa').val($tr.data('fasa') ?? '');
                 $('#status_koneksi').val($tr.data('status_koneksi') ?? 'Aktif');
@@ -545,12 +541,9 @@
                 openModal();
                 initMapOnce();
                 setTimeout(() => map.invalidateSize(), 250);
-
-                // redraw based on selected dropdown coords
                 drawConnection();
             });
 
-            // Safety: redraw after modal shown
             const observer = new MutationObserver(() => {
                 if (modal.classList.contains('active') && map) {
                     setTimeout(() => map.invalidateSize(), 250);

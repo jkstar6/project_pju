@@ -55,15 +55,24 @@
 @endsection
 
 @section('content')
+    @php
+        // ✅ Panel KWh: CRUD hanya Admin (Teknisi & Survey read-only)
+        $canManagePanelKwh = auth()->check() && auth()->user()->hasRole('Admin');
+    @endphp
+
     <div class="trezo-card bg-white dark:bg-[#0c1427] mb-[25px] p-[20px] md:p-[25px] rounded-md shadow-sm">
         <div class="trezo-card-header mb-[20px] md:mb-[25px] sm:flex sm:items-center sm:justify-between border-b pb-4">
             <h5 class="mb-0 text-lg font-bold">Data @yield('title')</h5>
-            <div class="mt-3 sm:mt-0">
-                <button type="button" id="btn-open-create"
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 transition shadow-sm text-sm font-medium">
-                    <span class="material-symbols-outlined">add</span> Tambah Panel Baru
-                </button>
-            </div>
+
+            {{-- ✅ tombol tambah hanya Admin --}}
+            @if($canManagePanelKwh)
+                <div class="mt-3 sm:mt-0">
+                    <button type="button" id="btn-open-create"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 transition shadow-sm text-sm font-medium">
+                        <span class="material-symbols-outlined">add</span> Tambah Panel Baru
+                    </button>
+                </div>
+            @endif
         </div>
 
         @if(session('success'))
@@ -81,9 +90,14 @@
                             <th class="text-left">No Pelanggan</th>
                             <th class="text-left">Lokasi & GPS</th>
                             <th class="text-center">Daya (VA)</th>
-                            <th class="text-center">Aksi</th>
+
+                            {{-- ✅ kolom aksi hanya Admin --}}
+                            @if($canManagePanelKwh)
+                                <th class="text-center">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
+
                     <tbody>
                         @foreach ($panelKwh as $index => $item)
                             <tr
@@ -96,38 +110,51 @@
                                 data-catatan="{{ $item->catatan_admin_pln }}"
                             >
                                 <td class="text-center font-bold text-gray-400">{{ $index + 1 }}</td>
-                                <td class="text-left"><strong class="text-primary-500">{{ $item->no_pelanggan_pln }}</strong></td>
+
+                                <td class="text-left">
+                                    <strong class="text-primary-500">{{ $item->no_pelanggan_pln }}</strong>
+                                </td>
+
                                 <td class="text-left">
                                     <div class="flex flex-col gap-1">
                                         <span class="text-sm font-medium text-gray-700">{{ $item->lokasi_panel }}</span>
-                                        <a href="https://www.google.com/maps?q={{ $item->latitude }},{{ $item->longitude }}"
-                                           target="_blank"
-                                           class="text-blue-500 hover:underline text-xs inline-flex items-center">
-                                            <i class="material-symbols-outlined !text-[14px] mr-1">location_on</i> Lihat di Map
-                                        </a>
+                                        @if($item->latitude && $item->longitude)
+                                            <a href="https://www.google.com/maps?q={{ $item->latitude }},{{ $item->longitude }}"
+                                               target="_blank"
+                                               class="text-blue-500 hover:underline text-xs inline-flex items-center">
+                                                <i class="material-symbols-outlined !text-[14px] mr-1">location_on</i> Lihat di Map
+                                            </a>
+                                        @else
+                                            <span class="text-xs text-gray-400">Koordinat belum diisi</span>
+                                        @endif
                                     </div>
                                 </td>
+
                                 <td class="text-center">
                                     <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-bold">
                                         {{ number_format($item->daya_va) }} VA
                                     </span>
                                 </td>
-                                <td class="text-center">
-                                    <div class="flex items-center gap-3 justify-center">
-                                        <button class="btn-edit text-blue-500 hover:text-blue-700 transition">
-                                            <i class="material-symbols-outlined">edit</i>
-                                        </button>
 
-                                        <form action="{{ route('panel-kwh.destroy', $item->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Hapus data ini?')"
-                                                    class="text-red-500 hover:text-red-700 transition">
-                                                <i class="material-symbols-outlined">delete</i>
+                                {{-- ✅ aksi hanya Admin --}}
+                                @if($canManagePanelKwh)
+                                    <td class="text-center">
+                                        <div class="flex items-center gap-3 justify-center">
+                                            <button type="button" class="btn-edit text-blue-500 hover:text-blue-700 transition">
+                                                <i class="material-symbols-outlined">edit</i>
                                             </button>
-                                        </form>
-                                    </div>
-                                </td>
+
+                                            <form action="{{ route('panel-kwh.destroy', $item->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" onclick="return confirm('Hapus data ini?')"
+                                                        class="text-red-500 hover:text-red-700 transition">
+                                                    <i class="material-symbols-outlined">delete</i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
@@ -137,95 +164,97 @@
         </div>
     </div>
 
-    {{-- MODAL --}}
-    <div id="modalPanel" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
-        <div class="w-full max-w-2xl rounded-lg bg-white dark:bg-[#0c1427] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-4 border-b pb-3">
-                <h5 id="modalTitle" class="text-xl font-bold">Tambah Panel KWh</h5>
-                <button type="button" class="btn-close-modal text-gray-400 hover:text-gray-600">
-                    <i class="material-symbols-outlined">close</i>
-                </button>
-            </div>
-
-            <form id="formPanel" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @csrf
-                <input type="hidden" name="_method" id="formMethod" value="POST">
-
-                <div class="md:col-span-1">
-                    <label class="block text-sm font-semibold mb-1">No. Pelanggan PLN</label>
-                    <input name="no_pelanggan_pln" id="in_no_pelanggan"
-                           class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500" required>
+    {{-- ✅ MODAL hanya Admin --}}
+    @if($canManagePanelKwh)
+        <div id="modalPanel" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
+            <div class="w-full max-w-2xl rounded-lg bg-white dark:bg-[#0c1427] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4 border-b pb-3">
+                    <h5 id="modalTitle" class="text-xl font-bold">Tambah Panel KWh</h5>
+                    <button type="button" class="btn-close-modal text-gray-400 hover:text-gray-600">
+                        <i class="material-symbols-outlined">close</i>
+                    </button>
                 </div>
 
-                <div class="md:col-span-1">
-                    <label class="block text-sm font-semibold mb-1">Daya (VA)</label>
-                    <input type="number" name="daya_va" id="in_daya_va"
-                           class="w-full border rounded-md px-3 py-2 outline-none" placeholder="1300">
-                </div>
+                <form id="formPanel" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @csrf
+                    <input type="hidden" name="_method" id="formMethod" value="POST">
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold mb-1 text-primary-600 italic">
-                        Klik pada peta atau isi koordinat manual:
-                    </label>
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-semibold mb-1">No. Pelanggan PLN</label>
+                        <input name="no_pelanggan_pln" id="in_no_pelanggan"
+                               class="w-full border rounded-md px-3 py-2 outline-none focus:border-primary-500" required>
+                    </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <span class="text-[10px] text-gray-400 uppercase">Latitude</span>
-                            <input type="number" step="any" name="latitude" id="lat-input"
-                                   class="w-full border rounded-md px-3 py-1.5 bg-blue-50/30" required>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-gray-400 uppercase">Longitude</span>
-                            <input type="number" step="any" name="longitude" id="lng-input"
-                                   class="w-full border rounded-md px-3 py-1.5 bg-blue-50/30" required>
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-semibold mb-1">Daya (VA)</label>
+                        <input type="number" name="daya_va" id="in_daya_va"
+                               class="w-full border rounded-md px-3 py-2 outline-none" placeholder="1300">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold mb-1 text-primary-600 italic">
+                            Klik pada peta atau isi koordinat manual:
+                        </label>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-[10px] text-gray-400 uppercase">Latitude</span>
+                                <input type="number" step="any" name="latitude" id="lat-input"
+                                       class="w-full border rounded-md px-3 py-1.5 bg-blue-50/30" required>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-gray-400 uppercase">Longitude</span>
+                                <input type="number" step="any" name="longitude" id="lng-input"
+                                       class="w-full border rounded-md px-3 py-1.5 bg-blue-50/30" required>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="md:col-span-2">
-                    <div id="map-panel"></div>
-                </div>
+                    <div class="md:col-span-2">
+                        <div id="map-panel"></div>
+                    </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold mb-1">Lokasi Deskripsi</label>
-                    <textarea name="lokasi_panel" id="in_lokasi" rows="2"
-                              class="w-full border rounded-md px-3 py-2 outline-none" required></textarea>
-                </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold mb-1">Lokasi Deskripsi</label>
+                        <textarea name="lokasi_panel" id="in_lokasi" rows="2"
+                                  class="w-full border rounded-md px-3 py-2 outline-none" required></textarea>
+                    </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold mb-1">Catatan Admin</label>
-                    <textarea name="catatan_admin_pln" id="in_catatan" rows="1"
-                              class="w-full border rounded-md px-3 py-2 outline-none"></textarea>
-                </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold mb-1">Catatan Admin</label>
+                        <textarea name="catatan_admin_pln" id="in_catatan" rows="1"
+                                  class="w-full border rounded-md px-3 py-2 outline-none"></textarea>
+                    </div>
 
-                <div class="md:col-span-2 flex justify-end gap-3 mt-4">
-                    <button type="button" class="btn-close-modal px-5 py-2 rounded-md bg-gray-100 hover:bg-gray-200 font-medium">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-5 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 font-medium shadow-md">
-                        Simpan Data
-                    </button>
-                </div>
-            </form>
+                    <div class="md:col-span-2 flex justify-end gap-3 mt-4">
+                        <button type="button" class="btn-close-modal px-5 py-2 rounded-md bg-gray-100 hover:bg-gray-200 font-medium">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-5 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600 font-medium shadow-md">
+                            Simpan Data
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    {{-- ✅ JSON data panel existing (cara paling aman, anti parse error) --}}
-    <script type="application/json" id="panel-points-json">
-        {!! json_encode(
-            $panelKwh->map(function($p){
-                return [
-                    'id' => $p->id,
-                    'no_pelanggan' => $p->no_pelanggan_pln,
-                    'lokasi' => $p->lokasi_panel,
-                    'lat' => (float) $p->latitude,
-                    'lng' => (float) $p->longitude,
-                    'daya' => (int) $p->daya_va,
-                ];
-            })->values()->toArray(),
-            JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES
-        ) !!}
-    </script>
+        {{-- ✅ JSON data panel existing (anti parse error) --}}
+        <script type="application/json" id="panel-points-json">
+            {!! json_encode(
+                $panelKwh->map(function($p){
+                    return [
+                        'id' => $p->id,
+                        'no_pelanggan' => $p->no_pelanggan_pln,
+                        'lokasi' => $p->lokasi_panel,
+                        'lat' => (float) $p->latitude,
+                        'lng' => (float) $p->longitude,
+                        'daya' => (int) $p->daya_va,
+                    ];
+                })->values()->toArray(),
+                JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES
+            ) !!}
+        </script>
+    @endif
 @endsection
 
 @push('scripts')
@@ -234,13 +263,17 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
+        const CAN_MANAGE_PANEL = @json($canManagePanelKwh);
+
         $(document).ready(function() {
             $('#data-table').DataTable({ responsive: true });
+
+            // ✅ Non-admin: stop total biar gak ada tombol/aksi/JS modal
+            if (!CAN_MANAGE_PANEL) return;
 
             const modal = document.getElementById('modalPanel');
             const defaultLoc = [-7.8897, 110.3289]; // Bantul
 
-            // ambil data JSON panel existing
             const jsonEl = document.getElementById('panel-points-json');
             const PANEL_POINTS = jsonEl ? JSON.parse(jsonEl.textContent) : [];
 
@@ -335,7 +368,6 @@
                 setTimeout(() => map.invalidateSize(), 300);
             }
 
-            // input manual -> map ikut
             $('#lat-input, #lng-input').on('input', function() {
                 const lat = parseFloat($('#lat-input').val());
                 const lng = parseFloat($('#lng-input').val());
@@ -363,7 +395,7 @@
 
                 $('#modalTitle').text('Edit Panel KWh');
                 $('#formMethod').val('PUT');
-                $('#formPanel').attr('action', `/panel-kwh/${tr.id}`);
+                $('#formPanel').attr('action', `{{ url('/panel-kwh') }}/${tr.id}`);
 
                 $('#in_no_pelanggan').val(tr.no_pelanggan);
                 $('#in_daya_va').val(tr.daya_va);
@@ -375,7 +407,9 @@
                 modal.classList.add('active');
                 initMap(tr.latitude, tr.longitude, tr.id);
             });
+
             $('.btn-close-modal').click(() => modal.classList.remove('active'));
+            window.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
         });
     </script>
 @endpush

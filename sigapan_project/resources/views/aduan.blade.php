@@ -15,7 +15,7 @@
   }
 
   /* ====== PAGE ====== */
-  .aduan-page { padding: 60px 0 90px; background:#fff; }
+  .aduan-page { padding: 60px 0 90px;}
   .aduan-title {
     text-align:center;
     font-size:42px;
@@ -55,7 +55,6 @@
   .aduan-panel {
     max-width: 1280px;
     margin: 0 auto;
-    background: var(--panel);
     border-radius: 20px;
     padding: 40px 42px;
     box-shadow: 0 18px 45px rgba(0,0,0,0.12);
@@ -256,7 +255,7 @@
 @endpush
 
 @section('content')
-<div class="aduan-page">
+<div class="aduan-page bg-neutral-200">
   <div class="container">
     <div class="aduan-title">Buat Pengaduan</div>
 
@@ -264,7 +263,7 @@
       <a class="btn-top" href="{{ url('/daftar-aduan') }}">Lihat Daftar Aduan</a>
     </div>
 
-    <div class="aduan-panel">
+    <div class="aduan-panel bg-neutral-100">
 
       @if (session('success'))
         <div style="margin-bottom:14px; padding:12px 14px; border-radius:14px; background:#eaf7ee; border:1px solid #bfe5c9; color:#1f7a36;">

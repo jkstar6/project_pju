@@ -21,19 +21,11 @@ class UpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        // untuk route resource: settings/users/{user}
-        $userId = $this->route('user');
-
         return [
-            'name'      => ['required', 'string', 'max:255'],
-            'email'     => ['required', 'email:rfc,dns', 'unique:users,email,' . $userId],
-            'is_active' => ['required', 'in:0,1'],
-
-            // ✅ SINGLE ROLE (bukan roles[])
-            'role'      => ['required', 'string', 'exists:roles,name'],
-
-            // password optional saat update
-            'password'  => ['nullable', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
+            'name' => 'required',
+            'email' => 'required|email:rfc,dns|unique:users,email,' . $this->route('user'),
+            'is_active' => 'required|in:0,1',
+            'roles' => 'required',
         ];
     }
 }

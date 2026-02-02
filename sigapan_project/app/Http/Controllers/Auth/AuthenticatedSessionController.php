@@ -24,23 +24,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        // login (Auth::attempt) ada di dalam LoginRequest::authenticate()
         $request->authenticate();
-
-        /**
-         * ✅ BLOCK user tidak aktif
-         * Kalau is_active = 0 -> paksa logout dan tampilkan error
-         */
-        if (Auth::check() && (int) Auth::user()->is_active === 0) {
-            Auth::guard('web')->logout();
-
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            return back()->withErrors([
-                'email' => 'Akun Anda tidak aktif. Silakan hubungi admin.',
-            ]);
-        }
 
         $request->session()->regenerate();
 

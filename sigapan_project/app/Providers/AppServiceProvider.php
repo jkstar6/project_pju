@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -76,7 +77,9 @@ class AppServiceProvider extends ServiceProvider
                 ->to($notifiable->email)
                 ->subject('[No Reply] Lupa Password');
         });
-
+        Gate::before(function ($user, $ability) {
+        return $user->hasRole('Admin') ? true : null;
+        });
         View::composer('*', NavigationComposer::class);
     }
 }

@@ -195,11 +195,15 @@
 
                     <div>
                         <label class="text-sm font-medium mb-2 block">Surveyor</label>
-                        <select name="user_id" class="w-full border rounded-md px-3 py-2.5" required>
-                            @foreach ($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                            @endforeach
-                        </select>
+                        <select name="tim_lapangan_id" class="w-full border rounded-md px-3 py-2.5" required>
+    <option value="">-- Pilih Surveyor --</option>
+    @foreach ($timLapangans as $tim)
+        <option value="{{ $tim->id }}">
+            {{ $tim->nama_tim }}
+        </option>
+    @endforeach
+</select>
+
                     </div>
 
                         <div>

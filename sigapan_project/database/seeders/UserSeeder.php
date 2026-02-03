@@ -1,66 +1,65 @@
 <?php
 
-/**
- * @author Yayong Ditya <https://gitlab.com/yayong.dk>
- */
-
 namespace Database\Seeders;
 
-use App\Enums\RoleEnum;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
-use App\Models\Navigation as ModelsNavigation;
+use App\Models\User;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
-        // Reset cached roles and permissions
+        // WAJIB: reset cache spatie
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
-        // create permissions for navigation
-        $navSlug = ModelsNavigation::pluck('slug')->toArray();
-        $this->generatePermissions($navSlug);
-        $permissions = Permission::all();
 
-        // create roles and assign existing permissions
-        $developerRole = Role::create(['name' => RoleEnum::DEVELOPER->value]);
-        $superadmin = Role::create(['name' => RoleEnum::SUPERADMIN->value]);
-        $admin = Role::create(['name' => RoleEnum::ADMIN->value]);
-        $user = Role::create(['name' => RoleEnum::USER->value]);
+        /* =======================
+        |  BUAT ROLE (SESUIAI ROUTES)
+        ======================= */
+        $admin    = Role::firstOrCreate(['name' => 'Admin']);
+        $teknisi  = Role::firstOrCreate(['name' => 'Teknisi']);
+        $survey   = Role::firstOrCreate(['name' => 'Survey']);
 
-        // Sync permission to each role
-        $developerRole->syncPermissions($permissions);
+        /* =======================
+        |  BUAT PERMISSION SETTINGS USERS
+        ======================= */
+        $permissions = [
+            'settings-users.read',
+            'settings-users.create',
+            'settings-users.update',
+            'settings-users.delete',
+        ];
 
-        // create developer users
-        $developerAccount = \App\Models\User::factory()->create([
-            'name' => 'Laravel Base Developer',
-            'email' => 'developerlaravelbase@gmail.com',
-            'password' => Hash::make('123456789'),
-            'role'     => 'Admin',
-        ]);
-        $developerAccount->assignRole($developerRole);
-    }
-    
-    /**
-     * Fungsi untuk menghasilkan permission berdasarkan slug navigasi
-    */
-    public function generatePermissions($permissions)
-    {
-        $permissionsList = [];
         foreach ($permissions as $permission) {
-            $permissionsList[] = ['name' => $permission . '.read', 'guard_name' => 'web'];
-            $permissionsList[] = ['name' => $permission . '.create', 'guard_name' => 'web'];
-            $permissionsList[] = ['name' => $permission . '.update', 'guard_name' => 'web'];
-            $permissionsList[] = ['name' => $permission . '.delete', 'guard_name' => 'web'];
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
         }
-        return Permission::insert($permissionsList);
+
+        // Admin FULL AKSES
+        $admin->givePermissionTo($permissions);
+
+        // Teknisi & Survey cuma READ
+        $teknisi->givePermissionTo('settings-users.read');
+        $survey->givePermissionTo('settings-users.read');
+
+        /* =======================
+        |  BUAT USER ADMIN
+        ======================= */
+        $user = User::firstOrCreate(
+            ['email' => 'admin@app.test'],
+            [
+                'name' => 'Admin Utama',
+                'password' => Hash::make('123456'),
+            ]
+        );
+
+        // PASTI LOLOS SEMUA ROUTE
+        $user->syncRoles(['Admin']);
     }
 }
+

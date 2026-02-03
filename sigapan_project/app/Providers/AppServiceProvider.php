@@ -9,6 +9,8 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\URL;
+use App\View\Composers\NavigationComposer;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -74,5 +76,7 @@ class AppServiceProvider extends ServiceProvider
                 ->to($notifiable->email)
                 ->subject('[No Reply] Lupa Password');
         });
+
+        View::composer('*', NavigationComposer::class);
     }
 }

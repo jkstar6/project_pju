@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Settings;
 
+use Illuminate\Support\Facades\Route;
 use App\Models\Navigation;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -22,8 +23,15 @@ class NavigationsController extends Controller
 
         $navigations = $this->navigationsService->getAllNavigations();
         $parentNavigations = $navigations->where('parent_id', null);
-        return view('admin.settings.navigations.index', compact('navigations', 'parentNavigations'));
+
+        // Ambil semua route Laravel yang punya nama
+        $routes = collect(Route::getRoutes())
+            ->mapWithKeys(fn($route) => [$route->getName() => $route->getName()])
+            ->filter(); // hanya yang punya nama
+
+        return view('admin.settings.navigations.index', compact('navigations', 'parentNavigations', 'routes'));
     }
+
 
     /**
      * Store a newly created resource in storage.

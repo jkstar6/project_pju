@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AsetPju;
 use App\Models\PanelKwh;
 use App\Models\MasterJalan;
-use App\Models\KoneksiPjuKwh; // Pastikan Model Koneksi di-import
+use App\Models\KoneksiPjuKwh;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -17,13 +17,16 @@ class AsetPjuController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $panelKwh = PanelKwh::select('id','no_pelanggan_pln','daya_va','latitude','longitude','lokasi_panel')
+        // PERBAIKAN DI SINI: Ubah nama variabel jadi $panelKwhList
+        $panelKwhList = PanelKwh::select('id','no_pelanggan_pln','daya_va','latitude','longitude','lokasi_panel')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $masterJalan = MasterJalan::orderBy('nama_jalan')->get();
+        // PERBAIKAN DI SINI: Ubah nama variabel jadi $jalanList
+        $jalanList = MasterJalan::orderBy('nama_jalan')->get();
 
-        return view('aset-pju.index', compact('asetPju', 'panelKwh', 'masterJalan'));
+        // Kirim variabel yang sudah diganti namanya ke view
+        return view('aset-pju.index', compact('asetPju', 'panelKwhList', 'jalanList'));
     }
 
     public function store(Request $request)
@@ -116,10 +119,7 @@ class AsetPjuController extends Controller
                 ->withInput();
         }
 
-        // [LOGIKA HAPUS OTOMATIS]
-        // Hapus koneksi jaringan jika:
-        // 1. Panel KWh berubah (beda induk)
-        // 2. ATAU Lokasi (Latitude/Longitude) berubah (jarak/jalur kabel tidak lagi valid)
+        // [LOGIKA HAPUS OTOMATIS KONEKSI JIKA PINDAH]
         if (
             $aset->panel_kwh_id != $request->panel_kwh_id ||
             $aset->latitude != $request->latitude ||

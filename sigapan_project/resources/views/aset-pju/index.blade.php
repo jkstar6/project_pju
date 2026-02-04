@@ -18,11 +18,7 @@
             z-index: 10;
         }
 
-        /* modal */
         #modalTambahAset, #modalEditAset { z-index: 9999; }
-
-        .input-error { border-color: #ef4444 !important; background: #fef2f2 !important; }
-        .text-error { color: #ef4444 !important; }
 
         /* simple input style helper */
         .i {
@@ -159,7 +155,6 @@
         </div>
     </div>
 
-    {{-- ✅ MODAL hanya Admin --}}
     @if($canManageAset)
         {{-- ===================== MODAL TAMBAH ===================== --}}
         <div id="modalTambahAset" class="fixed inset-0 hidden bg-black/50 flex items-start justify-center p-4 overflow-y-auto pt-10 pb-10">
@@ -197,7 +192,7 @@
                         <div>
                             <label class="l">Panel KWh</label>
                             <select name="panel_kwh_id" class="i" id="aset-panel-id">
-                                <option value="">-- pilih panel (opsional) --</option>
+                                <option value="">-- pilih panel (wajib punya koordinat) --</option>
                                 @foreach(($panelKwhList ?? []) as $p)
                                     <option value="{{ $p->id }}"
                                         data-lat="{{ $p->latitude }}"
@@ -206,7 +201,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-gray-500 mt-1">Kalau panel punya koordinat, map akan diarahkan ke dekat panel.</p>
+                            <p class="text-xs text-gray-500 mt-1">Pilih panel dulu, lalu klik peta untuk menentukan aset.</p>
                         </div>
 
                         <div>
@@ -245,7 +240,8 @@
                     <div>
                         <label class="l">Tentukan Lokasi Aset (klik peta)</label>
                         <div id="map-aset"></div>
-                        <p class="text-xs text-gray-500 mt-2">Klik peta untuk mengisi Latitude & Longitude.</p>
+                        <p id="distance-info-tambah" class="text-sm mt-2 font-semibold text-gray-700"></p>
+                        <p class="text-xs text-gray-500 mt-1">Batas maksimal jarak Panel → Aset: 500 meter.</p>
                     </div>
 
                     <div class="g2">
@@ -308,7 +304,7 @@
                         <div>
                             <label class="l">Panel KWh</label>
                             <select name="panel_kwh_id" class="i" id="edit-panel-id">
-                                <option value="">-- pilih panel (opsional) --</option>
+                                <option value="">-- pilih panel (wajib punya koordinat) --</option>
                                 @foreach(($panelKwhList ?? []) as $p)
                                     <option value="{{ $p->id }}"
                                         data-lat="{{ $p->latitude }}"
@@ -355,7 +351,8 @@
                     <div>
                         <label class="l">Tentukan Lokasi Aset (klik peta)</label>
                         <div id="map-edit-aset"></div>
-                        <p class="text-xs text-gray-500 mt-2">Klik peta untuk update Latitude & Longitude.</p>
+                        <p id="distance-info-edit" class="text-sm mt-2 font-semibold text-gray-700"></p>
+                        <p class="text-xs text-gray-500 mt-1">Batas maksimal jarak Panel → Aset: 500 meter.</p>
                     </div>
 
                     <div class="g2">
@@ -391,9 +388,8 @@
 
 <script>
     const CAN_MANAGE_ASET = @json($canManageAset);
-</script>
+    const MAX_DISTANCE = 500; // meter
 
-<script>
     // ===================== DataTables =====================
     $(document).ready(function() {
         $('#data-table').DataTable({
@@ -417,19 +413,12 @@
     // ===================== Modal helpers =====================
     function openTambahAset() {
         if (!CAN_MANAGE_ASET) return;
-
         document.getElementById('modalTambahAset').classList.remove('hidden');
-
-        // init map after modal visible
-        setTimeout(() => {
-            initMapTambah();
-        }, 150);
+        setTimeout(() => initMapTambah(), 150);
     }
-
     function closeTambahAset() {
         document.getElementById('modalTambahAset').classList.add('hidden');
     }
-
     function closeEditAset() {
         document.getElementById('modalEditAset').classList.add('hidden');
     }
@@ -442,133 +431,338 @@
         if (me && !me.classList.contains('hidden') && e.target === me) closeEditAset();
     });
 
-    // ===================== Map Tambah =====================
-    let mapTambah, markerTambah;
+    // ===================== UTIL =====================
+    function getPanelLatLngFromSelect(selectEl) {
+        if (!selectEl) return null;
+        const opt = selectEl.options[selectEl.selectedIndex];
+        const lat = opt?.dataset?.lat;
+        const lng = opt?.dataset?.lng;
+        if (!lat || !lng) return null;
+        const plat = parseFloat(lat);
+        const plng = parseFloat(lng);
+        if (Number.isNaN(plat) || Number.isNaN(plng)) return null;
+        return L.latLng(plat, plng);
+    }
+
+    function setDisabledSubmit(formEl, isDisabled) {
+        if (!formEl) return;
+        const btn = formEl.querySelector('button[type="submit"]');
+        if (!btn) return;
+        btn.disabled = isDisabled;
+        btn.classList.toggle('opacity-50', isDisabled);
+        btn.classList.toggle('cursor-not-allowed', isDisabled);
+    }
+
+    function showDistanceInfo(infoEl, distanceMeters, isValid) {
+        if (!infoEl) return;
+        if (distanceMeters == null) {
+            infoEl.textContent = '';
+            infoEl.className = 'text-sm mt-2 font-semibold text-gray-700';
+            return;
+        }
+        const d = Math.round(distanceMeters);
+        infoEl.textContent = `Jarak Panel → Aset: ${d} meter (maks ${MAX_DISTANCE}m)`;
+        infoEl.className = isValid
+            ? 'text-sm mt-2 font-semibold text-green-700'
+            : 'text-sm mt-2 font-semibold text-red-700';
+    }
+
+    function fitMapToPoints(map, points) {
+        const valid = points.filter(Boolean);
+        if (!map || valid.length === 0) return;
+        if (valid.length === 1) {
+            map.setView(valid[0], 17);
+            return;
+        }
+        const bounds = L.latLngBounds(valid);
+        map.fitBounds(bounds.pad(0.25));
+    }
+
+    // ===================== MAP TAMBAH =====================
+    let mapTambah = null;
+    let markerPanelTambah = null;
+    let markerAsetTambah = null;
+    let lineTambah = null;
+    let circleTambah = null;
+    let panelLatLngTambah = null;
+    let asetLatLngTambah = null;
 
     function initMapTambah() {
-        // destroy if exists
-        if (mapTambah) {
-            mapTambah.remove();
-            mapTambah = null;
-            markerTambah = null;
-        }
+        if (mapTambah) { mapTambah.remove(); mapTambah = null; }
+
+        markerPanelTambah = null;
+        markerAsetTambah = null;
+        lineTambah = null;
+        circleTambah = null;
+        panelLatLngTambah = null;
+        asetLatLngTambah = null;
 
         const mapEl = document.getElementById('map-aset');
         const latInput = document.getElementById('lat-aset');
         const lngInput = document.getElementById('lng-aset');
+        const panelSel = document.getElementById('aset-panel-id');
+        const formTambah = document.getElementById('formTambahAset');
+        const infoEl = document.getElementById('distance-info-tambah');
 
-        // default Bantul approx
-        const defaultLat = -7.885;
-        const defaultLng = 110.333;
+        latInput.value = '';
+        lngInput.value = '';
+        showDistanceInfo(infoEl, null, true);
+        setDisabledSubmit(formTambah, true);
 
-        mapTambah = L.map(mapEl).setView([defaultLat, defaultLng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19
-        }).addTo(mapTambah);
+        mapTambah = L.map(mapEl).setView([-7.885, 110.333], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapTambah);
 
-        function setMarker(lat, lng) {
-            latInput.value = lat.toFixed(6);
-            lngInput.value = lng.toFixed(6);
+        function clearLineAndCircle() {
+            if (lineTambah) { lineTambah.remove(); lineTambah = null; }
+            if (circleTambah) { circleTambah.remove(); circleTambah = null; }
+        }
 
-            if (!markerTambah) {
-                markerTambah = L.marker([lat, lng], { draggable: true }).addTo(mapTambah);
-                markerTambah.on('dragend', function(ev){
+        function renderLineCircleAndValidate() {
+            if (lineTambah) { lineTambah.remove(); lineTambah = null; }
+
+            if (!panelLatLngTambah) {
+                clearLineAndCircle();
+                showDistanceInfo(infoEl, null, true);
+                setDisabledSubmit(formTambah, true);
+                return;
+            }
+
+            // circle radius 500m from panel
+            if (!circleTambah) {
+                circleTambah = L.circle(panelLatLngTambah, { radius: MAX_DISTANCE }).addTo(mapTambah);
+            } else {
+                circleTambah.setLatLng(panelLatLngTambah);
+            }
+
+            if (!asetLatLngTambah) {
+                showDistanceInfo(infoEl, null, true);
+                setDisabledSubmit(formTambah, true);
+                return;
+            }
+
+            lineTambah = L.polyline([panelLatLngTambah, asetLatLngTambah]).addTo(mapTambah);
+
+            const dist = mapTambah.distance(panelLatLngTambah, asetLatLngTambah);
+            const isValid = dist <= MAX_DISTANCE;
+
+            showDistanceInfo(infoEl, dist, isValid);
+            setDisabledSubmit(formTambah, !isValid);
+
+            fitMapToPoints(mapTambah, [panelLatLngTambah, asetLatLngTambah]);
+        }
+
+        function setPanelMarker(latlng) {
+            panelLatLngTambah = latlng;
+
+            if (!markerPanelTambah) {
+                markerPanelTambah = L.marker(latlng).addTo(mapTambah);
+                markerPanelTambah.bindPopup('Lokasi Panel KWh').openPopup();
+            } else {
+                markerPanelTambah.setLatLng(latlng);
+            }
+
+            mapTambah.setView(latlng, 17);
+            renderLineCircleAndValidate();
+        }
+
+        function setAsetMarker(latlng) {
+            asetLatLngTambah = latlng;
+            latInput.value = latlng.lat.toFixed(6);
+            lngInput.value = latlng.lng.toFixed(6);
+
+            if (!markerAsetTambah) {
+                markerAsetTambah = L.marker(latlng, { draggable: true }).addTo(mapTambah);
+                markerAsetTambah.bindPopup('Lokasi Aset PJU');
+
+                markerAsetTambah.on('dragend', function(ev){
                     const p = ev.target.getLatLng();
+                    asetLatLngTambah = p;
                     latInput.value = p.lat.toFixed(6);
                     lngInput.value = p.lng.toFixed(6);
+                    renderLineCircleAndValidate();
                 });
             } else {
-                markerTambah.setLatLng([lat, lng]);
+                markerAsetTambah.setLatLng(latlng);
             }
+
+            renderLineCircleAndValidate();
         }
 
-        // click to place marker
-        mapTambah.on('click', function(e) {
-            setMarker(e.latlng.lat, e.latlng.lng);
-        });
-
-        // if panel selected, move map near panel
-        const selPanel = document.getElementById('aset-panel-id');
-        if (selPanel) {
-            selPanel.addEventListener('change', function(){
-                const opt = selPanel.options[selPanel.selectedIndex];
-                const lat = opt?.dataset?.lat;
-                const lng = opt?.dataset?.lng;
-                if (lat && lng) {
-                    mapTambah.setView([parseFloat(lat), parseFloat(lng)], 16);
+        if (panelSel) {
+            panelSel.addEventListener('change', function() {
+                const p = getPanelLatLngFromSelect(panelSel);
+                if (!p) {
+                    panelLatLngTambah = null;
+                    if (markerPanelTambah) { markerPanelTambah.remove(); markerPanelTambah = null; }
+                    clearLineAndCircle();
+                    renderLineCircleAndValidate();
+                    return;
                 }
+                setPanelMarker(p);
             });
 
-            // trigger initial change if any
-            selPanel.dispatchEvent(new Event('change'));
+            panelSel.dispatchEvent(new Event('change'));
         }
+
+        mapTambah.on('click', function(e) {
+            if (!panelLatLngTambah) {
+                alert('Pilih Panel KWh dulu (yang punya koordinat), baru tentukan lokasi aset.');
+                return;
+            }
+            setAsetMarker(e.latlng);
+        });
     }
 
-    // ===================== Map Edit =====================
-    let mapEdit, markerEdit;
+    // ===================== MAP EDIT =====================
+    let mapEdit = null;
+    let markerPanelEdit = null;
+    let markerAsetEdit = null;
+    let lineEdit = null;
+    let circleEdit = null;
+    let panelLatLngEdit = null;
+    let asetLatLngEdit = null;
 
-    function initMapEdit(lat, lng) {
-        if (mapEdit) {
-            mapEdit.remove();
-            mapEdit = null;
-            markerEdit = null;
-        }
+    function initMapEdit(initialAsetLatLng) {
+        if (mapEdit) { mapEdit.remove(); mapEdit = null; }
+
+        markerPanelEdit = null;
+        markerAsetEdit = null;
+        lineEdit = null;
+        circleEdit = null;
+        panelLatLngEdit = null;
+        asetLatLngEdit = null;
 
         const mapEl = document.getElementById('map-edit-aset');
         const latInput = document.getElementById('edit-lat');
         const lngInput = document.getElementById('edit-lng');
+        const panelSel = document.getElementById('edit-panel-id');
+        const formEdit = document.getElementById('formEditAset');
+        const infoEl = document.getElementById('distance-info-edit');
 
-        const initLat = lat ?? -7.885;
-        const initLng = lng ?? 110.333;
+        const fallback = L.latLng(-7.885, 110.333);
+        const start = initialAsetLatLng || fallback;
 
-        mapEdit = L.map(mapEl).setView([initLat, initLng], 15);
+        mapEdit = L.map(mapEl).setView(start, 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapEdit);
 
-        function setMarker(lat, lng) {
-            latInput.value = Number(lat).toFixed(6);
-            lngInput.value = Number(lng).toFixed(6);
+        function clearLineAndCircle() {
+            if (lineEdit) { lineEdit.remove(); lineEdit = null; }
+            if (circleEdit) { circleEdit.remove(); circleEdit = null; }
+        }
 
-            if (!markerEdit) {
-                markerEdit = L.marker([lat, lng], { draggable: true }).addTo(mapEdit);
-                markerEdit.on('dragend', function(ev){
+        function renderLineCircleAndValidate() {
+            if (lineEdit) { lineEdit.remove(); lineEdit = null; }
+
+            if (!panelLatLngEdit) {
+                clearLineAndCircle();
+                showDistanceInfo(infoEl, null, true);
+                setDisabledSubmit(formEdit, true);
+                return;
+            }
+
+            // circle radius 500m
+            if (!circleEdit) {
+                circleEdit = L.circle(panelLatLngEdit, { radius: MAX_DISTANCE }).addTo(mapEdit);
+            } else {
+                circleEdit.setLatLng(panelLatLngEdit);
+            }
+
+            if (!asetLatLngEdit) {
+                showDistanceInfo(infoEl, null, true);
+                setDisabledSubmit(formEdit, true);
+                return;
+            }
+
+            lineEdit = L.polyline([panelLatLngEdit, asetLatLngEdit]).addTo(mapEdit);
+
+            const dist = mapEdit.distance(panelLatLngEdit, asetLatLngEdit);
+            const isValid = dist <= MAX_DISTANCE;
+
+            showDistanceInfo(infoEl, dist, isValid);
+            setDisabledSubmit(formEdit, !isValid);
+
+            fitMapToPoints(mapEdit, [panelLatLngEdit, asetLatLngEdit]);
+        }
+
+        function setPanelMarker(latlng) {
+            panelLatLngEdit = latlng;
+
+            if (!markerPanelEdit) {
+                markerPanelEdit = L.marker(latlng).addTo(mapEdit);
+                markerPanelEdit.bindPopup('Lokasi Panel KWh').openPopup();
+            } else {
+                markerPanelEdit.setLatLng(latlng);
+            }
+
+            mapEdit.setView(latlng, 17);
+            renderLineCircleAndValidate();
+        }
+
+        function setAsetMarker(latlng) {
+            asetLatLngEdit = latlng;
+            latInput.value = latlng.lat.toFixed(6);
+            lngInput.value = latlng.lng.toFixed(6);
+
+            if (!markerAsetEdit) {
+                markerAsetEdit = L.marker(latlng, { draggable: true }).addTo(mapEdit);
+                markerAsetEdit.bindPopup('Lokasi Aset PJU');
+
+                markerAsetEdit.on('dragend', function(ev){
                     const p = ev.target.getLatLng();
+                    asetLatLngEdit = p;
                     latInput.value = p.lat.toFixed(6);
                     lngInput.value = p.lng.toFixed(6);
+                    renderLineCircleAndValidate();
                 });
             } else {
-                markerEdit.setLatLng([lat, lng]);
+                markerAsetEdit.setLatLng(latlng);
             }
+
+            renderLineCircleAndValidate();
         }
 
-        // set initial marker
-        setMarker(initLat, initLng);
+        // aset awal
+        if (initialAsetLatLng) {
+            setAsetMarker(initialAsetLatLng);
+        } else {
+            showDistanceInfo(infoEl, null, true);
+            setDisabledSubmit(formEdit, true);
+        }
 
-        mapEdit.on('click', function(e){
-            setMarker(e.latlng.lat, e.latlng.lng);
-        });
-
-        // panel change center
-        const selPanel = document.getElementById('edit-panel-id');
-        if (selPanel) {
-            selPanel.addEventListener('change', function(){
-                const opt = selPanel.options[selPanel.selectedIndex];
-                const plat = opt?.dataset?.lat;
-                const plng = opt?.dataset?.lng;
-                if (plat && plng) mapEdit.setView([parseFloat(plat), parseFloat(plng)], 16);
+        // panel change
+        if (panelSel) {
+            panelSel.addEventListener('change', function(){
+                const p = getPanelLatLngFromSelect(panelSel);
+                if (!p) {
+                    panelLatLngEdit = null;
+                    if (markerPanelEdit) { markerPanelEdit.remove(); markerPanelEdit = null; }
+                    clearLineAndCircle();
+                    renderLineCircleAndValidate();
+                    return;
+                }
+                setPanelMarker(p);
             });
+
+            panelSel.dispatchEvent(new Event('change'));
         }
+
+        // click peta => set aset
+        mapEdit.on('click', function(e){
+            if (!panelLatLngEdit) {
+                alert('Pilih Panel KWh dulu (yang punya koordinat), baru tentukan lokasi aset.');
+                return;
+            }
+            setAsetMarker(e.latlng);
+        });
     }
 
-    // ===================== Open Edit (fill form) =====================
+    // ===================== OPEN EDIT =====================
     function openEditAset(data) {
         if (!CAN_MANAGE_ASET) return;
 
-        // set action url: /aset-pju/{id}
-        // Pastikan route('aset-pju.update', id) ada.
         const form = document.getElementById('formEditAset');
         form.action = `{{ url('aset-pju') }}/${data.id}`;
 
-        // fill fields
         document.getElementById('edit-kode-tiang').value = data.kode_tiang ?? '';
         document.getElementById('edit-status-aset').value = data.status_aset ?? '';
         document.getElementById('edit-jenis-lampu').value = data.jenis_lampu ?? '';
@@ -576,24 +770,29 @@
         document.getElementById('edit-kecamatan').value = data.kecamatan ?? '';
         document.getElementById('edit-desa').value = data.desa ?? '';
 
-        // select panel & jalan
         const panelSel = document.getElementById('edit-panel-id');
         if (panelSel) panelSel.value = data.panel_kwh_id ?? '';
 
         const jalanSel = document.getElementById('edit-jalan-id');
         if (jalanSel) jalanSel.value = data.jalan_id ?? '';
 
-        // lat lng
-        const lat = data.latitude ? parseFloat(data.latitude) : -7.885;
-        const lng = data.longitude ? parseFloat(data.longitude) : 110.333;
-        document.getElementById('edit-lat').value = lat.toFixed(6);
-        document.getElementById('edit-lng').value = lng.toFixed(6);
+        const lat = data.latitude ? parseFloat(data.latitude) : null;
+        const lng = data.longitude ? parseFloat(data.longitude) : null;
 
-        // show modal then init map
+        const initialAsetLatLng = (lat != null && lng != null && !Number.isNaN(lat) && !Number.isNaN(lng))
+            ? L.latLng(lat, lng)
+            : null;
+
+        if (initialAsetLatLng) {
+            document.getElementById('edit-lat').value = initialAsetLatLng.lat.toFixed(6);
+            document.getElementById('edit-lng').value = initialAsetLatLng.lng.toFixed(6);
+        } else {
+            document.getElementById('edit-lat').value = '';
+            document.getElementById('edit-lng').value = '';
+        }
+
         document.getElementById('modalEditAset').classList.remove('hidden');
-        setTimeout(() => {
-            initMapEdit(lat, lng);
-        }, 150);
+        setTimeout(() => initMapEdit(initialAsetLatLng), 150);
     }
 </script>
 @endpush

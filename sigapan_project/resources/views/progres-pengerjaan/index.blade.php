@@ -11,6 +11,7 @@
         #data-table td:last-child,
         #data-table td:last-child * { pointer-events: auto; }
 
+
         .btn-icon { cursor: pointer; position: relative; z-index: 10; }
         .material-symbols-outlined { font-size: 18px !important; }
 
@@ -184,63 +185,90 @@
 
     {{-- ✅ Modal hanya Admin & Teknisi --}}
     @if($canManageProgres)
-        {{-- ========================= MODAL CREATE ========================== --}}
-        <div id="modalCreate" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
-            <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Tambah Progres Pengerjaan</h5>
-                    <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
-                        <i class="material-symbols-outlined">close</i>
-                    </button>
-                </div>
+        {{-- ... Bagian atas file tetap sama ... --}}
 
-                <form action="{{ route('progres-pengerjaan.store') }}" method="POST" class="grid grid-cols-1 gap-4">
-                    @csrf
+{{-- ... Kode sebelumnya (Layouts, Styles, Header, Table) ... --}}
 
-                    <div>
-                        <label class="text-sm text-gray-600 dark:text-gray-300">Pilih Aset PJU</label>
-                        <select name="aset_pju_id"
-                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
-                            required>
-                            <option value="">-- Pilih Aset PJU --</option>
-                            @foreach ($listAset as $aset)
-                                <option value="{{ $aset->id }}">
-                                    {{ $aset->kode_tiang }} | {{ $aset->desa ?? '-' }} | {{ $aset->status_aset ?? '-' }}
-                                </option>
-                            @endforeach
-                        </select>
-
-                        @if ($listAset->isEmpty())
-                            <p class="text-xs text-amber-500 mt-1">Semua aset sudah dalam pengerjaan.</p>
-                        @endif
-                    </div>
-
-                    <div>
-                        <label class="text-sm text-gray-600 dark:text-gray-300">Tahapan Awal</label>
-                        <select name="tahapan"
-                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
-                            <option value="Galian" selected>Galian (20%)</option>
-                            <option value="Pengecoran">Pengecoran (40%)</option>
-                            <option value="Pemasangan Tiang dan Armatur">Pemasangan Tiang dan Armatur (60%)</option>
-                            <option value="Pemasangan Jaringan">Pemasangan Jaringan (80%)</option>
-                            <option value="Selesai">Selesai (100%)</option>
-                        </select>
-                    </div>
-
-                    <div class="flex justify-end gap-2 mt-4">
-                        <button type="button"
-                            class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
-                            Batal
-                        </button>
-                        <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600"
-                            {{ $listAset->isEmpty() ? 'disabled' : '' }}>
-                            Simpan
-                        </button>
-                    </div>
-                </form>
-            </div>
+{{-- ========================= MODAL CREATE ========================== --}}
+<div id="modalCreate" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
+        <div class="flex items-center justify-between mb-4">
+            <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Tambah Progres Pengerjaan</h5>
+            <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
+                <i class="material-symbols-outlined">close</i>
+            </button>
         </div>
 
+        <form action="{{ route('progres-pengerjaan.store') }}" method="POST" class="grid grid-cols-1 gap-4">
+            @csrf
+
+            {{-- 1. PILIH ASET --}}
+            <div>
+                <label class="text-sm text-gray-600 dark:text-gray-300">Pilih Aset PJU</label>
+                <select name="aset_pju_id"
+                    class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
+                    required>
+                    <option value="">-- Pilih Aset PJU --</option>
+                    @foreach ($listAset as $aset)
+                        <option value="{{ $aset->id }}">
+                            {{ $aset->kode_tiang }} | {{ $aset->desa ?? '-' }}
+                        </option>
+                    @endforeach
+                </select>
+                @if ($listAset->isEmpty())
+                    <p class="text-xs text-amber-500 mt-1">Semua aset sudah dalam pengerjaan.</p>
+                @endif
+            </div>
+
+            {{-- ✅ 2. PILIH PETUGAS (Hanya Teknisi) --}}
+            <div>
+                <label class="text-sm text-gray-600 dark:text-gray-300">Pilih Petugas (Teknisi)</label>
+                <select name="user_id"
+                    class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
+                    required>
+                    <option value="">-- Pilih Teknisi --</option>
+                    @foreach ($listTeknisi as $teknisi)
+                        {{-- Opsi terpilih otomatis jika user yang login adalah teknisi tersebut --}}
+                        <option value="{{ $teknisi->id }}" {{ Auth::id() == $teknisi->id ? 'selected' : '' }}>
+                            {{ $teknisi->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @if($listTeknisi->isEmpty())
+                     <p class="text-xs text-red-500 mt-1">Tidak ada data teknisi.</p>
+                @endif
+            </div>
+
+            {{-- 3. TAHAPAN --}}
+            <div>
+                <label class="text-sm text-gray-600 dark:text-gray-300">Tahapan Awal</label>
+                <select name="tahapan"
+                    class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
+                    <option value="Galian" selected>Galian (20%)</option>
+                    <option value="Pengecoran">Pengecoran (40%)</option>
+                    <option value="Pemasangan Tiang dan Armatur">Pemasangan Tiang dan Armatur (60%)</option>
+                    <option value="Pemasangan Jaringan">Pemasangan Jaringan (80%)</option>
+                    <option value="Selesai">Selesai (100%)</option>
+                </select>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button"
+                    class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
+                    Batal
+                </button>
+                <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600"
+                    {{ $listAset->isEmpty() ? 'disabled' : '' }}>
+                    Simpan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ... Sisa kode (Modal Edit & Scripts) tetap sama ... --}}
+
+{{-- ... Bagian bawah (Modal Edit & Script) tetap sama ... --}}
         {{-- ========================= MODAL EDIT ========================== --}}
         <div id="modalEdit" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
             <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">

@@ -53,7 +53,7 @@
                             <label class="mb-[12px] font-medium block">
                                 Role <strong class="text-red-500">*</strong>
                             </label>
-                            <select name="role" id="role"
+                            <select name="roles[]" id="roles"
                                 class="h-[45px] rounded-md border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[13px] block w-full outline-0 cursor-pointer transition-all focus:border-primary-500"
                                 required>
                                 <option value="">- Select Role -</option>
@@ -155,10 +155,25 @@
                     $('#form-edit').find('#email').val(response.email);
 
                     // ✅ SINGLE ROLE: ambil role pertama kalau backend masih kirim array role_names
-                    const roleName = Array.isArray(response.role_names)
-                        ? (response.role_names[0] ?? '')
-                        : (response.role_name ?? '');
-                    $('#form-edit').find('#role').val(roleName).trigger('change');
+                    // const roleName = Array.isArray(response.role_names)
+                    //     ? (response.role_names[0] ?? '')
+                    //     : (response.role_name ?? '');
+                    // $('#form-edit').find('#roles').val(roleName).trigger('change');
+                    // --- PERBAIKAN DI SINI ---
+        // Pastikan kita mengambil 'roles' (biasanya array dari Spatie) 
+        // atau 'role' tergantung apa yang dikembalikan Service kamu.
+        
+        let selectedRole = "";
+        if (response.roles && response.roles.length > 0) {
+            // Jika Spatie mengembalikan array object roles
+            selectedRole = response.roles[0].name; 
+        } else if (response.role_names && response.role_names.length > 0) {
+            // Jika mengembalikan array string nama role
+            selectedRole = response.role_names[0];
+        }
+
+        // Pastikan selector ID-nya '#roles' (sesuai yang kamu ubah di HTML)
+        $('#form-edit').find('#roles').val(selectedRole).trigger('change');
 
                     $('#form-edit').find('#is_active').val(response.is_active).trigger('change');
                 },

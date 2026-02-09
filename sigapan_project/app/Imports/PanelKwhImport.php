@@ -12,6 +12,15 @@ class PanelKwhImport implements ToModel, WithHeadingRow, WithUpserts
     /**
      * Menangani data ganda berdasarkan ID Pelanggan.
      */
+
+    private $kapanewon;
+
+    // Tambahkan ini agar bisa menerima nama wilayah dari Command
+    public function __construct($kapanewon)
+    {
+        $this->kapanewon = $kapanewon;
+    }
+
     public function uniqueBy()
     {
         return 'no_pelanggan_pln';
@@ -59,6 +68,7 @@ class PanelKwhImport implements ToModel, WithHeadingRow, WithUpserts
 
         return new PanelKwh([
             'no_pelanggan_pln' => $no_pelanggan,
+            'kapanewon'        => $this->kapanewon, // DISIMPAN DI SINI
             'lokasi_panel'     => $lokasi ?: 'Lokasi Terdeteksi',
             'latitude'         => (float)$latitude,
             'longitude'        => (float)$longitude,

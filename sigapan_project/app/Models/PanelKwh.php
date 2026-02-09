@@ -16,6 +16,7 @@ class PanelKwh extends Model
     protected $fillable = [
         'no_pelanggan_pln',
         'lokasi_panel',
+        'kapanewon',
         'latitude',
         'longitude',
         'daya_va',

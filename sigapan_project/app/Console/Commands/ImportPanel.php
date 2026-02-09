@@ -27,7 +27,10 @@ class ImportPanel extends Command
     {
         // Menentukan lokasi folder data
         $folderPath = storage_path('app/excel_data');
+        $files = \File::files($folderPath);
 
+        // Kosongkan tabel agar data 'null' hilang
+        \App\Models\PanelKwh::truncate();
         // Proteksi jika folder tidak ada
         if (!File::isDirectory($folderPath)) {
             $this->error("Folder tidak ditemukan! Silakan buat folder di: storage/app/excel_data");
@@ -48,9 +51,13 @@ class ImportPanel extends Command
         foreach ($files as $file) {
             $fileName = $file->getFilename();
             
+            // Mengambil nama Kapanewon dari nama file
+            // Contoh: "Kapanewon Dlingo.xls" menjadi "Dlingo"
+            $namaKapanewon = str_ireplace(['Kapanewon ', '.xls', '.xlsx'], '', $fileName);
+            
             try {
-                // MenggunakanRealPath agar Laravel Excel bisa membaca lokasi file dengan tepat
-                Excel::import(new PanelKwhImport, $file->getRealPath());
+                // Masukkan $namaKapanewon ke dalam kurung PanelKwhImport
+                Excel::import(new PanelKwhImport($namaKapanewon), $file->getRealPath());
                 
                 $this->line("\n ✅ Berhasil: $fileName");
             } catch (\Exception $e) {
@@ -59,7 +66,6 @@ class ImportPanel extends Command
 
             $this->output->progressAdvance();
         }
-
         $this->output->progressFinish();
         $this->info("Semua proses selesai! Silakan cek database PostgreSQL Anda.");
     }

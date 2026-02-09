@@ -314,7 +314,6 @@
 
 @section('content')
     <main class="bg-neutral-200 py-6">
-        <main class="bg-neutral-200 py-6">
         <div class="container mx-auto px-4 mb-4 search-container">
             <div class="max-w-2xl mx-auto flex shadow-sm bg-white rounded-lg overflow-hidden border">
                 <input id="addressSearch" type="text" placeholder="Masukkan nama jalan atau tempat..." class="flex-1 px-4 py-3 outline-none text-sm">
@@ -328,26 +327,31 @@
                 <div class="legend">
                     <div class="legend-title">Status Lampu PJU</div>
                     
-                    <div class="legend-item" data-status="Aktif">
-                        <input type="checkbox" class="legend-checkbox" checked data-filter="Aktif">
+                    {{-- PERBAIKAN: data-filter disesuaikan dengan nilai ENUM database 'Terelialisasi' --}}
+                    <div class="legend-item" data-status="Terelialisasi">
+                        <input type="checkbox" class="legend-checkbox" checked data-filter="Terelialisasi">
                         <div class="legend-color" style="background: #10b981;"></div>
                         <span>Aktif</span>
                     </div>
+
                     <div class="legend-item" data-status="Pindah">
                         <input type="checkbox" class="legend-checkbox" checked data-filter="Pindah">
                         <div class="legend-color" style="background: #ef4444;"></div>
                         <span>Pindah</span>
                     </div>
+
                     <div class="legend-item" data-status="Pengerjaan">
                         <input type="checkbox" class="legend-checkbox" checked data-filter="Pengerjaan">
                         <div class="legend-color" style="background: #3b82f6;"></div>
                         <span>Pengerjaan</span>
                     </div>
+
                     <div class="legend-item" data-status="Usulan">
                         <input type="checkbox" class="legend-checkbox" checked data-filter="Usulan">
                         <div class="legend-color" style="background: #facc15;"></div>
                         <span>Usulan</span>
                     </div>
+
                     <div class="legend-item" data-status="Mati">
                         <input type="checkbox" class="legend-checkbox" checked data-filter="Mati">
                         <div class="legend-color" style="background: #111827;"></div>
@@ -390,7 +394,7 @@
                 <button class="detail-tab" data-tab="kwh">KWH Panel</button>
                 <button class="detail-tab" data-tab="cables">Cables</button>
             </div>
-            <button id="closePanel" class="text-3xl leading-none">&times;</button>
+            <button id="closePanel" class="text-3xl leading-none">×</button>
         </div>
         <div id="lampContent" class="p-6">
             <div id="tab-pju" class="detail-tab-content space-y-5"></div>
@@ -410,15 +414,6 @@
             const streetLights = @json($streetLights);
             const koneksiPJUKWH = @json($koneksiPjuKwh);
 
-            // Validate data
-            console.log('Panel KWH:', panelKWH.length);
-            console.log('Street Lights:', streetLights.length);
-            console.log('Connections:', koneksiPJUKWH.length);
-            
-            // Debug: Log unique status values
-            const uniqueStatuses = [...new Set(streetLights.map(l => l.status_aset))];
-            console.log('Unique Status Values:', uniqueStatuses);
-
             // Initialize map
             const map = L.map('map', {
                 center: [-7.8753849, 110.3289243],
@@ -429,7 +424,7 @@
 
             // Add tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
                 maxZoom: 19
             }).addTo(map);
 
@@ -446,7 +441,8 @@
             const glowLayer = L.layerGroup();
 
             // State variables
-            let activeFilters = new Set(['Terelialisasi', 'Aktif', 'Pindah', 'Pengerjaan', 'Usulan', 'Mati', 'Panel']);
+            // PERBAIKAN: Menggunakan 'Terelialisasi' sesuai database, bukan 'Aktif'
+            let activeFilters = new Set(['Terelialisasi', 'Pindah', 'Pengerjaan', 'Usulan', 'Mati', 'Panel']);
             let cablesVisible = false;
             let clusteringEnabled = true;
             let searchMarker;
@@ -460,31 +456,33 @@
             const toggleCablesBtn = document.getElementById('toggleCables');
             const toggleClusterBtn = document.getElementById('toggleCluster');
 
-            // Helper functions - FIXED: Better color handling
+            // Helper functions
             function getColor(warna) {
-                if (!warna) return '#6b7280';
+                if (!warna) return '#6b7280'; // Default gray
                 
+                // Normalisasi string (hapus spasi, lowercase) untuk pencocokan yang aman
+                const key = String(warna).trim();
+                
+                // Peta warna
                 const colorMap = {
-                    'green': '#10b981',
-                    'red': '#ef4444',
-                    'blue': '#3b82f6',
-                    'black': '#111827',
-                    'yellow': '#facc15',
+                    'Terelialisasi': '#10b981', // Hijau (Sesuai database)
+                    'Aktif': '#10b981',         // Fallback jika ada data lama
                     'Hijau': '#10b981',
+                    
+                    'Pindah': '#ef4444',        // Merah
                     'Merah': '#ef4444',
+                    
+                    'Pengerjaan': '#3b82f6',    // Biru
                     'Biru': '#3b82f6',
+                    
+                    'Mati': '#111827',          // Hitam
                     'Hitam': '#111827',
-                    'Kuning': '#facc15',
-                    'Aktif': '#10b981',
-                    'Terelialisasi': '#10b981',
-                    'Pindah': '#ef4444',
-                    'Pengerjaan': '#3b82f6',
-                    'Mati': '#111827',
-                    'Usulan': '#facc15'
+                    
+                    'Usulan': '#facc15',        // Kuning
+                    'Kuning': '#facc15'
                 };
                 
-                const color = colorMap[String(warna).toLowerCase().trim()] || colorMap[String(warna).trim()];
-                return color || '#6b7280';
+                return colorMap[key] || '#6b7280';
             }
 
             function getFasaColor(fasa) {
@@ -496,7 +494,6 @@
                 return fasaMap[String(fasa).trim()] || '#6b7280';
             }
 
-            // FIXED: Proper coordinate validation
             function isValidCoordinate(lat, lng) {
                 const latNum = parseFloat(lat);
                 const lngNum = parseFloat(lng);
@@ -513,29 +510,23 @@
             async function handleSearch() {
                 const query = searchInput.value.trim();
                 if (!query) return;
-
                 searchLoading.classList.remove('hidden');
-                
                 try {
                     const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
                     const data = await response.json();
-
                     if (data && data.length > 0) {
                         const lat = parseFloat(data[0].lat);
                         const lon = parseFloat(data[0].lon);
-                        
                         map.flyTo([lat, lon], 17);
-                        
                         if (searchMarker) map.removeLayer(searchMarker);
                         searchMarker = L.marker([lat, lon]).addTo(map)
                             .bindPopup(`<b>Lokasi Ditemukan</b><br>${data[0].display_name}`)
                             .openPopup();
                     } else {
-                        alert("Lokasi tidak ditemukan. Coba masukkan nama jalan yang lebih spesifik.");
+                        alert("Lokasi tidak ditemukan.");
                     }
                 } catch (error) {
                     console.error("Search error:", error);
-                    alert("Terjadi kesalahan saat mencari lokasi.");
                 } finally {
                     searchLoading.classList.add('hidden');
                 }
@@ -590,8 +581,6 @@
                             <span>${panel.daya_va || 0} VA</span>
                         </div>
                     </div>
-                    <a href="https://www.google.com/maps/search/?api=1&query=${panel.latitude},${panel.longitude}"
-                       target="_blank" class="map-link">Buka di Google Maps</a>
                 ` : `<div class="p-4 text-center text-gray-500">Panel KWH tidak terhubung</div>`;
 
                 const cablesContent = connection ? `
@@ -619,20 +608,6 @@
                             <span>${connection.panjang_kabel_est || 0} m</span>
                         </div>
                     </div>
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Tanggal Koneksi</span>
-                            <span>${connection.tgl_koneksi || 'N/A'}</span>
-                        </div>
-                    </div>
-                    ${connection.keterangan_jalur ? `
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Keterangan</span>
-                            <span>${connection.keterangan_jalur}</span>
-                        </div>
-                    </div>
-                    ` : ''}
                 ` : `<div class="p-4 text-center text-gray-500">Tidak ada koneksi kabel</div>`;
 
                 document.getElementById('tab-pju').innerHTML = pjuContent;
@@ -643,32 +618,26 @@
                 overlay.style.display = 'block';
             }
 
-            // Tab switching
             document.querySelectorAll('.detail-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
-                    
                     document.querySelectorAll('.detail-tab-content').forEach(content => {
                         content.style.display = 'none';
                     });
-                    
                     document.getElementById(`tab-${tab.dataset.tab}`).style.display = 'block';
                 });
             });
 
-            // Close panel
             document.getElementById('closePanel').onclick = () => {
                 lampPanel.classList.remove('active');
                 overlay.style.display = 'none';
             };
-
             overlay.onclick = () => {
                 lampPanel.classList.remove('active');
                 overlay.style.display = 'none';
             };
 
-            // GPS button
             document.getElementById('gpsBtn').onclick = () => {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
@@ -676,65 +645,47 @@
                             const lat = position.coords.latitude;
                             const lng = position.coords.longitude;
                             map.flyTo([lat, lng], 16);
-                            
                             if (searchMarker) map.removeLayer(searchMarker);
-                            searchMarker = L.marker([lat, lng]).addTo(map)
-                                .bindPopup('<b>Lokasi Anda</b>')
-                                .openPopup();
+                            searchMarker = L.marker([lat, lng]).addTo(map).bindPopup('<b>Lokasi Anda</b>').openPopup();
                         },
-                        () => {
-                            alert('Tidak bisa mendapatkan lokasi Anda.');
-                        }
+                        () => alert('Tidak bisa mendapatkan lokasi Anda.')
                     );
                 } else {
-                    alert('Geolocation tidak didukung oleh browser Anda.');
+                    alert('Geolocation tidak didukung browser ini.');
                 }
             };
 
-            // FIXED: Draw cables with proper coordinate validation
             function drawCables() {
                 cableLayer.clearLayers();
-
                 koneksiPJUKWH.forEach(connection => {
                     const light = streetLights.find(l => l.id === connection.aset_pju_id);
                     const panel = panelKWH.find(p => p.id === connection.panel_kwh_id);
 
                     if (light && panel && connection.status_koneksi === 'Aktif') {
-                        if (isValidCoordinate(panel.latitude, panel.longitude) && 
-                            isValidCoordinate(light.latitude, light.longitude)) {
-                            
-                            const panelLat = parseFloat(panel.latitude);
-                            const panelLng = parseFloat(panel.longitude);
-                            const lightLat = parseFloat(light.latitude);
-                            const lightLng = parseFloat(light.longitude);
-                            
-                            const line = L.polyline(
-                                [[panelLat, panelLng], [lightLat, lightLng]],
-                                { 
-                                    color: getFasaColor(connection.fasa), 
-                                    weight: 3, 
-                                    opacity: 0.7,
-                                    dashArray: '5, 10'
-                                }
-                            );
+                        if (isValidCoordinate(panel.latitude, panel.longitude) && isValidCoordinate(light.latitude, light.longitude)) {
+                            // Cek apakah status lampu (misal: 'Terelialisasi') ada di filter aktif
+                            const isLightVisible = activeFilters.has(light.status_aset);
+                            const isPanelVisible = activeFilters.has('Panel');
 
-                            line.bindTooltip(`${connection.nomor_mcb_panel || 'N/A'} - Fasa ${connection.fasa || 'N/A'}`, {
-                                permanent: false,
-                                direction: 'center',
-                                className: 'cable-tooltip'
-                            });
-
-                            cableLayer.addLayer(line);
+                            if(isLightVisible && isPanelVisible) {
+                                const line = L.polyline(
+                                    [[parseFloat(panel.latitude), parseFloat(panel.longitude)], 
+                                     [parseFloat(light.latitude), parseFloat(light.longitude)]],
+                                    { color: getFasaColor(connection.fasa), weight: 3, opacity: 0.7, dashArray: '5, 10' }
+                                );
+                                line.bindTooltip(`${connection.nomor_mcb_panel || 'N/A'} - Fasa ${connection.fasa || 'N/A'}`, {
+                                    permanent: false, direction: 'center', className: 'cable-tooltip'
+                                });
+                                cableLayer.addLayer(line);
+                            }
                         }
                     }
                 });
-
                 if (cablesVisible && cableLayer.getLayers().length > 0) {
                     cableLayer.addTo(map);
                 }
             }
 
-            // Toggle cables
             toggleCablesBtn.onclick = () => {
                 cablesVisible = !cablesVisible;
                 toggleCablesBtn.classList.toggle('active');
@@ -742,7 +693,6 @@
                 drawCables();
             };
 
-            // Toggle clustering
             toggleClusterBtn.onclick = () => {
                 clusteringEnabled = !clusteringEnabled;
                 toggleClusterBtn.classList.toggle('active');
@@ -750,94 +700,69 @@
                 updateLayers();
             };
 
-            // FIXED: Complete rewrite of updateLayers function
             function updateLayers() {
-                // Clear all layers
                 markerClusters.clearLayers();
                 nonClusteredLayer.clearLayers();
                 panelLayer.clearLayers();
                 glowLayer.clearLayers();
 
-                // Remove layers from map
                 if (map.hasLayer(markerClusters)) map.removeLayer(markerClusters);
                 if (map.hasLayer(nonClusteredLayer)) map.removeLayer(nonClusteredLayer);
                 if (map.hasLayer(panelLayer)) map.removeLayer(panelLayer);
                 if (map.hasLayer(glowLayer)) map.removeLayer(glowLayer);
                 if (map.hasLayer(cableLayer)) map.removeLayer(cableLayer);
 
-                // Add panel markers (always non-clustered)
+                // 1. Render Panel
                 if (activeFilters.has('Panel')) {
                     panelKWH.forEach(panel => {
                         if (isValidCoordinate(panel.latitude, panel.longitude)) {
                             const lat = parseFloat(panel.latitude);
                             const lng = parseFloat(panel.longitude);
-                            
                             const panelIcon = L.divIcon({
                                 className: 'custom-panel-icon',
                                 html: `<div style="background: #f59e0b; color: black; width: 32px; height: 32px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">KWH</div>`,
                                 iconSize: [32, 32]
                             });
-
-                            L.marker([lat, lng], { icon: panelIcon })
-                                .addTo(panelLayer)
-                                .bindPopup(`
-                                    <div style="font-size: 13px;">
-                                        <strong style="color: #f59e0b;">Panel KWH</strong><br>
-                                        <strong>No. PLN:</strong> ${panel.no_pelanggan_pln || 'N/A'}<br>
-                                        <strong>Lokasi:</strong> ${panel.lokasi_panel || 'N/A'}<br>
-                                        <strong>Daya:</strong> ${panel.daya_va || 0} VA
-                                    </div>
-                                `);
+                            L.marker([lat, lng], { icon: panelIcon }).addTo(panelLayer).bindPopup(`
+                                <div style="font-size: 13px;">
+                                    <strong style="color: #f59e0b;">Panel KWH</strong><br>
+                                    <strong>No. PLN:</strong> ${panel.no_pelanggan_pln || 'N/A'}<br>
+                                    <strong>Lokasi:</strong> ${panel.lokasi_panel || 'N/A'}<br>
+                                    <strong>Daya:</strong> ${panel.daya_va || 0} VA
+                                </div>
+                            `);
                         }
                     });
                     panelLayer.addTo(map);
                 }
 
-                // Add streetlight markers
+                // 2. Render Lampu PJU
                 const validLights = [];
-                
                 streetLights.forEach(light => {
-                    // Check if coordinates are valid
-                
-
-                    // Check if status is in active filters
-         
-
-                    validLights.push(light);
+                    if (isValidCoordinate(light.latitude, light.longitude)) {
+                        // PERBAIKAN LOGIKA FILTER:
+                        // Pastikan status_aset dari DB (misal 'Terelialisasi') dicocokkan dengan activeFilters
+                        if (activeFilters.has(light.status_aset)) {
+                            validLights.push(light);
+                        }
+                    }
                 });
 
-
-                // Create markers for each valid light
                 validLights.forEach(light => {
                     const lat = parseFloat(light.latitude);
                     const lng = parseFloat(light.longitude);
-                    const color = getColor(light.status_aset);
+                    const color = getColor(light.status_aset); // Mengambil warna berdasarkan status (Terelialisasi -> Hijau)
 
-                    // Create glow effect
                     const glow = L.circleMarker([lat, lng], {
-                        radius: 25,
-                        fillColor: color,
-                        color: color,
-                        weight: 0,
-                        opacity: 0.3,
-                        fillOpacity: 0.2,
-                        interactive: false
+                        radius: 25, fillColor: color, color: color, weight: 0, opacity: 0.3, fillOpacity: 0.2, interactive: false
                     });
-
                     glowLayer.addLayer(glow);
 
-                    // Create main marker
                     const marker = L.circleMarker([lat, lng], {
-                        radius: 10,
-                        fillColor: color,
-                        color: "#fff",
-                        weight: 2,
-                        fillOpacity: 1
-                    })
-                    .bindTooltip(light.kode_tiang || 'N/A', { direction: 'top', offset: [0, -10] })
-                    .on('click', () => openDetail(light));
+                        radius: 10, fillColor: color, color: "#fff", weight: 2, fillOpacity: 1
+                    }).bindTooltip(light.kode_tiang || 'N/A', { direction: 'top', offset: [0, -10] })
+                      .on('click', () => openDetail(light));
 
-                    // Add to appropriate layer based on clustering state
                     if (clusteringEnabled) {
                         markerClusters.addLayer(marker);
                     } else {
@@ -845,30 +770,20 @@
                     }
                 });
 
-                // Add glow layer
-                if (glowLayer.getLayers().length > 0) {
-                    glowLayer.addTo(map);
-                }
+                if (glowLayer.getLayers().length > 0) glowLayer.addTo(map);
 
-                // Add appropriate marker layer
                 if (clusteringEnabled) {
-                    if (markerClusters.getLayers().length > 0) {
-                        markerClusters.addTo(map);
-                    }
+                    if (markerClusters.getLayers().length > 0) markerClusters.addTo(map);
                 } else {
-                    if (nonClusteredLayer.getLayers().length > 0) {
-                        nonClusteredLayer.addTo(map);
-                    }
+                    if (nonClusteredLayer.getLayers().length > 0) nonClusteredLayer.addTo(map);
                 }
 
-                // Redraw cables
                 drawCables();
 
-                // Update legend visual state
+                // Update UI Checkbox agar sinkron jika ada perubahan state internal
                 document.querySelectorAll('.legend-item').forEach(item => {
                     const status = item.dataset.status;
                     const checkbox = item.querySelector('.legend-checkbox');
-                    
                     if (status && checkbox) {
                         if (activeFilters.has(status)) {
                             item.classList.remove('disabled');
@@ -881,7 +796,6 @@
                 });
             }
 
-            // Filter functionality
             document.querySelectorAll('.legend-checkbox').forEach(checkbox => {
                 checkbox.addEventListener('change', (e) => {
                     const filter = e.target.dataset.filter;
@@ -890,11 +804,12 @@
                     } else {
                         activeFilters.delete(filter);
                     }
+                    // Debugging untuk memastikan filter berjalan
+                    console.log('Filter changed. Active:', Array.from(activeFilters)); 
                     updateLayers();
                 });
             });
 
-            // Select/Deselect all buttons
             document.getElementById('selectAll').onclick = () => {
                 document.querySelectorAll('.legend-checkbox').forEach(cb => {
                     cb.checked = true;
@@ -911,32 +826,16 @@
                 updateLayers();
             };
 
-            // Initialize map with all layers
             updateLayers();
-            
-            // Fit bounds to show all markers
+
             const bounds = [];
             streetLights.forEach(light => {
-                if (isValidCoordinate(light.latitude, light.longitude)) {
-                    bounds.push([parseFloat(light.latitude), parseFloat(light.longitude)]);
-                }
+                if (isValidCoordinate(light.latitude, light.longitude)) bounds.push([parseFloat(light.latitude), parseFloat(light.longitude)]);
             });
             panelKWH.forEach(panel => {
-                if (isValidCoordinate(panel.latitude, panel.longitude)) {
-                    bounds.push([parseFloat(panel.latitude), parseFloat(panel.longitude)]);
-                }
+                if (isValidCoordinate(panel.latitude, panel.longitude)) bounds.push([parseFloat(panel.latitude), parseFloat(panel.longitude)]);
             });
-            
-            if (bounds.length > 1) {
-                map.fitBounds(bounds, { padding: [50, 50] });
-            }
-
-            // Log final stats
-            console.log('Map initialized with:');
-            console.log('- Street lights displayed:', validLights.length);
-            console.log('- Panels displayed:', panelKWH.length);
-            console.log('- Cables visible:', cablesVisible);
-            console.log('- Clustering enabled:', clusteringEnabled);
+            if (bounds.length > 1) map.fitBounds(bounds, { padding: [50, 50] });
         });
     </script>
 @endpush

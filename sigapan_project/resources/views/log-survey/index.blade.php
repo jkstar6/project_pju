@@ -90,16 +90,27 @@
 
                     <tbody>
                         @foreach ($logSurvey as $index => $log)
-                            <tr data-id="{{ $log->id }}" data-aset_pju_id="{{ $log->aset_pju_id }}"
-                                data-user_id="{{ $log->user_id }}" data-tgl_survey="{{ $log->tgl_survey }}"
-                                data-kondisi="{{ $log->kondisi }}" data-keberadaan="{{ $log->keberadaan }}"
-                                data-catatan="{{ $log->catatan_kerusakan }}" data-lat="{{ $log->lat_input }}"
+                            {{-- PERBAIKAN: data-tim_lapangan_id menggantikan data-user_id --}}
+                            <tr data-id="{{ $log->id }}" 
+                                data-aset_pju_id="{{ $log->aset_pju_id }}"
+                                data-tim_lapangan_id="{{ $log->tim_lapangan_id }}" 
+                                data-tgl_survey="{{ $log->tgl_survey }}"
+                                data-kondisi="{{ $log->kondisi }}" 
+                                data-keberadaan="{{ $log->keberadaan }}"
+                                data-catatan="{{ $log->catatan_kerusakan }}" 
+                                data-lat="{{ $log->lat_input }}"
                                 data-long="{{ $log->long_input }}">
+                                
                                 <td class="text-center">{{ $index + 1 }}</td>
                                 <td class="text-left">
                                     <strong class="text-primary-500">{{ $log->aset->kode_tiang ?? '-' }}</strong>
                                 </td>
-                                <td class="text-left">{{ $log->user->name ?? '-' }}</td>
+                                
+                                {{-- PERBAIKAN: Menampilkan nama tim lapangan, bukan nama user --}}
+                                <td class="text-left">
+                                    {{ $log->timLapangan->nama_tim ?? '-' }}
+                                </td>
+
                                 <td class="text-center">{{ date('d M Y', strtotime($log->tgl_survey)) }}</td>
                                 <td class="text-center">
                                     @if ($log->lat_input && $log->long_input)
@@ -137,9 +148,8 @@
                                 @if($canManageLogSurvey)
                                     <td class="text-center">
                                         <div class="flex items-center gap-[10px] justify-center">
-                                            <button type="button" class="btn-icon btn-edit text-warning-500" title="Edit">
-                                                <i class="material-symbols-outlined">edit</i>
-                                            </button>
+                                            {{-- Tombol Edit --}}
+                                           
 
                                             <form action="{{ route('log-survey.destroy', $log->id) }}" method="post" class="inline">
                                                 @csrf
@@ -193,18 +203,18 @@
                             </select>
                         </div>
 
-                    <div>
-                        <label class="text-sm font-medium mb-2 block">Surveyor</label>
-                        <select name="tim_lapangan_id" class="w-full border rounded-md px-3 py-2.5" required>
-    <option value="">-- Pilih Surveyor --</option>
-    @foreach ($timLapangans as $tim)
-        <option value="{{ $tim->id }}">
-            {{ $tim->nama_tim }}
-        </option>
-    @endforeach
-</select>
-
-                    </div>
+                        <div>
+                            <label class="text-sm font-medium mb-2 block">Surveyor</label>
+                            {{-- PERBAIKAN: Menggunakan name="tim_lapangan_id" --}}
+                            <select name="tim_lapangan_id" class="w-full border rounded-md px-3 py-2.5" required>
+                                <option value="">-- Pilih Surveyor --</option>
+                                @foreach ($timLapangans as $tim)
+                                    <option value="{{ $tim->id }}">
+                                        {{ $tim->nama_tim }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
                         <div>
                             <label class="text-sm font-medium mb-2 block">Tanggal Survey</label>
@@ -288,8 +298,12 @@
                     document.getElementById('formMethod').value = 'PUT';
                     form.action = `{{ url('/log-survey') }}/${id}`;
 
+                    // Populate Form
                     form.aset_pju_id.value = tr.dataset.aset_pju_id;
-                    form.user_id.value = tr.dataset.user_id;
+                    
+                    // PERBAIKAN: Mengambil tim_lapangan_id dari dataset untuk select option
+                    form.tim_lapangan_id.value = tr.dataset.tim_lapangan_id; 
+
                     form.tgl_survey.value = tr.dataset.tgl_survey;
                     form.kondisi.value = tr.dataset.kondisi;
                     form.keberadaan.value = tr.dataset.keberadaan;

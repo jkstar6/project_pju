@@ -196,6 +196,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::put('/{id}', [ProgresPengerjaanController::class, 'update'])
                     ->whereNumber('id')
                     ->name('update');
+                    Route::delete('/{id}', [ProgresPengerjaanController::class, 'destroy'])
+            ->whereNumber('id')
+            ->name('destroy');
             });
         });
 

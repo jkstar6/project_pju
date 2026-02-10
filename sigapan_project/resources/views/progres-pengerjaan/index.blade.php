@@ -7,15 +7,13 @@
 
     <style>
         #data-table td.text-center { vertical-align: middle; }
-
         #data-table td:last-child,
         #data-table td:last-child * { pointer-events: auto; }
-
 
         .btn-icon { cursor: pointer; position: relative; z-index: 10; }
         .material-symbols-outlined { font-size: 18px !important; }
 
-        /* modal */
+        /* modal styling */
         .modal-overlay { display: none; }
         .modal-overlay.active { display: flex; }
 
@@ -37,7 +35,7 @@
 
 @section('content')
     @php
-        // ✅ Progres Pengerjaan: CRUD hanya Admin & Teknisi. Survey read-only.
+        // Cek permission: Hanya Admin & Teknisi yang boleh CRUD
         $canManageProgres = auth()->check() && auth()->user()->hasAnyRole(['Admin','Teknisi']);
     @endphp
 
@@ -47,7 +45,6 @@
                 <h5 class="mb-0">Data @yield('title') PJU Baru</h5>
             </div>
 
-            {{-- ✅ CREATE hanya Admin & Teknisi --}}
             @if($canManageProgres)
                 <div class="mt-3 sm:mt-0">
                     <button type="button" id="btnOpenCreate"
@@ -68,12 +65,10 @@
                             <th class="text-left">Kode Aset</th>
                             <th class="text-left">Lokasi (Maps)</th>
                             <th class="text-left">Keterangan</th>
-                            <th class="text-left">Petugas</th>
+                            <th class="text-left">Petugas (Teknisi)</th>
                             <th class="text-center">Tahapan Terbaru</th>
                             <th class="text-center">Update Terbaru</th>
                             <th class="text-center">Progress</th>
-
-                            {{-- ✅ Aksi hanya Admin & Teknisi --}}
                             @if($canManageProgres)
                                 <th class="text-center">Aksi</th>
                             @endif
@@ -81,21 +76,18 @@
                     </thead>
 
                     <tbody>
-                        @php
-                            $mapPersen = [
-                                'Galian' => 20,
-                                'Pengecoran' => 40,
-                                'Pemasangan Tiang dan Armatur' => 60,
-                                'Pemasangan Jaringan' => 80,
-                                'Selesai' => 100,
-                            ];
-                        @endphp
-
                         @foreach ($progresPengerjaan as $item)
                             @php
                                 $tahapan = $item->tahapan;
-                                $persen = $mapPersen[$tahapan] ?? 0;
-
+                                $persen = match ($tahapan) {
+                                    'Galian' => 20,
+                                    'Pengecoran' => 40,
+                                    'Pemasangan Tiang dan Armatur' => 60,
+                                    'Pemasangan Jaringan' => 80,
+                                    'Selesai' => 100,
+                                    default => 0,
+                                };
+                                
                                 $badgeClass = match ($tahapan) {
                                     'Galian' => 'tahapan-galian',
                                     'Pengecoran' => 'tahapan-pengecoran',
@@ -117,45 +109,34 @@
                                 data-aset_id="{{ $item->aset_pju_id }}"
                                 data-kode="{{ $item->asetPju->kode_tiang ?? '-' }}"
                                 data-lokasi="{{ $lokasiText }}"
-                                data-petugas="{{ $item->user->name ?? '-' }}"
+                                
+                                {{-- Data Petugas Asli untuk Edit --}}
+                                data-petugas_id="{{ $item->user_id }}" 
+                                data-petugas_nama="{{ $item->user->name ?? '-' }}"
+                                
                                 data-tahapan="{{ $tahapan }}"
                                 data-keterangan="{{ e($item->keterangan ?? '') }}"
                             >
                                 <td class="text-center">{{ $loop->iteration }}</td>
-
-                                <td class="text-left">
-                                    <strong class="text-primary-500">{{ $item->asetPju->kode_tiang ?? '-' }}</strong>
-                                </td>
-
+                                <td class="text-left"><strong class="text-primary-500">{{ $item->asetPju->kode_tiang ?? '-' }}</strong></td>
                                 <td class="text-left">
                                     <div class="flex flex-col">
                                         <span class="font-medium text-gray-700 dark:text-gray-200">{{ $lokasiText }}</span>
                                         @if ($lat && $long)
-                                            <a href="https://www.google.com/maps?q={{ $lat }},{{ $long }}"
-                                               target="_blank"
-                                               class="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-1">
+                                            <a href="https://www.google.com/maps?q={{ $lat }},{{ $long }}" target="_blank" class="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-1">
                                                 <i class="material-symbols-outlined text-[14px]">map</i> Lihat Peta
                                             </a>
                                         @endif
                                     </div>
                                 </td>
-
-                                <td class="text-left text-sm text-gray-600 dark:text-gray-400">
-                                    {{ Str::limit($item->keterangan ?? '-', 50) }}
-                                </td>
-
+                                <td class="text-left text-sm text-gray-600 dark:text-gray-400">{{ Str::limit($item->keterangan ?? '-', 50) }}</td>
                                 <td class="text-left">{{ $item->user->name ?? '-' }}</td>
-
-                                <td class="text-center">
-                                    <span class="badge-tahapan {{ $badgeClass }}">{{ $tahapan }}</span>
-                                </td>
-
+                                <td class="text-center"><span class="badge-tahapan {{ $badgeClass }}">{{ $tahapan }}</span></td>
                                 <td class="text-center">
                                     <span class="last-update text-sm font-semibold text-gray-700 dark:text-gray-300">
                                         {{ \Carbon\Carbon::parse($item->tgl_update)->timezone('Asia/Jakarta')->format('d M Y H:i') }}
                                     </span>
                                 </td>
-
                                 <td class="text-center">
                                     <div class="w-full max-w-[220px] mx-auto">
                                         <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
@@ -165,13 +146,25 @@
                                     </div>
                                 </td>
 
-                                {{-- ✅ Aksi hanya Admin & Teknisi --}}
                                 @if($canManageProgres)
                                     <td class="text-center">
-                                        <div class="flex items-center gap-[12px] justify-center">
+                                        <div class="flex items-center gap-2 justify-center">
+                                            {{-- Tombol Edit --}}
                                             <button type="button" class="btn-icon btn-edit text-blue-600 custom-tooltip" data-text="Edit">
                                                 <i class="material-symbols-outlined">edit</i>
                                             </button>
+
+                                            {{-- ✅ TOMBOL HAPUS: Menggunakan Form Inline Sesuai Contoh Anda --}}
+                                            <form action="{{ route('progres-pengerjaan.destroy', $item->id) }}" method="POST" class="inline-block">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" 
+                                                    class="btn-icon text-red-500 hover:text-red-700 custom-tooltip" 
+                                                    onclick="return confirm('Apakah Anda yakin ingin menghapus data progres ini?')"
+                                                    title="Hapus">
+                                                    <i class="material-symbols-outlined">delete</i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 @endif
@@ -183,92 +176,56 @@
         </div>
     </div>
 
-    {{-- ✅ Modal hanya Admin & Teknisi --}}
+    {{-- MODAL AREA --}}
     @if($canManageProgres)
-        {{-- ... Bagian atas file tetap sama ... --}}
-
-{{-- ... Kode sebelumnya (Layouts, Styles, Header, Table) ... --}}
-
-{{-- ========================= MODAL CREATE ========================== --}}
-<div id="modalCreate" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
-    <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
-        <div class="flex items-center justify-between mb-4">
-            <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Tambah Progres Pengerjaan</h5>
-            <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
-                <i class="material-symbols-outlined">close</i>
-            </button>
+        {{-- ========================= MODAL CREATE ========================== --}}
+        <div id="modalCreate" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
+            <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h5 class="mb-0 font-semibold text-gray-800 dark:text-gray-100">Tambah Progres Pengerjaan</h5>
+                    <button type="button" class="btn-close-modal text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
+                        <i class="material-symbols-outlined">close</i>
+                    </button>
+                </div>
+                <form action="{{ route('progres-pengerjaan.store') }}" method="POST" class="grid grid-cols-1 gap-4">
+                    @csrf
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Pilih Aset PJU</label>
+                        <select name="aset_pju_id" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                            <option value="">-- Pilih Aset PJU --</option>
+                            @foreach ($listAset as $aset) 
+                                <option value="{{ $aset->id }}">{{ $aset->kode_tiang }} | {{ $aset->desa ?? '-' }}</option> 
+                            @endforeach
+                        </select>
+                        @if ($listAset->isEmpty()) <p class="text-xs text-amber-500 mt-1">Semua aset sudah dalam pengerjaan.</p> @endif
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Pilih Petugas (Teknisi)</label>
+                        <select name="user_id" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" required>
+                            <option value="">-- Pilih Teknisi --</option>
+                            @foreach ($listTeknisi as $teknisi) 
+                                <option value="{{ $teknisi->id }}" {{ Auth::id() == $teknisi->id ? 'selected' : '' }}>{{ $teknisi->name }}</option> 
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Tahapan Awal</label>
+                        <select name="tahapan" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
+                            <option value="Galian" selected>Galian (20%)</option>
+                            <option value="Pengecoran">Pengecoran (40%)</option>
+                            <option value="Pemasangan Tiang dan Armatur">Pemasangan Tiang dan Armatur (60%)</option>
+                            <option value="Pemasangan Jaringan">Pemasangan Jaringan (80%)</option>
+                            <option value="Selesai">Selesai (100%)</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button type="button" class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">Batal</button>
+                        <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600" {{ $listAset->isEmpty() ? 'disabled' : '' }}>Simpan</button>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <form action="{{ route('progres-pengerjaan.store') }}" method="POST" class="grid grid-cols-1 gap-4">
-            @csrf
-
-            {{-- 1. PILIH ASET --}}
-            <div>
-                <label class="text-sm text-gray-600 dark:text-gray-300">Pilih Aset PJU</label>
-                <select name="aset_pju_id"
-                    class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
-                    required>
-                    <option value="">-- Pilih Aset PJU --</option>
-                    @foreach ($listAset as $aset)
-                        <option value="{{ $aset->id }}">
-                            {{ $aset->kode_tiang }} | {{ $aset->desa ?? '-' }}
-                        </option>
-                    @endforeach
-                </select>
-                @if ($listAset->isEmpty())
-                    <p class="text-xs text-amber-500 mt-1">Semua aset sudah dalam pengerjaan.</p>
-                @endif
-            </div>
-
-            {{-- ✅ 2. PILIH PETUGAS (Hanya Teknisi) --}}
-            <div>
-                <label class="text-sm text-gray-600 dark:text-gray-300">Pilih Petugas (Teknisi)</label>
-                <select name="user_id"
-                    class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
-                    required>
-                    <option value="">-- Pilih Teknisi --</option>
-                    @foreach ($listTeknisi as $teknisi)
-                        {{-- Opsi terpilih otomatis jika user yang login adalah teknisi tersebut --}}
-                        <option value="{{ $teknisi->id }}" {{ Auth::id() == $teknisi->id ? 'selected' : '' }}>
-                            {{ $teknisi->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @if($listTeknisi->isEmpty())
-                     <p class="text-xs text-red-500 mt-1">Tidak ada data teknisi.</p>
-                @endif
-            </div>
-
-            {{-- 3. TAHAPAN --}}
-            <div>
-                <label class="text-sm text-gray-600 dark:text-gray-300">Tahapan Awal</label>
-                <select name="tahapan"
-                    class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
-                    <option value="Galian" selected>Galian (20%)</option>
-                    <option value="Pengecoran">Pengecoran (40%)</option>
-                    <option value="Pemasangan Tiang dan Armatur">Pemasangan Tiang dan Armatur (60%)</option>
-                    <option value="Pemasangan Jaringan">Pemasangan Jaringan (80%)</option>
-                    <option value="Selesai">Selesai (100%)</option>
-                </select>
-            </div>
-
-            <div class="flex justify-end gap-2 mt-4">
-                <button type="button"
-                    class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
-                    Batal
-                </button>
-                <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600"
-                    {{ $listAset->isEmpty() ? 'disabled' : '' }}>
-                    Simpan
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- ... Sisa kode (Modal Edit & Scripts) tetap sama ... --}}
-
-{{-- ... Bagian bawah (Modal Edit & Script) tetap sama ... --}}
         {{-- ========================= MODAL EDIT ========================== --}}
         <div id="modalEdit" class="modal-overlay fixed inset-0 z-[999] items-center justify-center bg-black/50 p-4">
             <div class="w-full max-w-2xl rounded-md bg-white dark:bg-[#0c1427] p-5">
@@ -278,33 +235,31 @@
                         <i class="material-symbols-outlined">close</i>
                     </button>
                 </div>
-
                 <form id="formEdit" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @csrf
+                    @csrf 
                     @method('PUT')
-
+                    
                     <div>
                         <label class="text-sm text-gray-600 dark:text-gray-300">Kode Aset</label>
-                        <input type="text" id="edit_kode"
-                            class="w-full mt-1 border rounded-md px-3 py-2 bg-gray-100 dark:bg-[#15203c] dark:border-[#15203c]" readonly>
+                        <input type="text" id="edit_kode" class="w-full mt-1 border rounded-md px-3 py-2 bg-gray-100 dark:bg-[#15203c] dark:border-[#15203c]" readonly>
                     </div>
-
+                    
                     <div>
                         <label class="text-sm text-gray-600 dark:text-gray-300">Lokasi</label>
-                        <input type="text" id="edit_lokasi"
-                            class="w-full mt-1 border rounded-md px-3 py-2 bg-gray-100 dark:bg-[#15203c] dark:border-[#15203c]" readonly>
+                        <input type="text" id="edit_lokasi" class="w-full mt-1 border rounded-md px-3 py-2 bg-gray-100 dark:bg-[#15203c] dark:border-[#15203c]" readonly>
                     </div>
-
+                    
                     <div>
-                        <label class="text-sm text-gray-600 dark:text-gray-300">Petugas Update (Anda)</label>
-                        <input type="text" value="{{ Auth::user()->name }}"
-                            class="w-full mt-1 border rounded-md px-3 py-2 bg-gray-100 dark:bg-[#15203c] dark:border-[#15203c]" readonly>
+                        {{-- Petugas (Readonly untuk tampilan, Hidden ID untuk data) --}}
+                        <label class="text-sm text-gray-600 dark:text-gray-300">Petugas (Teknisi)</label>
+                        <input type="text" id="edit_petugas_nama" class="w-full mt-1 border rounded-md px-3 py-2 bg-gray-100 dark:bg-[#15203c] dark:border-[#15203c]" readonly>
+                        {{-- Ini ID asli yang dikirim ke controller --}}
+                        <input type="hidden" name="user_id" id="edit_petugas_id">
                     </div>
-
+                    
                     <div>
                         <label class="text-sm text-gray-600 dark:text-gray-300">Tahapan</label>
-                        <select name="tahapan" id="edit_tahapan"
-                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
+                        <select name="tahapan" id="edit_tahapan" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]">
                             <option value="Galian">Galian (20%)</option>
                             <option value="Pengecoran">Pengecoran (40%)</option>
                             <option value="Pemasangan Tiang dan Armatur">Pemasangan Tiang dan Armatur (60%)</option>
@@ -312,22 +267,15 @@
                             <option value="Selesai">Selesai (100%)</option>
                         </select>
                     </div>
-
+                    
                     <div class="md:col-span-2">
                         <label class="text-sm text-gray-600 dark:text-gray-300">Keterangan</label>
-                        <textarea name="keterangan" id="edit_keterangan" rows="3"
-                            class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]"
-                            placeholder="Masukkan keterangan progres..."></textarea>
+                        <textarea name="keterangan" id="edit_keterangan" rows="3" class="w-full mt-1 border rounded-md px-3 py-2 bg-white dark:bg-[#0c1427] dark:border-[#15203c]" placeholder="Masukkan keterangan progres..."></textarea>
                     </div>
-
+                    
                     <div class="md:col-span-2 flex justify-end gap-2 mt-2">
-                        <button type="button"
-                            class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">
-                            Batal
-                        </button>
-                        <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600">
-                            Update
-                        </button>
+                        <button type="button" class="btn-close-modal px-4 py-2 rounded-md bg-gray-100 dark:bg-[#15203c] text-gray-700 dark:text-gray-200">Batal</button>
+                        <button type="submit" class="px-4 py-2 rounded-md bg-primary-500 text-white hover:bg-primary-600">Update</button>
                     </div>
                 </form>
             </div>
@@ -338,7 +286,7 @@
 @push('scripts')
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.js') }}"></script>
     <script src="{{ URL::asset('assets/admin/js/datatables-2.3.4/dataTables.tailwindcss.js') }}"></script>
-
+    
     <script>
         const CAN_MANAGE_PROGRES = @json($canManageProgres);
 
@@ -352,10 +300,11 @@
             ]
         });
 
-        // ✅ Survey/read-only: stop JS modal/edit
-        if (!CAN_MANAGE_PROGRES) {
-            // optional: kalau mau aman banget, hilangkan listener yang mungkin kebaca
-        } else {
+        // ✅ TIDAK PERLU FUNCTION DELETE JS
+        // Karena kita menggunakan form inline dengan 'onclick="return confirm()"'
+        // Ini lebih stabil untuk DataTables.
+
+        if (CAN_MANAGE_PROGRES) {
             const modalCreate = document.getElementById('modalCreate');
             const modalEdit = document.getElementById('modalEdit');
 
@@ -373,6 +322,7 @@
                 if (e.target === modalEdit) closeModal(modalEdit);
             });
 
+            // Logic Klik Tombol Edit
             document.addEventListener('click', function(e) {
                 const btn = e.target.closest('.btn-edit');
                 if (!btn) return;
@@ -383,6 +333,10 @@
                 const lokasi = tr.dataset.lokasi;
                 const tahapan = tr.dataset.tahapan;
                 const keterangan = tr.dataset.keterangan;
+                
+                // Ambil data petugas asli dari atribut TR
+                const petugasId = tr.dataset.petugas_id;
+                const petugasNama = tr.dataset.petugas_nama;
 
                 const form = document.getElementById('formEdit');
                 form.action = `{{ url('progres-pengerjaan') }}/${id}`;
@@ -391,6 +345,10 @@
                 document.getElementById('edit_lokasi').value = lokasi;
                 document.getElementById('edit_tahapan').value = tahapan;
                 document.getElementById('edit_keterangan').value = (!keterangan || keterangan === '-') ? '' : keterangan;
+                
+                // Set Data Petugas (Visual & Hidden)
+                document.getElementById('edit_petugas_nama').value = petugasNama;
+                document.getElementById('edit_petugas_id').value = petugasId;
 
                 openModal(modalEdit);
             });

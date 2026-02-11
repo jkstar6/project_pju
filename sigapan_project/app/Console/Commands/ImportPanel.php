@@ -6,12 +6,14 @@ use Illuminate\Console\Command;
 use App\Imports\PanelKwhImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
+use App\Models\PanelKwh;
+use App\Models\AsetPju;
 
 class ImportPanel extends Command
 {
     /**
      * Nama perintah yang dijalankan di terminal.
-     * Cukup ketik 'php artisan import:semua'
      */
     protected $signature = 'import:semua';
 
@@ -25,19 +27,14 @@ class ImportPanel extends Command
      */
     public function handle()
     {
-        // Menentukan lokasi folder data
         $folderPath = storage_path('app/excel_data');
-        $files = \File::files($folderPath);
 
-        // Kosongkan tabel agar data 'null' hilang
-        \App\Models\PanelKwh::truncate();
         // Proteksi jika folder tidak ada
         if (!File::isDirectory($folderPath)) {
             $this->error("Folder tidak ditemukan! Silakan buat folder di: storage/app/excel_data");
             return;
         }
 
-        // Ambil semua file dengan ekstensi .xls atau .xlsx
         $files = File::files($folderPath);
         
         if (count($files) === 0) {
@@ -45,18 +42,24 @@ class ImportPanel extends Command
             return;
         }
 
-        $this->info("Ditemukan " . count($files) . " file. Memulai proses import...");
+        // Kosongkan tabel agar data benar-benar bersih sebelum import
+        // Matikan sementara constraint agar bisa menghapus tabel yang berelasi
+        Schema::disableForeignKeyConstraints();
+        AsetPju::truncate();
+        PanelKwh::truncate();
+        Schema::enableForeignKeyConstraints();
+
+        $this->info("Ditemukan " . count($files) . " file. Tabel telah dikosongkan. Memulai proses import...");
         $this->output->progressStart(count($files));
 
         foreach ($files as $file) {
             $fileName = $file->getFilename();
             
-            // Mengambil nama Kapanewon dari nama file
-            // Contoh: "Kapanewon Dlingo.xls" menjadi "Dlingo"
-            $namaKapanewon = str_ireplace(['Kapanewon ', '.xls', '.xlsx'], '', $fileName);
+            // Mengambil nama Kapanewon dari nama file (ditambahkan trim untuk hapus spasi nyasar)
+            $namaKapanewon = trim(str_ireplace(['Kapanewon ', '.xls', '.xlsx'], '', $fileName));
             
             try {
-                // Masukkan $namaKapanewon ke dalam kurung PanelKwhImport
+                // Masukkan $namaKapanewon ke dalam import
                 Excel::import(new PanelKwhImport($namaKapanewon), $file->getRealPath());
                 
                 $this->line("\n ✅ Berhasil: $fileName");
@@ -67,6 +70,6 @@ class ImportPanel extends Command
             $this->output->progressAdvance();
         }
         $this->output->progressFinish();
-        $this->info("Semua proses selesai! Silakan cek database PostgreSQL Anda.");
+        $this->info("Semua proses selesai! Silakan cek database Anda.");
     }
 }

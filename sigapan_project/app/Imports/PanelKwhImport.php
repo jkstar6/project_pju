@@ -3,7 +3,7 @@
 namespace App\Imports;
 
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use Maatwebsite\Excel\Concerns\SkipsUnknownSheets; // Tambahkan ini
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 
 class PanelKwhImport implements WithMultipleSheets, SkipsUnknownSheets
 {
@@ -14,6 +14,9 @@ class PanelKwhImport implements WithMultipleSheets, SkipsUnknownSheets
     }
 
     public function sheets(): array {
+        // URUTAN INI SANGAT PENTING: 
+        // Sheet 0 (Panel KWH) HARUS dieksekusi lebih dulu agar masuk ke database.
+        // Dengan begitu, Sheet PJU bisa melakukan query pencarian Panel KWH (Haversine).
         return [
             0 => new PanelKwhSheetImport($this->kapanewon),
             'PJU' => new AsetPjuSheetImport($this->kapanewon),

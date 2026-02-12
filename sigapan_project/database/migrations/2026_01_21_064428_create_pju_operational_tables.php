@@ -43,7 +43,7 @@ return new class extends Migration
             $table->enum('fasa', ['R', 'S', 'T'])->nullable();
             $table->enum('status_koneksi', ['Aktif', 'Diputus'])->default('Aktif');
             $table->date('tgl_koneksi')->nullable();
-            $table->decimal('panjang_kabel_est', 6, 2)->nullable();
+            $table->decimal('panjang_kabel_est', 10, 2)->nullable();
             $table->text('keterangan_jalur')->nullable();
             $table->timestamps();
         });

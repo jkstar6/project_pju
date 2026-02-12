@@ -70,6 +70,9 @@ class ImportPanel extends Command
             $this->output->progressAdvance();
         }
         $this->output->progressFinish();
-        $this->info("Semua proses selesai! Silakan cek database Anda.");
+        $this->info("Sedang membuat data tabel koneksi jaringan (koneksi_pju_kwh)...");
+        $this->call('db:seed', ['--class' => 'KoneksiPjuSeeder']);
+
+        $this->info("Semua proses selesai! Silakan cek database PostgreSQL Anda.");
     }
 }
